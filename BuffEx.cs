@@ -7,6 +7,7 @@ using System;
 /// Unity 프로젝트에서 이 파일을 그대로 복사하거나 GitHub raw 주소로 불러와 사용할 수 있습니다.
 /// </summary>
 
+
 // ------------------ 기본 버프
 public class Power : Buff // 
 {
