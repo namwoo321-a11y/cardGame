@@ -8,32 +8,32 @@ using System;
 /// </summary>
 
 // ------------------ 기본 버프
-공개 class Power : Buff // 
+public class Power : Buff // 
 {
     // information
-    공개 override string Bname => "힘";
-    공개 override string Description => $"가하는 피해량 증가";
-    공개 override BuffType BuffType => BuffType.Power;
-    공개 Power(F_Cha o, F_Cha c, int s) : base(o, c, s) { }
-    공개 override void OnActivate()
+    public override string Bname => "힘";
+    public override string Description => $"가하는 피해량 증가";
+    public override BuffType BuffType => BuffType.Power;
+    public Power(F_Cha o, F_Cha c, int s) : base(o, c, s) { }
+    public override void OnActivate()
     {
         owner.Power += stack; // 힘 + stack
     }
-    공개 override void OnUpdate(int val)
+    public override void OnUpdate(int val)
     {
         base.OnUpdate(val); // stack 업데이트
         owner.Power += val; // 힘 + stack
     }
-    공개 override void OnDeactivate()
+    public override void OnDeactivate()
     {
         owner.Power -= stack; // 힘 -1
     }
 }
 
-공개 class DefPower : Buff
+public class DefPower : Buff
 {
     // information
-    공개 override string Bname => "방어력 약화";
+    public override string Bname => "방어력 약화";
     public override string Description => $"받는 피해 {stack} 증가," +
         $"\n얻는 방어 {stack} 감소";
     public override BuffType BuffType => BuffType.Bad;
