@@ -6,34 +6,34 @@ using System;
 /// GitHub raw 파일 예시로 사용할 수 있는 버프 클래스 모음입니다.
 /// Unity 프로젝트에서 이 파일을 그대로 복사하거나 GitHub raw 주소로 불러와 사용할 수 있습니다.
 /// </summary>
-공개 class BuffCS
+Public class BuffCS
 {
 }
 
 // ------------------ 기본 버프
-공개 class Power : Buff
+Public class Power : Buff
 {
     // information
-    공개 override string Bname => "힘";
-    공개 override string 설명 => $"가하는 피해량 증가";
-    공개 override BuffType BuffType => BuffType.Power;
-    공개 Power(F_Cha o, F_Cha c, int s) : base(o, c, s) { }
-    공개 override void OnActivate()
+    Public override string Bname => "힘";
+    Public override string 설명 => $"가하는 피해량 증가";
+    Public override BuffType BuffType => BuffType.Power;
+    Public Power(F_Cha o, F_Cha c, int s) : base(o, c, s) { }
+    Public override void OnActivate()
     {
         owner.Power += stack; // 힘 + stack
     }
-    공개 override void OnUpdate(int val)
+    Public override void OnUpdate(int val)
     {
         base.OnUpdate(val); // stack 업데이트
         owner.Power += val; // 힘 + stack
     }
-    공개 override void OnDeactivate()
+    Public override void OnDeactivate()
     {
         owner.Power -= stack; // 힘 -1
     }
 }
 
-공개 class DefPower : Buff
+Public class DefPower : Buff
 {
     // information
     public override string Bname => "방어력 약화";
