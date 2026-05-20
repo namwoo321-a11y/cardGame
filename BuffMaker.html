@@ -114,7 +114,7 @@
             <div class="flex justify-between items-center bg-slate-800 px-3 py-2 shrink-0 border-b border-slate-700">
                 <div class="flex gap-2">
                     <button onclick="setViewMode('single')" id="btn-view-single" class="text-xs px-2 py-1 rounded bg-slate-600 text-white font-bold">현재 버프</button>
-                    <button onclick="setViewMode('full')" id="btn-view-full" class="text-xs px-2 py-1 rounded bg-transparent text-slate-400 hover:text-white">전체(BuffEx)</button>
+                    <button onclick="setViewMode('full')" id="btn-view-full" class="text-xs px-2 py-1 rounded bg-transparent text-slate-400 hover:text-white">전체(BuffCase)</button>
                 </div>
                 <!-- 모바일 전용 닫기 버튼 -->
                 <button onclick="toggleMobileCode()" class="md:hidden text-slate-300 hover:text-white">
@@ -421,7 +421,7 @@
 
         function generateFullFileString() {
             let fullCode = `using System;\nusing UnityEngine;\nusing System.Collections.Generic;\nusing System.Linq;\n\n`;
-            fullCode += `/// <summary>\n/// BuffEx\n/// 이 파일은 웹 메이커에서 자동 생성되었습니다.\n/// </summary>\n\n`;
+            fullCode += `/// <summary>\n/// BuffCase\n/// 이 파일은 웹 메이커에서 자동 생성되었습니다.\n/// </summary>\n\n`;
             buffCollection.forEach(buff => { fullCode += generateBuffClassString(buff) + "\n\n"; });
             return fullCode;
         }
@@ -444,17 +444,17 @@
             
             try {
                 // 브라우저 캐싱 방지를 위해 쿼리스트링 부착
-                const res = await fetch("https://raw.githubusercontent.com/namwoo321-a11y/cardGame/main/BuffEx.cs?" + new Date().getTime());
+                const res = await fetch("https://raw.githubusercontent.com/namwoo321-a11y/cardGame/main/BuffCase.cs?" + new Date().getTime());
                 if (!res.ok) throw new Error("Network response was not ok");
                 const text = await res.text();
-                parseBuffExCS(text);
+                parseBuffCaseCS(text);
             } catch (e) {
                 console.error(e);
                 alert("GitHub에서 데이터를 가져오는데 실패했습니다.\nURL 연결 상태를 확인해주세요.");
             }
         }
 
-        function parseBuffExCS(csText) {
+        function parseBuffCaseCS(csText) {
             const blocks = csText.split("public class ");
             const newBuffs = [];
             
@@ -671,10 +671,10 @@
             const code = generateFullFileString();
             navigator.clipboard.writeText(code).then(() => {
                 alert('✨ 전체 코드가 클립보드에 복사되었습니다!\n\n이제 자동으로 GitHub 수정 페이지가 열립니다.\n[전체 선택(Ctrl+A)] 후 [붙여넣기(Ctrl+V)] 하시고 Commit 버튼을 누르시면 됩니다.');
-                window.open('https://github.com/namwoo321-a11y/cardGame/edit/main/BuffEx.cs', '_blank');
+                window.open('https://github.com/namwoo321-a11y/cardGame/edit/main/BuffCase.cs', '_blank');
             }).catch(err => {
                 alert('클립보드 복사에 실패했습니다. 우측 코드를 직접 복사해주세요.');
-                window.open('https://github.com/namwoo321-a11y/cardGame/edit/main/BuffEx.cs', '_blank');
+                window.open('https://github.com/namwoo321-a11y/cardGame/edit/main/BuffCase.cs', '_blank');
             });
         }
 
