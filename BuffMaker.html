@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unity Buff Code Maker (Cloud Sync)</title>
+    <title>Unity Buff Code Maker (Advanced Logic Parser)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -23,7 +23,7 @@
             <h1 class="text-lg md:text-xl font-bold tracking-wide">Buff Code Maker</h1>
         </div>
         <div class="flex gap-2">
-            <!-- GitHub에서 불러오기 버튼 -->
+            <!-- GitHub에서 불러오기 버튼 (모달 제거, Prompt 방식으로 복구) -->
             <button onclick="fetchFromGitHub()" class="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1.5 md:px-3 md:py-1.5 rounded text-xs md:text-sm font-bold transition shadow">
                 <i data-lucide="cloud-download" class="w-4 h-4"></i> <span class="hidden md:inline">GitHub에서 불러오기</span><span class="md:hidden">불러오기</span>
             </button>
@@ -33,7 +33,7 @@
                 <i data-lucide="code-2" class="w-4 h-4"></i> 코드 확인
             </button>
 
-            <!-- GitHub 덮어씌우기 버튼 -->
+            <!-- 복사 버튼 -->
             <button onclick="copyAndOpenGitHub()" class="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1.5 md:px-3 md:py-1.5 rounded text-xs md:text-sm font-bold transition shadow">
                 <i data-lucide="github" class="w-4 h-4"></i> <span class="hidden md:inline">코드 복사 및 GitHub 덮어씌우기</span><span class="md:hidden">GitHub 적용</span>
             </button>
@@ -86,6 +86,7 @@
                             <option value="Power">Power (지속)</option>
                             <option value="Resource">Resource (자원)</option>
                             <option value="Important">Important (주요)</option>
+                            <option value="Custom">Custom (코드 지정)</option>
                         </select>
                     </div>
                     <div class="col-span-2 md:col-span-1">
@@ -96,12 +97,16 @@
                         <label class="block text-xs font-semibold text-slate-600 mb-1">Description (설명 툴팁)</label>
                         <textarea id="inp-description" data-bind="description" class="w-full border border-slate-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none font-mono text-xs md:text-sm" rows="2" placeholder="예: 힘 +{stack}\n턴 종료시 제거"></textarea>
                     </div>
+                    <div class="col-span-2 md:col-span-4">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">클래스 내부 추가 코드 (전역 변수, 커스텀 함수 보존용)</label>
+                        <textarea id="inp-classCustomCode" data-bind="classCustomCode" class="w-full border border-slate-300 rounded p-2 bg-slate-800 text-emerald-400 outline-none font-mono text-xs md:text-sm" rows="3" placeholder="예: private int damageThisTurn = 0;"></textarea>
+                    </div>
                 </div>
             </section>
 
             <section>
                 <h2 class="text-base md:text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
-                    <i data-lucide="zap" class="w-4 h-4 text-amber-500"></i> 발동 로직 설정 (Gain / Consume 등 지원)
+                    <i data-lucide="zap" class="w-4 h-4 text-amber-500"></i> 발동 로직 설정 (F_Cha 연산 완벽 지원)
                 </h2>
                 <div id="event-list-container" class="space-y-2 pb-10">
                     <!-- JS 렌더링 -->
@@ -109,14 +114,13 @@
             </section>
         </div>
 
-        <!-- 우측 패널: 모바일에서는 display:none(숨김) 기반으로 작동. 토글시 전체화면으로 등장 -->
+        <!-- 우측 패널: 모바일에서는 숨김, 토글시 등장 -->
         <div id="code-viewer-panel" class="hidden md:flex flex-col absolute inset-0 z-30 md:static md:w-[400px] lg:w-[500px] bg-slate-900 border-l border-slate-700 shrink-0 h-full">
             <div class="flex justify-between items-center bg-slate-800 px-3 py-2 shrink-0 border-b border-slate-700">
                 <div class="flex gap-2">
                     <button onclick="setViewMode('single')" id="btn-view-single" class="text-xs px-2 py-1 rounded bg-slate-600 text-white font-bold">현재 버프</button>
                     <button onclick="setViewMode('full')" id="btn-view-full" class="text-xs px-2 py-1 rounded bg-transparent text-slate-400 hover:text-white">전체(BuffCase)</button>
                 </div>
-                <!-- 모바일 전용 닫기 버튼 -->
                 <button onclick="toggleMobileCode()" class="md:hidden text-slate-300 hover:text-white">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
@@ -137,7 +141,7 @@
             { id: 'OnTurnEnd', name: 'OnTurnEnd()', desc: '턴 종료 시' },
             { id: 'BeforeDamaged', name: 'BeforeDamaged(DamContext DC)', desc: '피격 전 (피해량 조작)' },
             { id: 'AfterDamaged', name: 'AfterDamaged(DamContext DC)', desc: '피격 후' },
-            { id: 'BeforeAttack', name: 'BeforeAttack(DamContext DC)', desc: '공격 전 (조건 검사, 자원 소모)' },
+            { id: 'BeforeAttack', name: 'BeforeAttack(DamContext DC)', desc: '공격 전 (조건 검사)' },
             { id: 'AfterAttack', name: 'AfterAttack(DamContext DC)', desc: '공격 후' }
         ];
 
@@ -164,21 +168,19 @@
 
         // --- 2. 초기화 ---
         function initApp() {
-            const saved = localStorage.getItem('buffMakerData_v2');
+            const saved = localStorage.getItem('buffMakerData_v4');
             if (saved) {
                 try { buffCollection = JSON.parse(saved); } catch (e) { buffCollection = []; }
             }
-
             if (buffCollection.length === 0) {
                 buffCollection.push(createEmptyBuff("NewBuff", "새 버프"));
             }
-
             currentIndex = 0;
             renderAll();
         }
 
         function saveData() {
-            localStorage.setItem('buffMakerData_v2', JSON.stringify(buffCollection));
+            localStorage.setItem('buffMakerData_v4', JSON.stringify(buffCollection));
         }
 
         function createEmptyBuff(cName, kName) {
@@ -188,7 +190,9 @@
                 bNameKR: kName,
                 description: "",
                 buffType: "Good",
+                customBuffTypeStr: "",
                 activatedTurn: 0,
+                classCustomCode: "",
                 events: {}
             };
             EVENT_DEF.forEach(ev => b.events[ev.id] = { active: false, actions: [] });
@@ -224,9 +228,14 @@
             
             document.getElementById('inp-className').value = buff.className || "";
             document.getElementById('inp-bNameKR').value = buff.bNameKR || "";
-            document.getElementById('inp-buffType').value = buff.buffType || "Good";
+            if(buff.customBuffTypeStr) {
+                document.getElementById('inp-buffType').value = "Custom";
+            } else {
+                document.getElementById('inp-buffType').value = buff.buffType || "Good";
+            }
             document.getElementById('inp-activatedTurn').value = buff.activatedTurn || 0;
             document.getElementById('inp-description').value = buff.description || "";
+            document.getElementById('inp-classCustomCode').value = buff.classCustomCode || "";
 
             let html = '';
             EVENT_DEF.forEach(ev => {
@@ -254,7 +263,9 @@
                     
                     html += `
                         <div class="mt-3 flex flex-wrap gap-1.5">
-                            <button onclick="addAction('${ev.id}', 'StatChange')" class="bg-teal-50 border border-teal-200 text-teal-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">스탯 증감 (Gain/Consume)</button>
+                            <button onclick="addAction('${ev.id}', 'StatChange')" class="bg-teal-50 border border-teal-200 text-teal-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">스탯 증감</button>
+                            <button onclick="addAction('${ev.id}', 'F_ChaMethod')" class="bg-indigo-50 border border-indigo-200 text-indigo-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">F_Cha 행동 (Heal/Draw/Dam)</button>
+                            <button onclick="addAction('${ev.id}', 'StackChange')" class="bg-fuchsia-50 border border-fuchsia-200 text-fuchsia-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">스택 조작 (+/-)</button>
                             <button onclick="addAction('${ev.id}', 'AddBuff')" class="bg-blue-50 border border-blue-200 text-blue-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">버프 부여</button>
                             <button onclick="addAction('${ev.id}', 'IfCondition')" class="bg-amber-50 border border-amber-200 text-amber-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">조건문 (If)</button>
                             <button onclick="addAction('${ev.id}', 'EndIf')" class="bg-amber-50 border border-amber-200 text-amber-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">조건 닫기 (})</button>
@@ -267,7 +278,6 @@
                 }
                 html += `</div>`;
             });
-
             document.getElementById('event-list-container').innerHTML = html;
         }
 
@@ -289,14 +299,31 @@
                     <span class="text-slate-700 font-mono text-[10px] md:text-xs">);</span>
                     <datalist id="statOptions">${stats}</datalist>
                 `;
+            } else if(act.type === 'F_ChaMethod') {
+                const methods = ['Heal', 'ApplyDamage', 'TakeDamage', 'DrawCard', 'DiscardCard', 'RemoveCard'].map(t => `<option ${act.method===t?'selected':''}>${t}</option>`).join('');
+                inner = `
+                    <select onchange="updateAction('${eventId}', ${idx}, 'target', this.value)" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded">${targets}</select>
+                    <span class="text-slate-500 font-bold">.</span>
+                    <select onchange="updateAction('${eventId}', ${idx}, 'method', this.value)" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded font-bold text-indigo-700">${methods}</select>
+                    <span class="text-slate-700 font-mono text-[10px] md:text-xs">(</span>
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'args', this.value)" value="${act.args}" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded w-32 font-mono" placeholder="매개변수 입력">
+                    <span class="text-slate-700 font-mono text-[10px] md:text-xs">);</span>
+                `;
+            } else if(act.type === 'StackChange') {
+                const ops = ['+=', '-=', '*=', '/=', '==', '=', '++', '--'].map(t => `<option ${act.op===t?'selected':''}>${t}</option>`).join('');
+                inner = `
+                    <span class="text-slate-700 font-mono text-[10px] md:text-xs font-bold">stack </span>
+                    <select onchange="updateAction('${eventId}', ${idx}, 'op', this.value)" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded font-bold text-fuchsia-700">${ops}</select>
+                    ${(act.op !== '++' && act.op !== '--') ? `<input type="text" oninput="updateAction('${eventId}', ${idx}, 'val', this.value)" value="${act.val}" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded w-12 font-mono" placeholder="값">` : ''}
+                    <span class="text-slate-700 font-mono text-[10px] md:text-xs">;</span>
+                `;
             } else if(act.type === 'IfCondition') {
-                const stats = ['Power', 'HP', 'SD', 'Block', 'ActivatedTurn'].map(t => `<option ${act.stat===t?'selected':''}>${t}</option>`).join('');
                 const ops = ['>', '>=', '==', '<=', '<', '!='].map(t => `<option ${act.op===t?'selected':''}>${t}</option>`).join('');
                 inner = `
                     <span class="text-amber-700 font-mono text-[10px] md:text-xs font-bold">if (</span>
                     <select onchange="updateAction('${eventId}', ${idx}, 'target', this.value)" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded">${targets}</select>
                     <span class="text-slate-700 font-mono text-[10px] md:text-xs">.CValue("</span>
-                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'stat', this.value)" value="${act.stat}" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded w-16" list="statOptions">
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'stat', this.value)" value="${act.stat}" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded w-16">
                     <span class="text-slate-700 font-mono text-[10px] md:text-xs">") </span>
                     <select onchange="updateAction('${eventId}', ${idx}, 'op', this.value)" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded font-bold">${ops}</select>
                     <input type="text" oninput="updateAction('${eventId}', ${idx}, 'val', this.value)" value="${act.val}" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded w-10 font-mono">
@@ -309,7 +336,7 @@
                 inner = `
                     <select onchange="updateAction('${eventId}', ${idx}, 'target', this.value)" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded">${targets}</select>
                     <span class="text-slate-700 font-mono text-[10px] md:text-xs">.AddBuff(new </span>
-                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'buffClass', this.value)" value="${act.buffClass}" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded w-16 text-blue-600 font-bold" placeholder="Class">
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'buffClass', this.value)" value="${act.buffClass}" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded w-20 text-blue-600 font-bold" placeholder="Class">
                     <span class="text-slate-700 font-mono text-[10px] md:text-xs">(${act.target}, </span>
                     <select onchange="updateAction('${eventId}', ${idx}, 'caster', this.value)" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded">${casterOpts}</select>
                     <span class="text-slate-700 font-mono text-[10px] md:text-xs">,</span>
@@ -317,19 +344,19 @@
                     <span class="text-slate-700 font-mono text-[10px] md:text-xs">));</span>
                 `;
             } else if(act.type === 'DCModify') {
-                const fields = ['PlusDamage', 'PercentDamage', 'Damage'].map(t => `<option ${act.field===t?'selected':''}>${t}</option>`).join('');
-                const ops = ['+=', '-=', '*=', '='].map(t => `<option ${act.op===t?'selected':''}>${t}</option>`).join('');
+                const fields = ['PlusDamage', 'PercentDamage', 'Damage', 'FixDamage'].map(t => `<option ${act.field===t?'selected':''}>${t}</option>`).join('');
+                const ops = ['+=', '-=', '*=', '=', '/='].map(t => `<option ${act.op===t?'selected':''}>${t}</option>`).join('');
                 inner = `
                     <span class="font-mono text-[10px] md:text-xs font-bold text-purple-700">DC.</span>
                     <select onchange="updateAction('${eventId}', ${idx}, 'field', this.value)" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded">${fields}</select>
                     <select onchange="updateAction('${eventId}', ${idx}, 'op', this.value)" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded font-bold">${ops}</select>
-                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'val', this.value)" value="${act.val}" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded w-12 font-mono">
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'val', this.value)" value="${act.val}" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded w-16 font-mono">
                     <span class="text-slate-500 font-bold">;</span>
                 `;
             } else if(act.type === 'RemoveThis') {
                 inner = `<span class="font-mono text-[10px] md:text-xs text-red-600 font-semibold">owner.RemoveBuff(this);</span>`;
             } else if(act.type === 'Custom') {
-                inner = `<textarea oninput="updateAction('${eventId}', ${idx}, 'code', this.value)" class="w-full border border-slate-300 rounded p-1.5 font-mono text-[11px] md:text-xs bg-slate-800 text-emerald-400 outline-none" rows="2">${act.code}</textarea>`;
+                inner = `<textarea oninput="updateAction('${eventId}', ${idx}, 'code', this.value)" class="w-full border border-slate-300 rounded p-1.5 font-mono text-[11px] md:text-xs bg-slate-800 text-emerald-400 outline-none" rows="3">${act.code}</textarea>`;
             } else if(act.type === 'BaseCall') {
                 inner = `<span class="font-mono text-[10px] md:text-xs text-indigo-600 font-semibold">base.${eventId}(${eventId === 'OnUpdate' ? 'val' : ''});</span>`;
             }
@@ -337,12 +364,14 @@
             let badgeColor = 'bg-slate-500';
             if(act.type==='AddBuff') badgeColor = 'bg-blue-500';
             else if(act.type==='StatChange') badgeColor = 'bg-teal-600';
+            else if(act.type==='F_ChaMethod') badgeColor = 'bg-indigo-600';
+            else if(act.type==='StackChange') badgeColor = 'bg-fuchsia-600';
             else if(act.type==='IfCondition' || act.type==='EndIf') badgeColor = 'bg-amber-500';
             else if(act.type==='DCModify') badgeColor = 'bg-purple-500';
 
             return `
             <div class="flex flex-col md:flex-row items-start md:items-center gap-1.5 md:gap-2 bg-white p-2 rounded border border-slate-200 relative group pr-8">
-                <span class="${badgeColor} text-white text-[9px] md:text-[10px] px-1.5 py-0.5 rounded font-bold shrink-0">${act.type}</span>
+                <span class="${badgeColor} text-white text-[9px] md:text-[10px] px-1.5 py-0.5 rounded font-bold shrink-0 w-16 text-center">${act.type}</span>
                 <div class="flex-1 flex flex-wrap items-center gap-1 w-full">
                     ${inner}
                 </div>
@@ -353,22 +382,33 @@
             `;
         }
 
-        // --- 4. 코드 생성 (제네레이터) ---
+        // --- 4. 코드 생성 (Generator) ---
         function generateBuffClassString(buff) {
             let descStr = (buff.description || "").replace(/\n/g, '\\n');
             let className = buff.className || "UnknownBuff";
             
             let code = `public class ${className} : Buff\n{\n`;
-            code += `    public override BuffType BuffType => BuffType.${buff.buffType};\n`;
+            
+            if (buff.customBuffTypeStr) {
+                code += `    public override BuffType BuffType => ${buff.customBuffTypeStr};\n`;
+            } else {
+                code += `    public override BuffType BuffType => BuffType.${buff.buffType};\n`;
+            }
             
             code += `    public override string Bname => "${className}";\n`;
             if (buff.bNameKR) {
                 code += `    public override string BnameKR => "${buff.bNameKR}";\n`;
             }
-            code += `    public override string Description => $"${descStr}";\n\n`;
+            code += `    public override string Description => $"${descStr}";\n`;
 
             if (buff.activatedTurn && buff.activatedTurn > 0) {
-                code += `    public int ActivatedTurn;\n\n`;
+                code += `    public int ActivatedTurn;\n`;
+            }
+            code += `\n`;
+
+            // 클래스 커스텀 코드 삽입 (안전 격리된 원본 변수 및 함수)
+            if (buff.classCustomCode && buff.classCustomCode.trim() !== "") {
+                code += buff.classCustomCode.trim().split('\n').map(l => `    ${l}`).join('\n') + `\n\n`;
             }
 
             code += `    public ${className}(F_Cha target, F_Cha user, int s) : base(target, user, s) \n    {\n`;
@@ -381,7 +421,7 @@
                 const evData = buff.events[ev.id];
                 if(evData && evData.active) {
                     code += `    ${EVENT_SIGNATURES[ev.id]}\n`;
-                    let indentLvl = 2; // 2탭 (8공백)
+                    let indentLvl = 2;
 
                     evData.actions.forEach(act => {
                         let line = "";
@@ -390,6 +430,8 @@
                         let indentStr = "    ".repeat(indentLvl);
 
                         if(act.type === 'StatChange') line = `${act.target}.${act.op}("${act.stat}", ${act.val});`;
+                        else if(act.type === 'F_ChaMethod') line = `${act.target}.${act.method}(${act.args});`;
+                        else if(act.type === 'StackChange') line = (act.op === '++' || act.op === '--') ? `stack${act.op};` : `stack ${act.op} ${act.val};`;
                         else if(act.type === 'AddBuff') line = `${act.target}.AddBuff(new ${act.buffClass}(${act.target}, ${act.caster}, ${act.stack}));`;
                         else if(act.type === 'IfCondition') { line = `if (${act.target}.CValue("${act.stat}") ${act.op} ${act.val})\n${indentStr}{`; }
                         else if(act.type === 'EndIf') { line = `}`; }
@@ -400,7 +442,7 @@
                         
                         line.split('\n').forEach((l, idx) => { 
                             if(act.type === 'IfCondition' && idx === 1) {
-                                code += `${l}\n`; // 여는 중괄호 줄의 들여쓰기
+                                code += `${l}\n`;
                             } else {
                                 code += `${indentStr}${l}\n`; 
                             }
@@ -421,7 +463,7 @@
 
         function generateFullFileString() {
             let fullCode = `using System;\nusing UnityEngine;\nusing System.Collections.Generic;\nusing System.Linq;\n\n`;
-            fullCode += `/// <summary>\n/// BuffCase\n/// 이 파일은 웹 메이커에서 자동 생성되었습니다.\n/// </summary>\n\n`;
+            fullCode += `/// <summary>\n/// BuffCase Auto Generated\n/// </summary>\n\n`;
             buffCollection.forEach(buff => { fullCode += generateBuffClassString(buff) + "\n\n"; });
             return fullCode;
         }
@@ -438,19 +480,22 @@
             }
         }
 
-        // --- 5. GitHub에서 불러오기 (파서) ---
+        // --- 5. 코드 가져오기 (Advanced Parser) ---
         async function fetchFromGitHub() {
-            if(!confirm('GitHub의 코드를 가져오면 현재 작성 중인 목록이 모두 덮어씌워집니다.\n진행하시겠습니까?')) return;
+            const url = prompt("불러올 C# 파일의 URL (GitHub Raw 등)을 입력하세요.", "https://raw.githubusercontent.com/namwoo321-a11y/cardGame/main/BuffCase.cs");
+            if(!url) return;
+
+            if(!confirm('코드를 가져오면 현재 작성 중인 목록이 모두 덮어씌워집니다.\n진행하시겠습니까?')) return;
             
             try {
                 // 브라우저 캐싱 방지를 위해 쿼리스트링 부착
-                const res = await fetch("https://raw.githubusercontent.com/namwoo321-a11y/cardGame/main/BuffCase.cs?" + new Date().getTime());
+                const res = await fetch(url + (url.includes('?') ? '&' : '?') + new Date().getTime());
                 if (!res.ok) throw new Error("Network response was not ok");
                 const text = await res.text();
                 parseBuffCaseCS(text);
             } catch (e) {
                 console.error(e);
-                alert("GitHub에서 데이터를 가져오는데 실패했습니다.\nURL 연결 상태를 확인해주세요.");
+                alert("데이터를 가져오는데 실패했습니다.\nURL 연결 상태를 확인해주세요.");
             }
         }
 
@@ -459,51 +504,93 @@
             const newBuffs = [];
             
             for (let i = 1; i < blocks.length; i++) {
-                const block = blocks[i];
+                let block = blocks[i];
                 const headerMatch = block.match(/^(\w+)\s*:\s*Buff/);
                 if (!headerMatch) continue;
                 
                 const className = headerMatch[1];
+                let buff = createEmptyBuff(className, "");
+
+                // 클래스 본문( { ~ } )만 추출
+                const bodyStart = block.indexOf('{');
+                const bodyEnd = block.lastIndexOf('}');
+                if(bodyStart === -1 || bodyEnd === -1) continue;
                 
-                const buffTypeMatch = block.match(/BuffType\s*=>\s*BuffType\.(\w+);/);
-                const bNameMatch = block.match(/Bname\s*=>\s*"([^"]+)";/);
-                const bNameKRMatch = block.match(/BnameKR\s*=>\s*"([^"]+)";/);
-                const descMatch = block.match(/Description\s*=>\s*\$?"([^"]*)";/);
-                const actTurnMatch = block.match(/ActivatedTurn\s*=\s*(\d+);/);
-                
-                // bName은 ClassName과 동일하므로 무시하고, KR 이름이나 기본 Bname을 KR 칸에 넣습니다.
-                let buff = createEmptyBuff(className, bNameKRMatch ? bNameKRMatch[1] : (bNameMatch ? (bNameMatch[1] === className ? "" : bNameMatch[1]) : ""));
-                if (buffTypeMatch) buff.buffType = buffTypeMatch[1];
-                if (descMatch) buff.description = descMatch[1].replace(/\\n/g, '\n');
-                if (actTurnMatch) buff.activatedTurn = parseInt(actTurnMatch[1]);
-                
-                // 이벤트(메서드) 파싱
+                let leftover = block.substring(bodyStart + 1, bodyEnd);
+
+                // --- 1. 메타 데이터 정확한 파싱 및 안전 제거 ---
+                const bNameMatch = leftover.match(/public\s+override\s+string\s+Bname\s*=>\s*([^;]+);/);
+                if (bNameMatch) {
+                    leftover = leftover.replace(bNameMatch[0], '');
+                }
+
+                const bNameKRMatch = leftover.match(/public\s+override\s+string\s+BnameKR\s*=>\s*"([^"]+)";/);
+                if (bNameKRMatch) {
+                    buff.bNameKR = bNameKRMatch[1];
+                    leftover = leftover.replace(bNameKRMatch[0], '');
+                }
+
+                const buffTypeMatch = leftover.match(/public\s+override\s+BuffType\s+BuffType\s*=>\s*([^;]+);/);
+                if (buffTypeMatch) {
+                    const btRaw = buffTypeMatch[1].trim();
+                    if(btRaw.startsWith("BuffType.")) {
+                        buff.buffType = btRaw.replace("BuffType.", "");
+                    } else {
+                        buff.buffType = "Custom";
+                        buff.customBuffTypeStr = btRaw; // 삼항연산자 등 보존
+                    }
+                    leftover = leftover.replace(buffTypeMatch[0], '');
+                }
+
+                const descMatch = leftover.match(/public\s+override\s+string\s+Description\s*=>\s*\$?"([^]*?)";/);
+                if (descMatch) {
+                    buff.description = descMatch[1].replace(/\\n/g, '\n').replace(/"\s*\+\s*\$?"/g, ''); // 줄바꿈 연산자 병합
+                    leftover = leftover.replace(descMatch[0], '');
+                }
+
+                const actTurnMatch = leftover.match(/public\s+int\s+ActivatedTurn\s*=\s*(\d+);/);
+                if (actTurnMatch) {
+                    buff.activatedTurn = parseInt(actTurnMatch[1]);
+                    leftover = leftover.replace(actTurnMatch[0], '');
+                }
+
+                // 생성자 제거
+                const ctorRegex = new RegExp(`public\\s+${className}\\s*\\([^)]*\\)\\s*:\\s*base\\([^)]*\\)\\s*\\{[^}]*\\}`);
+                const ctorMatch = leftover.match(ctorRegex);
+                if(ctorMatch) leftover = leftover.replace(ctorMatch[0], '');
+
+                // --- 2. 이벤트(메서드) 파싱 ---
                 EVENT_DEF.forEach(ev => {
                     const sig = `public override void ${ev.id}`;
                     const sigDC = `public override DamContext ${ev.id}`;
                     
-                    let idx = block.indexOf(sig);
-                    if (idx === -1) idx = block.indexOf(sigDC);
+                    let idx = leftover.indexOf(sig);
+                    if (idx === -1) idx = leftover.indexOf(sigDC);
                     
                     if (idx !== -1) {
-                        buff.events[ev.id].active = true;
-                        
-                        let startIdx = block.indexOf('{', idx) + 1;
+                        let startIdx = leftover.indexOf('{', idx);
                         let braceCount = 1;
-                        let endIdx = startIdx;
-                        while(braceCount > 0 && endIdx < block.length) {
-                            if (block[endIdx] === '{') braceCount++;
-                            else if (block[endIdx] === '}') braceCount--;
+                        let endIdx = startIdx + 1;
+                        while(braceCount > 0 && endIdx < leftover.length) {
+                            if (leftover[endIdx] === '{') braceCount++;
+                            else if (leftover[endIdx] === '}') braceCount--;
                             endIdx++;
                         }
                         
-                        let body = block.substring(startIdx, endIdx - 1).trim();
-                        body = body.replace(/return DC;\s*$/, '').trim(); // 자동 리턴문 제거
+                        const methodStr = leftover.substring(idx, endIdx);
+                        let body = leftover.substring(startIdx + 1, endIdx - 1).trim();
+                        body = body.replace(/return DC;\s*$/, '').trim();
                         
+                        buff.events[ev.id].active = true;
                         buff.events[ev.id].actions = parseBodyToActions(body);
+                        
+                        // 파싱 완료된 이벤트는 leftover에서 제거
+                        leftover = leftover.replace(methodStr, '');
                     }
                 });
                 
+                // 남은 코드(변수, 커스텀 함수 등)는 안전 격리
+                buff.classCustomCode = leftover.trim();
                 newBuffs.push(buff);
             }
             
@@ -512,7 +599,7 @@
                 saveData();
                 currentIndex = 0;
                 renderAll();
-                alert(`성공적으로 ${newBuffs.length}개의 버프를 불러왔습니다!`);
+                alert(`성공적으로 ${newBuffs.length}개의 버프를 불러왔습니다! (F_Cha 로직 포함 완벽 파싱됨)`);
             } else {
                 alert('파싱할 버프 클래스를 찾지 못했습니다.');
             }
@@ -524,6 +611,7 @@
             const actions = [];
             const lines = body.split('\n');
             let customBlock = [];
+            let openIfs = 0;
             
             function flushCustom() {
                 if (customBlock.length > 0) {
@@ -552,41 +640,66 @@
                     actions.push({ type: 'StatChange', target: statMatch[1], op: statMatch[2], stat: statMatch[3], val: statMatch[4] }); 
                     continue;
                 }
-                // 4. DCModify
-                const dcMatch = line.match(/^DC\.(PlusDamage|PercentDamage|Damage)\s*(\+=|-=|\*|=|)\s*([^;]+);$/);
+                // 4. F_ChaMethod (Heal, ApplyDamage, DrawCard 등)
+                const fchaMatch = line.match(/^(owner|caster|DC\.Target|DC\.Attacker)\.(Heal|DrawCard|DiscardCard|RemoveCard|ApplyDamage|TakeDamage)\((.*)\);$/);
+                if (fchaMatch) {
+                    flushCustom();
+                    actions.push({ type: 'F_ChaMethod', target: fchaMatch[1], method: fchaMatch[2], args: fchaMatch[3] });
+                    continue;
+                }
+                // 5. StackChange
+                const stackOpMatch = line.match(/^stack\s*(\+=|-=|\*=|\/=|==|=)\s*([^;]+);$/);
+                if (stackOpMatch) {
+                    flushCustom();
+                    actions.push({ type: 'StackChange', op: stackOpMatch[1], val: stackOpMatch[2] });
+                    continue;
+                }
+                const stackIncMatch = line.match(/^stack\s*(--|\+\+)\s*;$/);
+                if (stackIncMatch) {
+                    flushCustom();
+                    actions.push({ type: 'StackChange', op: stackIncMatch[1], val: "" });
+                    continue;
+                }
+                // 6. DCModify
+                const dcMatch = line.match(/^DC\.(PlusDamage|PercentDamage|Damage|FixDamage)\s*(\+=|-=|\*=|\/=|==|=)\s*([^;]+);$/);
                 if (dcMatch) {
                     flushCustom();
                     actions.push({ type: 'DCModify', field: dcMatch[1], op: dcMatch[2], val: dcMatch[3] });
                     continue;
                 }
-                // 5. AddBuff
+                // 7. AddBuff
                 const addBuffMatch = line.match(/^(owner|caster|DC\.Target|DC\.Attacker)\.AddBuff\(new\s+(\w+)\(([^,]+),\s*([^,]+),\s*([^)]+)\)\);$/);
                 if (addBuffMatch) {
                     flushCustom();
                     actions.push({ type: 'AddBuff', target: addBuffMatch[1], buffClass: addBuffMatch[2], caster: addBuffMatch[4].trim(), stack: addBuffMatch[5].trim() });
                     continue;
                 }
-                // 6. IfCondition
+                // 8. IfCondition
                 const ifMatch = line.match(/^if\s*\((owner|caster|DC\.Target|DC\.Attacker)\.CValue\("([^"]+)"\)\s*(>|>=|==|<=|<|!=)\s*([^)]+)\)\s*\{?$/);
                 if (ifMatch) {
                     flushCustom();
                     actions.push({ type: 'IfCondition', target: ifMatch[1], stat: ifMatch[2], op: ifMatch[3], val: ifMatch[4] });
+                    openIfs++;
                     continue;
                 }
-                // (여는 중괄호 무시: IfCondition 직후에 나오는 { )
+                
                 if (line === "{") {
                     if (customBlock.length === 0 && actions.length > 0 && actions[actions.length - 1].type === 'IfCondition') {
                         continue; 
                     }
                 }
-                // 7. EndIf
+                
+                // 9. EndIf
                 if (line === "}") {
-                    flushCustom();
-                    actions.push({ type: 'EndIf' });
-                    continue;
+                    if (openIfs > 0 && customBlock.length === 0) {
+                        flushCustom();
+                        actions.push({ type: 'EndIf' });
+                        openIfs--;
+                        continue;
+                    }
                 }
                 
-                // 매칭 안 되는건 커스텀으로
+                // 매칭 안 되는 복잡한 로직은 모두 C# 커스텀으로 안전 보존
                 customBlock.push(line);
             }
             flushCustom();
@@ -634,6 +747,8 @@
         window.addAction = function(id, type) {
             let act = { type };
             if(type === 'StatChange') act = { ...act, target: 'owner', op: 'Gain', stat: 'Power', val: 'stack' };
+            else if (type === 'F_ChaMethod') act = { ...act, target: 'owner', method: 'Heal', args: 'stack * 4, DmgT.HP' };
+            else if (type === 'StackChange') act = { ...act, op: '-=', val: '1' };
             else if (type === 'IfCondition') act = { ...act, target: 'owner', stat: 'SD', op: '>', val: '0' };
             else if (type === 'AddBuff') act = { ...act, target: 'owner', buffClass: 'Power_1T', caster: 'caster', stack: '1' };
             else if (type === 'DCModify') act = { ...act, field: 'PlusDamage', op: '+=', val: '1' };
