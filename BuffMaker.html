@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unity Buff Code Maker (Advanced)</title>
+    <title>Unity Buff Code Maker (Cloud Sync)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -23,11 +23,17 @@
             <h1 class="text-lg md:text-xl font-bold tracking-wide">Buff Code Maker</h1>
         </div>
         <div class="flex gap-2">
+            <!-- GitHub에서 불러오기 버튼 -->
+            <button onclick="fetchFromGitHub()" class="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1.5 md:px-3 md:py-1.5 rounded text-xs md:text-sm font-bold transition shadow">
+                <i data-lucide="cloud-download" class="w-4 h-4"></i> <span class="hidden md:inline">GitHub에서 불러오기</span><span class="md:hidden">불러오기</span>
+            </button>
+
             <!-- 모바일 전용 코드 보기 토글 -->
             <button onclick="toggleMobileCode()" class="md:hidden flex items-center gap-1 bg-slate-700 text-white px-2 py-1.5 rounded text-xs font-bold shadow">
                 <i data-lucide="code-2" class="w-4 h-4"></i> 코드 확인
             </button>
 
+            <!-- GitHub 덮어씌우기 버튼 -->
             <button onclick="copyAndOpenGitHub()" class="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1.5 md:px-3 md:py-1.5 rounded text-xs md:text-sm font-bold transition shadow">
                 <i data-lucide="github" class="w-4 h-4"></i> <span class="hidden md:inline">코드 복사 및 GitHub 덮어씌우기</span><span class="md:hidden">GitHub 적용</span>
             </button>
@@ -41,7 +47,7 @@
             <div class="p-2 md:p-3 bg-slate-300 font-bold text-slate-700 flex justify-between items-center text-xs md:text-sm">
                 <span class="hidden md:inline">버프 목록</span>
                 <span class="md:hidden">목록</span>
-                <button onclick="addNewBuff()" class="bg-blue-600 text-white p-1 rounded hover:bg-blue-500 transition">
+                <button onclick="addNewBuff()" class="bg-blue-600 text-white p-1 rounded hover:bg-blue-500 transition" title="새 버프 추가">
                     <i data-lucide="plus" class="w-4 h-4"></i>
                 </button>
             </div>
@@ -108,7 +114,7 @@
             <div class="flex justify-between items-center bg-slate-800 px-3 py-2 shrink-0 border-b border-slate-700">
                 <div class="flex gap-2">
                     <button onclick="setViewMode('single')" id="btn-view-single" class="text-xs px-2 py-1 rounded bg-slate-600 text-white font-bold">현재 버프</button>
-                    <button onclick="setViewMode('full')" id="btn-view-full" class="text-xs px-2 py-1 rounded bg-transparent text-slate-400 hover:text-white">전체(BuffCase)</button>
+                    <button onclick="setViewMode('full')" id="btn-view-full" class="text-xs px-2 py-1 rounded bg-transparent text-slate-400 hover:text-white">전체(BuffEx)</button>
                 </div>
                 <!-- 모바일 전용 닫기 버튼 -->
                 <button onclick="toggleMobileCode()" class="md:hidden text-slate-300 hover:text-white">
@@ -277,10 +283,11 @@
                     <span class="text-slate-500 font-bold">.</span>
                     <select onchange="updateAction('${eventId}', ${idx}, 'op', this.value)" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded font-bold text-teal-700">${ops}</select>
                     <span class="text-slate-700 font-mono text-[10px] md:text-xs">("</span>
-                    <select onchange="updateAction('${eventId}', ${idx}, 'stat', this.value)" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded">${stats}</select>
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'stat', this.value)" value="${act.stat}" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded w-16" list="statOptions">
                     <span class="text-slate-700 font-mono text-[10px] md:text-xs">", </span>
                     <input type="text" oninput="updateAction('${eventId}', ${idx}, 'val', this.value)" value="${act.val}" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded w-12 font-mono" placeholder="값">
                     <span class="text-slate-700 font-mono text-[10px] md:text-xs">);</span>
+                    <datalist id="statOptions">${stats}</datalist>
                 `;
             } else if(act.type === 'IfCondition') {
                 const stats = ['Power', 'HP', 'SD', 'Block', 'ActivatedTurn'].map(t => `<option ${act.stat===t?'selected':''}>${t}</option>`).join('');
@@ -289,7 +296,7 @@
                     <span class="text-amber-700 font-mono text-[10px] md:text-xs font-bold">if (</span>
                     <select onchange="updateAction('${eventId}', ${idx}, 'target', this.value)" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded">${targets}</select>
                     <span class="text-slate-700 font-mono text-[10px] md:text-xs">.CValue("</span>
-                    <select onchange="updateAction('${eventId}', ${idx}, 'stat', this.value)" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded">${stats}</select>
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'stat', this.value)" value="${act.stat}" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded w-16" list="statOptions">
                     <span class="text-slate-700 font-mono text-[10px] md:text-xs">") </span>
                     <select onchange="updateAction('${eventId}', ${idx}, 'op', this.value)" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded font-bold">${ops}</select>
                     <input type="text" oninput="updateAction('${eventId}', ${idx}, 'val', this.value)" value="${act.val}" class="border border-slate-300 p-1 text-[10px] md:text-xs rounded w-10 font-mono">
@@ -323,6 +330,8 @@
                 inner = `<span class="font-mono text-[10px] md:text-xs text-red-600 font-semibold">owner.RemoveBuff(this);</span>`;
             } else if(act.type === 'Custom') {
                 inner = `<textarea oninput="updateAction('${eventId}', ${idx}, 'code', this.value)" class="w-full border border-slate-300 rounded p-1.5 font-mono text-[11px] md:text-xs bg-slate-800 text-emerald-400 outline-none" rows="2">${act.code}</textarea>`;
+            } else if(act.type === 'BaseCall') {
+                inner = `<span class="font-mono text-[10px] md:text-xs text-indigo-600 font-semibold">base.${eventId}(${eventId === 'OnUpdate' ? 'val' : ''});</span>`;
             }
 
             let badgeColor = 'bg-slate-500';
@@ -344,7 +353,7 @@
             `;
         }
 
-        // --- 4. 코드 생성 ---
+        // --- 4. 코드 생성 (제네레이터) ---
         function generateBuffClassString(buff) {
             let descStr = (buff.description || "").replace(/\n/g, '\\n');
             let className = buff.className || "UnknownBuff";
@@ -352,7 +361,6 @@
             let code = `public class ${className} : Buff\n{\n`;
             code += `    public override BuffType BuffType => BuffType.${buff.buffType};\n`;
             
-            // Bname은 ClassName과 동일하게
             code += `    public override string Bname => "${className}";\n`;
             if (buff.bNameKR) {
                 code += `    public override string BnameKR => "${buff.bNameKR}";\n`;
@@ -373,7 +381,7 @@
                 const evData = buff.events[ev.id];
                 if(evData && evData.active) {
                     code += `    ${EVENT_SIGNATURES[ev.id]}\n`;
-                    let indentLvl = 2; // 기본 2탭(8공백)
+                    let indentLvl = 2; // 2탭 (8공백)
 
                     evData.actions.forEach(act => {
                         let line = "";
@@ -387,11 +395,12 @@
                         else if(act.type === 'EndIf') { line = `}`; }
                         else if(act.type === 'RemoveThis') line = `owner.RemoveBuff(this);`;
                         else if(act.type === 'DCModify') line = `DC.${act.field} ${act.op} ${act.val};`;
+                        else if(act.type === 'BaseCall') line = `base.${ev.id}(${ev.id === 'OnUpdate' ? 'val' : ''});`;
                         else if(act.type === 'Custom') line = act.code;
                         
                         line.split('\n').forEach((l, idx) => { 
                             if(act.type === 'IfCondition' && idx === 1) {
-                                code += `${l}\n`; // 괄호 줄 들여쓰기
+                                code += `${l}\n`; // 여는 중괄호 줄의 들여쓰기
                             } else {
                                 code += `${indentStr}${l}\n`; 
                             }
@@ -412,7 +421,7 @@
 
         function generateFullFileString() {
             let fullCode = `using System;\nusing UnityEngine;\nusing System.Collections.Generic;\nusing System.Linq;\n\n`;
-            fullCode += `/// <summary>\n/// BuffCase\n/// 이 파일은 웹 메이커에서 자동 생성되었습니다.\n/// </summary>\n\n`;
+            fullCode += `/// <summary>\n/// BuffEx\n/// 이 파일은 웹 메이커에서 자동 생성되었습니다.\n/// </summary>\n\n`;
             buffCollection.forEach(buff => { fullCode += generateBuffClassString(buff) + "\n\n"; });
             return fullCode;
         }
@@ -429,20 +438,172 @@
             }
         }
 
-        // --- 5. 사용자 이벤트 라우팅 ---
+        // --- 5. GitHub에서 불러오기 (파서) ---
+        async function fetchFromGitHub() {
+            if(!confirm('GitHub의 코드를 가져오면 현재 작성 중인 목록이 모두 덮어씌워집니다.\n진행하시겠습니까?')) return;
+            
+            try {
+                // 브라우저 캐싱 방지를 위해 쿼리스트링 부착
+                const res = await fetch("https://raw.githubusercontent.com/namwoo321-a11y/cardGame/main/BuffEx.cs?" + new Date().getTime());
+                if (!res.ok) throw new Error("Network response was not ok");
+                const text = await res.text();
+                parseBuffExCS(text);
+            } catch (e) {
+                console.error(e);
+                alert("GitHub에서 데이터를 가져오는데 실패했습니다.\nURL 연결 상태를 확인해주세요.");
+            }
+        }
+
+        function parseBuffExCS(csText) {
+            const blocks = csText.split("public class ");
+            const newBuffs = [];
+            
+            for (let i = 1; i < blocks.length; i++) {
+                const block = blocks[i];
+                const headerMatch = block.match(/^(\w+)\s*:\s*Buff/);
+                if (!headerMatch) continue;
+                
+                const className = headerMatch[1];
+                
+                const buffTypeMatch = block.match(/BuffType\s*=>\s*BuffType\.(\w+);/);
+                const bNameMatch = block.match(/Bname\s*=>\s*"([^"]+)";/);
+                const bNameKRMatch = block.match(/BnameKR\s*=>\s*"([^"]+)";/);
+                const descMatch = block.match(/Description\s*=>\s*\$?"([^"]*)";/);
+                const actTurnMatch = block.match(/ActivatedTurn\s*=\s*(\d+);/);
+                
+                // bName은 ClassName과 동일하므로 무시하고, KR 이름이나 기본 Bname을 KR 칸에 넣습니다.
+                let buff = createEmptyBuff(className, bNameKRMatch ? bNameKRMatch[1] : (bNameMatch ? (bNameMatch[1] === className ? "" : bNameMatch[1]) : ""));
+                if (buffTypeMatch) buff.buffType = buffTypeMatch[1];
+                if (descMatch) buff.description = descMatch[1].replace(/\\n/g, '\n');
+                if (actTurnMatch) buff.activatedTurn = parseInt(actTurnMatch[1]);
+                
+                // 이벤트(메서드) 파싱
+                EVENT_DEF.forEach(ev => {
+                    const sig = `public override void ${ev.id}`;
+                    const sigDC = `public override DamContext ${ev.id}`;
+                    
+                    let idx = block.indexOf(sig);
+                    if (idx === -1) idx = block.indexOf(sigDC);
+                    
+                    if (idx !== -1) {
+                        buff.events[ev.id].active = true;
+                        
+                        let startIdx = block.indexOf('{', idx) + 1;
+                        let braceCount = 1;
+                        let endIdx = startIdx;
+                        while(braceCount > 0 && endIdx < block.length) {
+                            if (block[endIdx] === '{') braceCount++;
+                            else if (block[endIdx] === '}') braceCount--;
+                            endIdx++;
+                        }
+                        
+                        let body = block.substring(startIdx, endIdx - 1).trim();
+                        body = body.replace(/return DC;\s*$/, '').trim(); // 자동 리턴문 제거
+                        
+                        buff.events[ev.id].actions = parseBodyToActions(body);
+                    }
+                });
+                
+                newBuffs.push(buff);
+            }
+            
+            if (newBuffs.length > 0) {
+                buffCollection = newBuffs;
+                saveData();
+                currentIndex = 0;
+                renderAll();
+                alert(`성공적으로 ${newBuffs.length}개의 버프를 불러왔습니다!`);
+            } else {
+                alert('파싱할 버프 클래스를 찾지 못했습니다.');
+            }
+        }
+
+        // C# 본문 -> UI 액션 역어셈블러
+        function parseBodyToActions(body) {
+            if (!body) return [];
+            const actions = [];
+            const lines = body.split('\n');
+            let customBlock = [];
+            
+            function flushCustom() {
+                if (customBlock.length > 0) {
+                    actions.push({ type: 'Custom', code: customBlock.join('\n').trim() });
+                    customBlock = [];
+                }
+            }
+
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i].trim();
+                if (!line) continue;
+                
+                // 1. RemoveThis
+                if (line === "owner.RemoveBuff(this);") {
+                    flushCustom(); actions.push({ type: 'RemoveThis' }); continue;
+                }
+                // 2. BaseCall
+                const baseMatch = line.match(/^base\.(\w+)\((.*)\);$/);
+                if (baseMatch) {
+                    flushCustom(); actions.push({ type: 'BaseCall' }); continue;
+                }
+                // 3. StatChange (Gain/Consume)
+                const statMatch = line.match(/^(owner|caster|DC\.Target|DC\.Attacker)\.(Gain|Consume)\("([^"]+)",\s*([^)]+)\);$/);
+                if (statMatch) {
+                    flushCustom(); 
+                    actions.push({ type: 'StatChange', target: statMatch[1], op: statMatch[2], stat: statMatch[3], val: statMatch[4] }); 
+                    continue;
+                }
+                // 4. DCModify
+                const dcMatch = line.match(/^DC\.(PlusDamage|PercentDamage|Damage)\s*(\+=|-=|\*|=|)\s*([^;]+);$/);
+                if (dcMatch) {
+                    flushCustom();
+                    actions.push({ type: 'DCModify', field: dcMatch[1], op: dcMatch[2], val: dcMatch[3] });
+                    continue;
+                }
+                // 5. AddBuff
+                const addBuffMatch = line.match(/^(owner|caster|DC\.Target|DC\.Attacker)\.AddBuff\(new\s+(\w+)\(([^,]+),\s*([^,]+),\s*([^)]+)\)\);$/);
+                if (addBuffMatch) {
+                    flushCustom();
+                    actions.push({ type: 'AddBuff', target: addBuffMatch[1], buffClass: addBuffMatch[2], caster: addBuffMatch[4].trim(), stack: addBuffMatch[5].trim() });
+                    continue;
+                }
+                // 6. IfCondition
+                const ifMatch = line.match(/^if\s*\((owner|caster|DC\.Target|DC\.Attacker)\.CValue\("([^"]+)"\)\s*(>|>=|==|<=|<|!=)\s*([^)]+)\)\s*\{?$/);
+                if (ifMatch) {
+                    flushCustom();
+                    actions.push({ type: 'IfCondition', target: ifMatch[1], stat: ifMatch[2], op: ifMatch[3], val: ifMatch[4] });
+                    continue;
+                }
+                // (여는 중괄호 무시: IfCondition 직후에 나오는 { )
+                if (line === "{") {
+                    if (customBlock.length === 0 && actions.length > 0 && actions[actions.length - 1].type === 'IfCondition') {
+                        continue; 
+                    }
+                }
+                // 7. EndIf
+                if (line === "}") {
+                    flushCustom();
+                    actions.push({ type: 'EndIf' });
+                    continue;
+                }
+                
+                // 매칭 안 되는건 커스텀으로
+                customBlock.push(line);
+            }
+            flushCustom();
+            return actions;
+        }
+
+        // --- 6. 사용자 이벤트 라우팅 ---
         document.addEventListener('input', e => {
             if(e.target.matches('[data-bind]')) {
                 buffCollection[currentIndex][e.target.getAttribute('data-bind')] = e.target.type === 'number' ? parseInt(e.target.value) || 0 : e.target.value;
-                saveData();
-                renderBuffList();
-                renderCode();
+                saveData(); renderBuffList(); renderCode();
             }
         });
         document.addEventListener('change', e => {
             if(e.target.matches('select[data-bind]')) {
                 buffCollection[currentIndex][e.target.getAttribute('data-bind')] = e.target.value;
-                saveData();
-                renderCode();
+                saveData(); renderCode();
             }
         });
 
@@ -450,13 +611,11 @@
             const num = buffCollection.length + 1;
             buffCollection.push(createEmptyBuff(`NewBuff${num}`, `새 버프 ${num}`));
             currentIndex = buffCollection.length - 1;
-            saveData();
-            renderAll();
+            saveData(); renderAll();
         }
 
         window.selectBuff = function(idx) {
-            currentIndex = idx;
-            renderAll();
+            currentIndex = idx; renderAll();
         }
 
         window.deleteCurrentBuff = function() {
@@ -464,8 +623,7 @@
             if(!confirm('현재 편집 중인 버프를 삭제하시겠습니까?')) return;
             buffCollection.splice(currentIndex, 1);
             currentIndex = Math.max(0, currentIndex - 1);
-            saveData();
-            renderAll();
+            saveData(); renderAll();
         }
 
         window.toggleEvent = function(id) {
@@ -479,6 +637,7 @@
             else if (type === 'IfCondition') act = { ...act, target: 'owner', stat: 'SD', op: '>', val: '0' };
             else if (type === 'AddBuff') act = { ...act, target: 'owner', buffClass: 'Power_1T', caster: 'caster', stack: '1' };
             else if (type === 'DCModify') act = { ...act, field: 'PlusDamage', op: '+=', val: '1' };
+            else if (type === 'BaseCall') act = { ...act };
             else if (type === 'Custom') act = { ...act, code: "// 직접 입력" };
             
             buffCollection[currentIndex].events[id].actions.push(act);
@@ -499,32 +658,23 @@
             viewMode = mode; renderCode();
         }
 
-        window.resetData = function() {
-            if(!confirm('모든 데이터가 삭제됩니다. 계속하시겠습니까?')) return;
-            localStorage.removeItem('buffMakerData_v2');
-            buffCollection = []; initApp();
-        }
-
         window.toggleMobileCode = function() {
             const panel = document.getElementById('code-viewer-panel');
             if(panel.classList.contains('hidden')) {
-                panel.classList.remove('hidden');
-                panel.classList.add('flex');
+                panel.classList.remove('hidden'); panel.classList.add('flex');
             } else {
-                panel.classList.add('hidden');
-                panel.classList.remove('flex');
+                panel.classList.add('hidden'); panel.classList.remove('flex');
             }
         }
 
         window.copyAndOpenGitHub = function() {
             const code = generateFullFileString();
             navigator.clipboard.writeText(code).then(() => {
-                alert('✨ [1단계 완료] 전체 코드가 클립보드에 복사되었습니다!\n\n이제 자동으로 GitHub 수정 페이지가 열립니다.\n화면의 기존 코드를 [전체 선택(Ctrl+A)] 한 뒤, [붙여넣기(Ctrl+V)] 하시고 Commit을 누르시면 됩니다.');
-                // GitHub 편집 페이지 URL (주의: 로그인되어 있어야 정상 작동합니다)
-                window.open('https://github.com/namwoo321-a11y/cardGame/edit/main/BuffCase.cs', '_blank');
+                alert('✨ 전체 코드가 클립보드에 복사되었습니다!\n\n이제 자동으로 GitHub 수정 페이지가 열립니다.\n[전체 선택(Ctrl+A)] 후 [붙여넣기(Ctrl+V)] 하시고 Commit 버튼을 누르시면 됩니다.');
+                window.open('https://github.com/namwoo321-a11y/cardGame/edit/main/BuffEx.cs', '_blank');
             }).catch(err => {
-                alert('클립보드 복사에 실패했습니다. 수동으로 복사해주세요.');
-                window.open('https://github.com/namwoo321-a11y/cardGame/edit/main/BuffCase.cs', '_blank');
+                alert('클립보드 복사에 실패했습니다. 우측 코드를 직접 복사해주세요.');
+                window.open('https://github.com/namwoo321-a11y/cardGame/edit/main/BuffEx.cs', '_blank');
             });
         }
 
