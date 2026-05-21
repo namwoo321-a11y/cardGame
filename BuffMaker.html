@@ -118,7 +118,7 @@
             <div class="flex justify-between items-center bg-slate-800 px-3 py-2 shrink-0 border-b border-slate-700">
                 <div class="flex gap-2">
                     <button onclick="setViewMode('single')" id="btn-view-single" class="text-xs px-2 py-1 rounded bg-slate-600 text-white font-bold">현재 버프</button>
-                    <button onclick="setViewMode('full')" id="btn-view-full" class="text-xs px-2 py-1 rounded bg-transparent text-slate-400 hover:text-white">전체(BuffCase)</button>
+                    <button onclick="setViewMode('full')" id="btn-view-full" class="text-xs px-2 py-1 rounded bg-transparent text-slate-400 hover:text-white">전체(<span id="target-file-label">BuffCase.cs</span>)</button>
                 </div>
                 <button onclick="toggleMobileCode()" class="md:hidden text-slate-300 hover:text-white">
                     <i data-lucide="x" class="w-5 h-5"></i>
@@ -141,6 +141,9 @@
                 <label class="text-sm font-bold text-slate-700">대상 파일 선택</label>
                 <select id="github-file-select" class="w-full border border-slate-300 rounded p-2 focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-sm bg-slate-50">
                     <option value="BuffCase.cs">BuffCase.cs</option>
+                    <option value="BuffCS.cs">BuffCS.cs</option>
+                    <option value="BuffCS_E_0.cs">BuffCS_E_0.cs</option>
+                    <option value="BuffCS_E_1.cs">BuffCS_E_1.cs</option>
                     <option value="BuffCS_Anima.cs">BuffCS_Anima.cs</option>
                     <option value="BuffCS_El.cs">BuffCS_El.cs</option>
                     <option value="BuffCS_Hana.cs">BuffCS_Hana.cs</option>
@@ -194,22 +197,29 @@
         let buffCollection = [];
         let currentIndex = 0;
         let viewMode = 'single';
+        let currentTargetFile = "BuffCase.cs"; // 현재 연동중인 파일명 보관
 
         // --- 2. 초기화 ---
         function initApp() {
-            const saved = localStorage.getItem('buffMakerData_v12'); // 캐시 충돌 방지를 위해 v12 변경
+            const saved = localStorage.getItem('buffMakerData_v12');
             if (saved) {
                 try { buffCollection = JSON.parse(saved); } catch (e) { buffCollection = []; }
             }
             if (buffCollection.length === 0) {
                 buffCollection.push(createEmptyBuff("NewBuff", "새 버프"));
             }
+            
+            // 저장된 타겟 파일명이 있다면 복구
+            const savedFile = localStorage.getItem('buffMakerTargetFile');
+            if (savedFile) currentTargetFile = savedFile;
+            
             currentIndex = 0;
             renderAll();
         }
 
         function saveData() {
             localStorage.setItem('buffMakerData_v12', JSON.stringify(buffCollection));
+            localStorage.setItem('buffMakerTargetFile', currentTargetFile);
         }
 
         function createEmptyBuff(cName, kName) {
@@ -229,6 +239,7 @@
 
         // --- 3. UI 렌더링 ---
         function renderAll() {
+            document.getElementById('target-file-label').innerText = currentTargetFile;
             renderBuffList();
             renderEditor();
             renderCode();
@@ -517,7 +528,7 @@
 
         function generateFullFileString() {
             let fullCode = `using System;\nusing UnityEngine;\nusing System.Collections.Generic;\nusing System.Linq;\n\n`;
-            fullCode += `/// <summary>\n/// BuffCase Auto Generated\n/// </summary>\n\n`;
+            fullCode += `/// <summary>\n/// BuffCase Auto Generated - ${currentTargetFile}\n/// </summary>\n\n`;
             buffCollection.forEach(buff => { fullCode += generateBuffClassString(buff) + "\n\n"; });
             return fullCode;
         }
@@ -554,6 +565,8 @@
                 const res = await fetch(url + (url.includes('?') ? '&' : '?') + new Date().getTime());
                 if (!res.ok) throw new Error("Network response was not ok");
                 const text = await res.text();
+                
+                currentTargetFile = fileName; // 현재 파일명 업데이트
                 parseBuffCaseCS(text);
             } catch (e) {
                 console.error(e);
@@ -611,12 +624,6 @@
                     leftover = leftover.replace(descMatch[0], '');
                 }
 
-                // ActivatedTurn은 구버전 호환용으로 제거 처리만 진행
-                const actTurnMatch = leftover.match(/public\s+int\s+ActivatedTurn\s*=\s*(\d+);/);
-                if (actTurnMatch) {
-                    leftover = leftover.replace(actTurnMatch[0], '');
-                }
-
                 const ctorRegex = new RegExp(`public\\s+${className}\\s*\\([^)]*\\)\\s*:\\s*base\\([^)]*\\)\\s*(?:\\{[^}]*\\}|\\{\\s*\\})`);
                 const ctorMatch = leftover.match(ctorRegex);
                 if(ctorMatch) leftover = leftover.replace(ctorMatch[0], '');
@@ -658,7 +665,7 @@
                 saveData();
                 currentIndex = 0;
                 renderAll();
-                alert(`성공적으로 ${newBuffs.length}개의 버프를 불러왔습니다!`);
+                alert(`성공적으로 ${newBuffs.length}개의 버프를 [${currentTargetFile}] 에서 불러왔습니다!`);
             } else {
                 alert('파싱할 버프 클래스를 찾지 못했습니다.');
             }
@@ -878,12 +885,13 @@
 
         window.copyAndOpenGitHub = function() {
             const code = generateFullFileString();
+            const editUrl = `https://github.com/namwoo321-a11y/cardGame/edit/main/${currentTargetFile}`;
             navigator.clipboard.writeText(code).then(() => {
-                alert('✨ 전체 코드가 클립보드에 복사되었습니다!\n\n이제 자동으로 GitHub 수정 페이지가 열립니다.\n[전체 선택(Ctrl+A)] 후 [붙여넣기(Ctrl+V)] 하시고 Commit 버튼을 누르시면 됩니다.');
-                window.open('https://github.com/namwoo321-a11y/cardGame/edit/main/BuffCase.cs', '_blank');
+                alert(`✨ 전체 코드가 클립보드에 복사되었습니다!\n\n이제 자동으로 GitHub 수정 페이지[ ${currentTargetFile} ]가 열립니다.\n[전체 선택(Ctrl+A)] 후 [붙여넣기(Ctrl+V)] 하시고 Commit 버튼을 누르시면 됩니다.`);
+                window.open(editUrl, '_blank');
             }).catch(err => {
                 alert('클립보드 복사에 실패했습니다. 우측 코드를 직접 복사해주세요.');
-                window.open('https://github.com/namwoo321-a11y/cardGame/edit/main/BuffCase.cs', '_blank');
+                window.open(editUrl, '_blank');
             });
         }
 
