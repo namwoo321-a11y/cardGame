@@ -52,7 +52,7 @@ public class TSEnerge : Buff
 public class Reflect : Buff
 {
     public override string Bname => "반사";
-    public override string Description => $"피격 | 피해 수치만큼 반사\n턴 종료시 제거";
+    public override string Description => $"피격 | 최대 {stack}만큼 반사 피해 \n턴 종료시 제거";
     public override BuffType BuffType => BuffType.Good;
 
     public Reflect(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
@@ -62,8 +62,7 @@ public class Reflect : Buff
         if (DC.Attacker != null)
         {
             int reflectedDamage = Mathf.Min(stack, DC.GetFinalDamage());
-            DamContext reflectDc = new DamContext(reflectedDamage, DmgT.HP, owner, DC.Attacker);
-            DC.Attacker.ApplyDamage(reflectDc);
+            DC.Attacker.TakeDamage(reflectedDamage);
         }
     }
 
@@ -82,13 +81,12 @@ public class Counter : Buff
 
     public Counter(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
-    public override void AfterDamaged(DamContext dc)
+    public override void AfterDamaged(DamContext DC)
     {
-        if (dc.Attacker != null)
+        if (DC.Attacker != null)
         {
-            int counterDamage = Mathf.Min(stack, dc.GetFinalDamage());
-            DamContext counterDc = new DamContext(counterDamage, DmgT.HP, owner, dc.Attacker);
-            dc.Attacker.ApplyDamage(counterDc);
+            int reflectedDamage = Mathf.Min(stack, DC.DamResult.finalDamage);
+            DC.Attacker.TakeDamage(reflectedDamage);
         }
     }
 

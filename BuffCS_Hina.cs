@@ -95,14 +95,13 @@ public class Cortisol : Buff
     public Cortisol(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
     public override void OnTurnStart()
     {
-        int damage = stack * 3;
-        DamContext K = new(damage, DmgT.HP, owner, owner, true); //
-        owner.ApplyDamage(K);
+        owner.TakeDamage(stack * 3);
+
         if (owner is Ally al)
         {
             if (al.HasCValue("Depress")) { al.AddBuff(new Depress(owner, caster, 1)); }
         }
-        stack /= 2; if (stack <= 0) { owner.RemoveBuff(this); }
+        stack /= 2; StackCheck();
     }
 }
 /// <summary> 엔케팔린 - 턴 시작 | 카드 수치만큼 뽑음, 기쁨 +1 | 이후 1/2 </summary>
@@ -136,8 +135,8 @@ public class Steroid : Buff
     public override BuffType BuffType => BuffType.Good;
     public override void OnTurnEnd()
     {
-        owner.Heal(stack * 4, DmgT.HP);
-        stack--; if (stack <= 0) { owner.RemoveBuff(this); } // [수치--, 0 제거]
+        owner.Heal(stack * 4);
+        stack--; StackCheck(); // [수치--, 0 제거]
     }
 }
 
@@ -468,8 +467,9 @@ public class Berserk : Buff
 
     public override void AfterAttack(DamContext DC)
     {
+        // 자신이 입힌 피해가 저장된 DC. 무슨 효과 가져오기
         // 자신에게 피해 입히기
-        owner.ApplyDamage(new DamContext(DC.GetFinalDamage(), DmgT.HP, owner, owner));
+        owner.TakeDamage(stack);
     }
 
     public override void OnTurnEnd()

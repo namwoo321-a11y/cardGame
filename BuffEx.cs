@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using UnityEngine;
 
 /// <summary>
 /// BuffEx
@@ -64,16 +65,16 @@ public class Power_1T : Buff
     public Power_1T(F_Cha o, F_Cha c, int s) : base(o, c, s) { }
     public override void OnActivate()
     {
-        owner.AddBuff(new Power(owner, caster[^1], stack)); // 마지막 부여자가 사용자.
+        owner.AddBuff(new Power(owner, caster, stack)); // 마지막 부여자가 사용자.
     }
     public override void OnUpdate(int val)
     {
         base.OnUpdate(val);
-        owner.AddBuff(new Power(owner, caster[^1], val)); // 마지막 부여자가 사용자.
+        owner.AddBuff(new Power(owner, caster, val)); // 마지막 부여자가 사용자.
     }
     public override void OnTurnStart()
     {
-        owner.AddBuff(new Power(owner, caster[^1], -stack)); // 마지막 부여자가 사용자.
+        owner.AddBuff(new Power(owner, caster, -stack)); // 마지막 부여자가 사용자.
         owner.RemoveBuff(this); // 효과 종료 시 버프 제거
     }
 }
@@ -88,7 +89,7 @@ public class PowerNT : Buff
     public PowerNT(F_Cha o, F_Cha c, int s) : base(o, c, s) { }
     public override void OnTurnStart()
     {
-        owner.AddBuff(new Power(owner, caster[^1], stack)); // 마지막 부여자가 사용자.
+        owner.AddBuff(new Power(owner, caster, stack)); // 마지막 부여자가 사용자.
         owner.RemoveBuff(this); // 효과 종료 시 버프 제거
     }
 }
@@ -115,9 +116,9 @@ public class Poison : Buff
 
     public override void OnTurnEnd()
     {
-        owner.TakeAddDamage(stack, DamageType.HP, caster, "Poison"); // 스택만큼 데미지
-        stack--; // 스택 1 감소
-        if (stack == 0) { owner.RemoveBuff(this); } // 스택이 0이 되면 버프 제거
+        owner.TakeDamage(stack);
+        stack--;
+        if (stack == 0) { owner.RemoveBuff(this); }
     }
 }
 
@@ -133,9 +134,9 @@ public class Burn : Buff
     public Burn(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
     public override void OnTurnEnd()
     {
-        owner.TakeAddDamage(stack, DamageType.HP, caster, "Burn"); // 스택만큼 데미지
-        stack--; // 스택 1 감소
-        if (stack == 0) { owner.RemoveBuff(this); } // 스택이 0이 되면 버프 제거
+        owner.TakeDamage(stack);
+        stack--;
+        if (stack == 0) { owner.RemoveBuff(this); }
     }
 }
 
@@ -149,9 +150,9 @@ public class Bleed : Buff
     public Bleed(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
     public override void OnTurnEnd()
     {
-        owner.TakeAddDamage(stack, DamageType.HP, caster, "Bleed");
+        owner.TakeDamage(stack);
         owner.RemoveBuff(this);
-    } // 스택만큼 데미지
+    }
 }
 
 // 턴 시작 시 피해, 피격 시 피해 및 스택 증가
@@ -167,7 +168,7 @@ public class Hurt : Buff
     {
         if (stack > 0)
         {
-            owner.AddBuff(new Bleed(owner, caster[^1], stack)); // 마지막 부여자가 사용자.
+            owner.AddBuff(new Bleed(owner, caster, stack)); // 마지막 부여자가 사용자.
             owner.Consume(this, stack / 2); // 수치의 절반만큼 스택 감소")
         }
         else
@@ -175,11 +176,11 @@ public class Hurt : Buff
             owner.RemoveBuff(this); // 스택이 0이하가 되면 버프 제거
         }
     }
-    public override void AfterDamaged(int damage, F_Cha[] attackers)
+    public override void AfterDamaged(DamContext DC)
     {
         if (stack > 0)
         {
-            owner.AddBuff(new Hurt(owner, caster[^1], 1)); // 마지막 부여자가 사용자.
+            owner.AddBuff(new Hurt(owner, caster, 1)); // 마지막 부여자가 사용자.
         }
     }
 }

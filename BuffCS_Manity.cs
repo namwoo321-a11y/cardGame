@@ -107,9 +107,7 @@ public class CounterUp : Buff
 
     public override void AfterDamaged(DamContext DC)
     {
-        int counterDamage = Mathf.Min(stack, DC.Damage);
-        DamContext A = new(counterDamage, DmgT.HP,owner,DC.Attacker);
-        DC.Attacker.ApplyDamage(A);
+        DC.Attacker.TakeDamage(stack);
 
         // 효과 발동 후: 내구도 감소 시도
         TryDecreaseEquipmentDurability();
@@ -326,7 +324,7 @@ public class CounterReflect : Buff
     public override void AfterDamaged(DamContext DC)
     {
         int reflectedDamage = Mathf.Min(stack, DC.Damage);
-        DC.Attacker.TakeDamage(reflectedDamage, DmgT.HP, owner);
+        DC.Attacker.TakeDamage(reflectedDamage);
 
     }
 
