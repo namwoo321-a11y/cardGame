@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unity Buff Code Maker (Clean Block UI)</title>
+    <title>Unity Buff Code Maker (Dynamic Layout & Sort)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -12,6 +12,8 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         .code-panel::-webkit-scrollbar-thumb { background: #475569; }
+        /* 텍스트 영역 부드러운 높이 전환 */
+        textarea { transition: height 0.1s ease-in-out; }
     </style>
 </head>
 <body class="bg-slate-100 h-screen w-screen overflow-hidden flex flex-col font-sans text-sm md:text-base relative">
@@ -23,8 +25,8 @@
             <h1 class="text-lg md:text-xl font-bold tracking-wide">Buff Code Maker</h1>
         </div>
         <div class="flex gap-2">
-            <!-- GitHub에서 불러오기 버튼 -->
-            <button onclick="fetchFromGitHub()" class="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1.5 md:px-3 md:py-1.5 rounded text-xs md:text-sm font-bold transition shadow">
+            <!-- GitHub에서 불러오기 버튼 (모달 연결) -->
+            <button onclick="openGitHubModal()" class="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1.5 md:px-3 md:py-1.5 rounded text-xs md:text-sm font-bold transition shadow">
                 <i data-lucide="cloud-download" class="w-4 h-4"></i> <span class="hidden md:inline">GitHub에서 불러오기</span><span class="md:hidden">불러오기</span>
             </button>
 
@@ -69,16 +71,16 @@
                     </button>
                 </div>
 
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div class="col-span-2 md:col-span-1">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">Class Name (영문)</label>
                         <input type="text" id="inp-className" data-bind="className" placeholder="예: Prote_A" class="w-full border border-slate-300 rounded p-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
                     </div>
-                    <div class="col-span-2 md:col-span-1">
+                    <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">BnameKR (인게임 명칭)</label>
                         <input type="text" id="inp-bNameKR" data-bind="bNameKR" placeholder="예: 자세 - 공세" class="w-full border border-slate-300 rounded p-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
                     </div>
-                    <div class="col-span-2 md:col-span-1">
+                    <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">BuffType</label>
                         <select id="inp-buffType" data-bind="buffType" class="w-full border border-slate-300 rounded p-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
                             <option value="Good">Good (긍정)</option>
@@ -89,17 +91,14 @@
                             <option value="Custom">Custom (코드 지정)</option>
                         </select>
                     </div>
-                    <div class="col-span-2 md:col-span-1">
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">ActivatedTurn (지속 턴)</label>
-                        <input type="number" id="inp-activatedTurn" data-bind="activatedTurn" placeholder="0이면 사용안함" class="w-full border border-slate-300 rounded p-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <div class="md:col-span-3">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Description (설명 툴팁 - 최대 3줄)</label>
+                        <!-- 최대 3줄까지만 입력되도록 제한 추가 -->
+                        <textarea id="inp-description" data-bind="description" class="w-full border border-slate-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none font-mono text-xs md:text-sm resize-none" rows="3" placeholder="예: 힘 +{stack}&#10;턴 종료시 제거" onkeydown="if(event.key === 'Enter' && this.value.split('\n').length >= 3) event.preventDefault();"></textarea>
                     </div>
-                    <div class="col-span-2 md:col-span-4">
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Description (설명 툴팁)</label>
-                        <textarea id="inp-description" data-bind="description" class="w-full border border-slate-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none font-mono text-xs md:text-sm" rows="2" placeholder="예: 힘 +{stack}\n턴 종료시 제거"></textarea>
-                    </div>
-                    <div class="col-span-2 md:col-span-4">
+                    <div class="md:col-span-3">
                         <label class="block text-xs font-semibold text-slate-600 mb-1">클래스 내부 전역 코드 (변수 등)</label>
-                        <textarea id="inp-classCustomCode" data-bind="classCustomCode" class="w-full border border-slate-300 rounded p-2 bg-slate-800 text-emerald-400 outline-none font-mono text-xs md:text-sm" rows="2" placeholder="예: private int damageThisTurn = 0;"></textarea>
+                        <textarea id="inp-classCustomCode" data-bind="classCustomCode" class="w-full border border-slate-300 rounded p-2 bg-slate-800 text-emerald-400 outline-none font-mono text-xs md:text-sm resize-y" placeholder="예: private int damageThisTurn = 0;" oninput="this.rows = Math.max(2, this.value.split('\n').length);"></textarea>
                     </div>
                 </div>
             </section>
@@ -130,6 +129,36 @@
             </div>
         </div>
     </main>
+
+    <!-- GitHub 리스트 불러오기 모달 -->
+    <div id="github-modal" class="hidden fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm flex flex-col">
+            <div class="p-4 border-b border-slate-200 font-bold text-lg flex justify-between items-center bg-slate-50 rounded-t-lg">
+                <span class="flex items-center gap-2"><i data-lucide="cloud-download" class="w-5 h-5 text-indigo-600"></i> GitHub 파일 불러오기</span>
+                <button onclick="closeGitHubModal()" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-4 flex flex-col gap-3">
+                <label class="text-sm font-bold text-slate-700">대상 파일 선택</label>
+                <select id="github-file-select" class="w-full border border-slate-300 rounded p-2 focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-sm bg-slate-50">
+                    <option value="BuffCase.cs">BuffCase.cs</option>
+                    <option value="BuffCS_Anima.cs">BuffCS_Anima.cs</option>
+                    <option value="BuffCS_El.cs">BuffCS_El.cs</option>
+                    <option value="BuffCS_Hana.cs">BuffCS_Hana.cs</option>
+                    <option value="BuffCS_Hina.cs">BuffCS_Hina.cs</option>
+                    <option value="BuffCS_Kira.cs">BuffCS_Kira.cs</option>
+                    <option value="BuffCS_Manity.cs">BuffCS_Manity.cs</option>
+                    <option value="BuffCS_Prote.cs">BuffCS_Prote.cs</option>
+                    <option value="BuffCS_UG.cs">BuffCS_UG.cs</option>
+                    <option value="BuffCS_Whai.cs">BuffCS_Whai.cs</option>
+                </select>
+                <p class="text-xs text-red-500 font-semibold mt-2">※ 주의: 불러올 경우 현재 작성 중인 목록이 모두 덮어씌워집니다.</p>
+            </div>
+            <div class="p-4 border-t border-slate-200 flex justify-end gap-2 bg-slate-50 rounded-b-lg">
+                <button onclick="closeGitHubModal()" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded hover:bg-slate-100 font-bold text-sm">취소</button>
+                <button onclick="confirmGitHubImport()" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 font-bold text-sm">불러오기</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // --- 1. 상수 및 데이터 구조 ---
@@ -168,7 +197,7 @@
 
         // --- 2. 초기화 ---
         function initApp() {
-            const saved = localStorage.getItem('buffMakerData_v7');
+            const saved = localStorage.getItem('buffMakerData_v12'); // 캐시 충돌 방지를 위해 v12 변경
             if (saved) {
                 try { buffCollection = JSON.parse(saved); } catch (e) { buffCollection = []; }
             }
@@ -180,7 +209,7 @@
         }
 
         function saveData() {
-            localStorage.setItem('buffMakerData_v7', JSON.stringify(buffCollection));
+            localStorage.setItem('buffMakerData_v12', JSON.stringify(buffCollection));
         }
 
         function createEmptyBuff(cName, kName) {
@@ -191,7 +220,6 @@
                 description: "",
                 buffType: "Good",
                 customBuffTypeStr: "",
-                activatedTurn: 0,
                 classCustomCode: "",
                 events: {}
             };
@@ -205,6 +233,11 @@
             renderEditor();
             renderCode();
             lucide.createIcons();
+            
+            const globalCodeArea = document.getElementById('inp-classCustomCode');
+            if(globalCodeArea && globalCodeArea.value) {
+                globalCodeArea.rows = Math.max(2, globalCodeArea.value.split('\n').length);
+            }
         }
 
         function renderBuffList() {
@@ -233,7 +266,6 @@
             } else {
                 document.getElementById('inp-buffType').value = buff.buffType || "Good";
             }
-            document.getElementById('inp-activatedTurn').value = buff.activatedTurn || 0;
             document.getElementById('inp-description').value = buff.description || "";
             document.getElementById('inp-classCustomCode').value = buff.classCustomCode || "";
 
@@ -257,17 +289,19 @@
                     html += `<div class="p-2 md:p-4 pt-0 border-t border-slate-100 bg-slate-50/50 rounded-b-lg">`;
                     html += `<div class="space-y-1 mt-2">`;
                     evData.actions.forEach((act, idx) => {
-                        html += renderAction(ev.id, idx, act);
+                        html += renderAction(ev.id, idx, act, evData.actions.length);
                     });
                     html += `</div>`;
                     
                     html += `
                         <div class="mt-3 flex flex-wrap gap-1.5">
                             <button onclick="addAction('${ev.id}', 'StatChange')" class="bg-teal-50 border border-teal-200 text-teal-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">스탯 증감</button>
-                            <button onclick="addAction('${ev.id}', 'F_ChaMethod')" class="bg-indigo-50 border border-indigo-200 text-indigo-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">F_Cha 행동 (Heal 등)</button>
+                            <button onclick="addAction('${ev.id}', 'F_ChaMethod')" class="bg-indigo-50 border border-indigo-200 text-indigo-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">F_Cha 행동</button>
                             <button onclick="addAction('${ev.id}', 'StackChange')" class="bg-fuchsia-50 border border-fuchsia-200 text-fuchsia-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">스택 조작 (+/-)</button>
                             <button onclick="addAction('${ev.id}', 'AddBuff')" class="bg-blue-50 border border-blue-200 text-blue-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">버프 부여</button>
-                            <button onclick="addAction('${ev.id}', 'IfCondition')" class="bg-amber-50 border border-amber-200 text-amber-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">조건문 (If)</button>
+                            <button onclick="addAction('${ev.id}', 'IfCondition')" class="bg-amber-50 border border-amber-200 text-amber-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">If</button>
+                            <button onclick="addAction('${ev.id}', 'ElseIfCondition')" class="bg-amber-50 border border-amber-200 text-amber-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">else if</button>
+                            <button onclick="addAction('${ev.id}', 'ElseCondition')" class="bg-amber-50 border border-amber-200 text-amber-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">else</button>
                             <button onclick="addAction('${ev.id}', 'EndIf')" class="bg-amber-50 border border-amber-200 text-amber-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">조건 닫기 (})</button>
                             <button onclick="addAction('${ev.id}', 'RemoveThis')" class="bg-red-50 border border-red-200 text-red-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">자신 제거</button>
                             <button onclick="addAction('${ev.id}', 'Custom')" class="bg-slate-800 text-white px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">C# 커스텀</button>
@@ -281,7 +315,7 @@
             document.getElementById('event-list-container').innerHTML = html;
         }
 
-        function renderAction(eventId, idx, act) {
+        function renderAction(eventId, idx, act, totalLen = 0) {
             let inner = '';
             
             if(act.type === 'StatChange') {
@@ -301,7 +335,7 @@
                 `;
             } else if(act.type === 'F_ChaMethod') {
                 const targets = ['owner', 'caster', 'DC.Target', 'DC.Attacker'].map(t => `<option ${act.target===t?'selected':''}>${t}</option>`).join('');
-                const methods = ['Heal', 'ApplyDamage', 'TakeDamage', 'DrawCard', 'DiscardCard', 'RemoveCard'].map(t => `<option ${act.method===t?'selected':''}>${t}</option>`).join('');
+                const methods = ['TakeDamage', 'Heal', 'DrawCard'].map(t => `<option ${act.method===t?'selected':''}>${t}</option>`).join('');
                 inner = `
                     <select onchange="updateAction('${eventId}', ${idx}, 'target', this.value)" class="bg-transparent p-1 text-[10px] md:text-xs rounded border border-slate-300">${targets}</select>
                     <span class="text-slate-500 font-bold">.</span>
@@ -324,6 +358,16 @@
                     <input type="text" oninput="updateAction('${eventId}', ${idx}, 'condition', this.value)" value="${act.condition}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded flex-1 min-w-[150px] font-mono outline-none focus:ring-1 focus:ring-amber-500" placeholder="조건식 자유 입력 (예: stack > 0)">
                     <span class="text-amber-700 font-mono text-[10px] md:text-xs font-bold">) {</span>
                 `;
+            } else if(act.type === 'ElseIfCondition') {
+                inner = `
+                    <span class="text-amber-700 font-mono text-[10px] md:text-xs font-bold">} else if (</span>
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'condition', this.value)" value="${act.condition}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded flex-1 min-w-[150px] font-mono outline-none focus:ring-1 focus:ring-amber-500" placeholder="조건식 (예: owner.name == &quot;El&quot;)">
+                    <span class="text-amber-700 font-mono text-[10px] md:text-xs font-bold">) {</span>
+                `;
+            } else if(act.type === 'ElseCondition') {
+                inner = `
+                    <span class="text-amber-700 font-mono text-[10px] md:text-xs font-bold">} else {</span>
+                `;
             } else if(act.type === 'EndIf') {
                 inner = `<span class="text-amber-700 font-mono text-[10px] md:text-xs font-bold">}</span>`;
             } else if(act.type === 'AddBuff') {
@@ -342,37 +386,40 @@
             } else if(act.type === 'DCModify') {
                 const fields = ['PlusDamage', 'PercentDamage', 'Damage', 'FixDamage'].map(t => `<option ${act.field===t?'selected':''}>${t}</option>`).join('');
                 const ops = ['+=', '-=', '*=', '/=', '='].map(t => `<option ${act.op===t?'selected':''}>${t}</option>`).join('');
+                let valLen = act.val ? act.val.length : 1;
+                
                 inner = `
                     <span class="font-mono text-[10px] md:text-xs font-bold text-purple-700">DC.</span>
                     <select onchange="updateAction('${eventId}', ${idx}, 'field', this.value)" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded">${fields}</select>
                     <select onchange="updateAction('${eventId}', ${idx}, 'op', this.value)" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded font-bold">${ops}</select>
-                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'val', this.value)" value="${act.val}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded w-16 font-mono">
+                    <input type="text" oninput="this.style.width = Math.max(8, this.value.length + 4) + 'ch'; updateAction('${eventId}', ${idx}, 'val', this.value)" value="${act.val}" style="width: ${Math.max(8, valLen + 4)}ch;" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded font-mono outline-none focus:ring-1 focus:ring-purple-500" placeholder="값">
                     <span class="text-slate-500 font-bold">;</span>
                 `;
             } else if(act.type === 'RemoveThis') {
                 inner = `<span class="font-mono text-[10px] md:text-xs text-red-600 font-semibold">owner.RemoveBuff(this);</span>`;
             } else if(act.type === 'Custom') {
-                inner = `<textarea oninput="updateAction('${eventId}', ${idx}, 'code', this.value)" class="w-full border border-slate-700 rounded p-2 font-mono text-[11px] md:text-xs bg-slate-800 text-emerald-400 outline-none" rows="2">${act.code}</textarea>`;
+                let codeLines = act.code ? act.code.split('\n').length : 2;
+                inner = `<textarea oninput="this.rows = Math.max(2, this.value.split('\\n').length); updateAction('${eventId}', ${idx}, 'code', this.value)" class="w-full border border-slate-700 rounded p-2 font-mono text-[11px] md:text-xs bg-slate-800 text-emerald-400 outline-none resize-y" rows="${Math.max(2, codeLines)}">${act.code}</textarea>`;
             } else if(act.type === 'BaseCall') {
                 inner = `<span class="font-mono text-[10px] md:text-xs text-indigo-600 font-semibold">base.${eventId}(${eventId === 'OnUpdate' ? 'val' : ''});</span>`;
             }
 
-            // 요청에 따라 흰색 글자가 들어가는 뱃지(span) 영역을 완전히 제거하고 순수 코드 블록 느낌으로 통일
             return `
-            <div class="flex flex-col md:flex-row items-start md:items-center gap-1.5 md:gap-2 bg-white p-1.5 md:p-2 rounded border border-slate-200 relative group pr-8">
+            <div class="flex flex-col md:flex-row items-start md:items-center gap-1.5 md:gap-2 bg-white p-1.5 md:p-2 rounded border border-slate-200 relative group pr-24">
                 <div class="flex-1 flex flex-wrap items-center gap-1 w-full">
                     ${inner}
                 </div>
-                <button onclick="removeAction('${eventId}', ${idx})" class="absolute right-2 top-2 text-slate-300 hover:text-red-500">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
+                <div class="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white pl-2 py-1 rounded">
+                    ${idx > 0 ? `<button onclick="moveAction('${eventId}', ${idx}, -1)" class="text-slate-400 hover:text-blue-500 p-1" title="위로 이동"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>` : `<div class="w-6"></div>`}
+                    ${idx < totalLen - 1 ? `<button onclick="moveAction('${eventId}', ${idx}, 1)" class="text-slate-400 hover:text-blue-500 p-1" title="아래로 이동"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>` : `<div class="w-6"></div>`}
+                    <button onclick="removeAction('${eventId}', ${idx})" class="text-slate-400 hover:text-red-500 p-1" title="삭제"><i data-lucide="x" class="w-4 h-4"></i></button>
+                </div>
             </div>
             `;
         }
 
         // --- 4. 코드 생성 (Generator) ---
         function generateBuffClassString(buff) {
-            let descStr = (buff.description || "").replace(/\n/g, '\\n');
             let className = buff.className || "UnknownBuff";
             
             let code = `public class ${className} : Buff\n{\n`;
@@ -387,29 +434,40 @@
             if (buff.bNameKR) {
                 code += `    public override string BnameKR => "${buff.bNameKR}";\n`;
             }
-            code += `    public override string Description => $"${descStr}";\n`;
-
-            if (buff.activatedTurn && buff.activatedTurn > 0) {
-                code += `    public int ActivatedTurn;\n`;
+            
+            // Description (최대 3줄) 다중 보간 포맷팅 로직
+            let descLines = (buff.description || "").split('\n').slice(0, 3);
+            if (descLines.length === 0 || (descLines.length === 1 && descLines[0] === "")) {
+                code += `    public override string Description => "";\n`;
+            } else if (descLines.length === 1) {
+                code += `    public override string Description => $"${descLines[0]}";\n`;
+            } else {
+                code += `    public override string Description => $"${descLines[0]}" +\n`;
+                for (let i = 1; i < descLines.length; i++) {
+                    let terminator = (i === descLines.length - 1) ? '";\n' : '" +\n';
+                    code += `        $"\\n${descLines[i]}${terminator}`;
+                }
             }
+
             code += `\n`;
 
-            // 클래스 커스텀 코드 삽입
             if (buff.classCustomCode && buff.classCustomCode.trim() !== "") {
                 code += buff.classCustomCode.trim().split('\n').map(l => `    ${l}`).join('\n') + `\n\n`;
             }
 
-            code += `    public ${className}(F_Cha target, F_Cha user, int s) : base(target, user, s) \n    {\n`;
-            if (buff.activatedTurn && buff.activatedTurn > 0) {
-                code += `        ActivatedTurn = ${buff.activatedTurn};\n`;
-            }
-            code += `    }\n\n`;
+            // 생성자를 한 줄로 깔끔하게 처리
+            code += `    public ${className}(F_Cha target, F_Cha user, int s) : base(target, user, s) { }\n\n`;
 
             EVENT_DEF.forEach(ev => {
                 const evData = buff.events[ev.id];
                 if(evData && evData.active) {
                     code += `    ${EVENT_SIGNATURES[ev.id]}\n`;
                     let indentLvl = 2;
+
+                    // OnUpdate는 무조건 base 고정 추가
+                    if (ev.id === 'OnUpdate') {
+                        code += `        base.OnUpdate(val);\n`;
+                    }
 
                     evData.actions.forEach(act => {
                         let line = "";
@@ -422,6 +480,14 @@
                         else if(act.type === 'StackChange') line = (act.op === '++' || act.op === '--') ? `stack${act.op};` : `stack ${act.op} ${act.val};`;
                         else if(act.type === 'AddBuff') line = `${act.target}.AddBuff(new ${act.buffClass}(${act.target}, ${act.caster}, ${act.stack}));`;
                         else if(act.type === 'IfCondition') { line = `if (${act.condition})\n${indentStr}{`; }
+                        else if(act.type === 'ElseIfCondition') { 
+                            indentLvl = Math.max(2, indentLvl - 1); 
+                            line = `} else if (${act.condition})\n${"    ".repeat(indentLvl)}{`; 
+                        }
+                        else if(act.type === 'ElseCondition') { 
+                            indentLvl = Math.max(2, indentLvl - 1); 
+                            line = `} else\n${"    ".repeat(indentLvl)}{`; 
+                        }
                         else if(act.type === 'EndIf') { line = `}`; }
                         else if(act.type === 'RemoveThis') line = `owner.RemoveBuff(this);`;
                         else if(act.type === 'DCModify') line = `DC.${act.field} ${act.op} ${act.val};`;
@@ -429,14 +495,14 @@
                         else if(act.type === 'Custom') line = act.code;
                         
                         line.split('\n').forEach((l, idx) => { 
-                            if(act.type === 'IfCondition' && idx === 1) {
+                            if((act.type === 'IfCondition' || act.type === 'ElseIfCondition' || act.type === 'ElseCondition') && idx === 1) {
                                 code += `${l}\n`;
                             } else {
                                 code += `${indentStr}${l}\n`; 
                             }
                         });
 
-                        if(act.type === 'IfCondition') { indentLvl += 1; }
+                        if(act.type === 'IfCondition' || act.type === 'ElseIfCondition' || act.type === 'ElseCondition') { indentLvl += 1; }
                     });
 
                     if(RETURN_STATEMENTS[ev.id]) {
@@ -469,12 +535,21 @@
         }
 
         // --- 5. 코드 가져오기 (Advanced Parser) ---
-        async function fetchFromGitHub() {
-            const url = prompt("불러올 C# 파일의 URL (GitHub Raw 등)을 입력하세요.", "https://raw.githubusercontent.com/namwoo321-a11y/cardGame/main/BuffCase.cs");
-            if(!url) return;
+        function openGitHubModal() {
+            document.getElementById('github-modal').classList.remove('hidden');
+        }
 
-            if(!confirm('코드를 가져오면 현재 작성 중인 목록이 모두 덮어씌워집니다.\n진행하시겠습니까?')) return;
+        function closeGitHubModal() {
+            document.getElementById('github-modal').classList.add('hidden');
+        }
+
+        async function confirmGitHubImport() {
+            const fileName = document.getElementById('github-file-select').value;
+            const baseUrl = "https://raw.githubusercontent.com/namwoo321-a11y/cardGame/main/";
+            const url = baseUrl + fileName;
             
+            closeGitHubModal();
+
             try {
                 const res = await fetch(url + (url.includes('?') ? '&' : '?') + new Date().getTime());
                 if (!res.ok) throw new Error("Network response was not ok");
@@ -525,19 +600,24 @@
                     leftover = leftover.replace(buffTypeMatch[0], '');
                 }
 
-                const descMatch = leftover.match(/public\s+override\s+string\s+Description\s*=>\s*\$?"([^]*?)";/);
+                const descMatch = leftover.match(/public\s+override\s+string\s+Description\s*=>\s*([^;]+);/);
                 if (descMatch) {
-                    buff.description = descMatch[1].replace(/\\n/g, '\n').replace(/"\s*\+\s*\$?"/g, ''); 
+                    let raw = descMatch[1];
+                    let cleaned = raw.replace(/\$?"/g, '') 
+                                     .replace(/\+/g, '') 
+                                     .replace(/\\n/g, '\n') 
+                                     .split('\n').map(l => l.trim()).filter(l => l).join('\n'); 
+                    buff.description = cleaned;
                     leftover = leftover.replace(descMatch[0], '');
                 }
 
+                // ActivatedTurn은 구버전 호환용으로 제거 처리만 진행
                 const actTurnMatch = leftover.match(/public\s+int\s+ActivatedTurn\s*=\s*(\d+);/);
                 if (actTurnMatch) {
-                    buff.activatedTurn = parseInt(actTurnMatch[1]);
                     leftover = leftover.replace(actTurnMatch[0], '');
                 }
 
-                const ctorRegex = new RegExp(`public\\s+${className}\\s*\\([^)]*\\)\\s*:\\s*base\\([^)]*\\)\\s*\\{[^}]*\\}`);
+                const ctorRegex = new RegExp(`public\\s+${className}\\s*\\([^)]*\\)\\s*:\\s*base\\([^)]*\\)\\s*(?:\\{[^}]*\\}|\\{\\s*\\})`);
                 const ctorMatch = leftover.match(ctorRegex);
                 if(ctorMatch) leftover = leftover.replace(ctorMatch[0], '');
 
@@ -606,6 +686,9 @@
                 if (line === "owner.RemoveBuff(this);") {
                     flushCustom(); actions.push({ type: 'RemoveThis' }); continue;
                 }
+                if (line === "base.OnUpdate(val);") { 
+                    continue; 
+                }
                 const baseMatch = line.match(/^base\.(\w+)\((.*)\);$/);
                 if (baseMatch) {
                     flushCustom(); actions.push({ type: 'BaseCall' }); continue;
@@ -616,13 +699,12 @@
                     actions.push({ type: 'StatChange', target: statMatch[1], op: statMatch[2], stat: statMatch[3], val: statMatch[4] }); 
                     continue;
                 }
-                const fchaMatch = line.match(/^(owner|caster|DC\.Target|DC\.Attacker)\.(Heal|DrawCard|DiscardCard|RemoveCard|ApplyDamage|TakeDamage)\((.*)\);$/);
+                const fchaMatch = line.match(/^(owner|caster|DC\.Target|DC\.Attacker)\.(Heal|DrawCard|TakeDamage)\((.*)\);$/);
                 if (fchaMatch) {
                     flushCustom();
                     actions.push({ type: 'F_ChaMethod', target: fchaMatch[1], method: fchaMatch[2], args: fchaMatch[3] });
                     continue;
                 }
-                // 나누기 연산자 에러 수정한 정규식
                 const stackOpMatch = line.match(/^stack\s*(\+=|-=|\*=|\/=|==|=)\s*([^;]+);$/);
                 if (stackOpMatch) {
                     flushCustom();
@@ -635,7 +717,6 @@
                     actions.push({ type: 'StackChange', op: stackIncMatch[1], val: "" });
                     continue;
                 }
-                // 나누기 연산자 에러 수정한 정규식
                 const dcMatch = line.match(/^DC\.(PlusDamage|PercentDamage|Damage|FixDamage)\s*(\+=|-=|\*=|\/=|==|=)\s*([^;]+);$/);
                 if (dcMatch) {
                     flushCustom();
@@ -648,6 +729,33 @@
                     actions.push({ type: 'AddBuff', target: addBuffMatch[1], buffClass: addBuffMatch[2], caster: addBuffMatch[4].trim(), stack: addBuffMatch[5].trim() });
                     continue;
                 }
+                
+                // Else If문 파서
+                const elseIfMatch = line.match(/^(\}?)\s*else\s+if\s*\((.*)\)\s*\{?$/);
+                if (elseIfMatch) {
+                    flushCustom();
+                    if (elseIfMatch[1] === '}') {
+                        if (openIfs > 0) openIfs--;
+                        actions.push({ type: 'EndIf' });
+                    }
+                    actions.push({ type: 'ElseIfCondition', condition: elseIfMatch[2] });
+                    openIfs++;
+                    continue;
+                }
+                
+                // Else문 파서
+                const elseMatch = line.match(/^(\}?)\s*else\s*\{?$/);
+                if (elseMatch) {
+                    flushCustom();
+                    if (elseMatch[1] === '}') {
+                        if (openIfs > 0) openIfs--;
+                        actions.push({ type: 'EndIf' });
+                    }
+                    actions.push({ type: 'ElseCondition' });
+                    openIfs++;
+                    continue;
+                }
+
                 // If문 파서 (자유 조건식)
                 const ifMatch = line.match(/^if\s*\((.*)\)\s*\{?$/);
                 if (ifMatch) {
@@ -657,8 +765,9 @@
                     continue;
                 }
                 
+                // { } 안전 처리
                 if (line === "{") {
-                    if (customBlock.length === 0 && actions.length > 0 && actions[actions.length - 1].type === 'IfCondition') {
+                    if (customBlock.length === 0 && actions.length > 0 && ['IfCondition', 'ElseIfCondition', 'ElseCondition'].includes(actions[actions.length - 1].type)) {
                         continue; 
                     }
                 }
@@ -716,12 +825,25 @@
             saveData(); renderEditor(); renderCode(); lucide.createIcons();
         }
 
+        window.moveAction = function(eventId, idx, dir) {
+            const actions = buffCollection[currentIndex].events[eventId].actions;
+            if (idx + dir < 0 || idx + dir >= actions.length) return; 
+            
+            const temp = actions[idx];
+            actions[idx] = actions[idx + dir];
+            actions[idx + dir] = temp;
+            
+            saveData(); renderEditor(); renderCode(); lucide.createIcons();
+        }
+
         window.addAction = function(id, type) {
             let act = { type };
             if(type === 'StatChange') act = { ...act, target: 'owner', op: 'Gain', stat: 'Power', val: 'stack' };
-            else if (type === 'F_ChaMethod') act = { ...act, target: 'owner', method: 'Heal', args: 'stack * 4, DmgT.HP' };
+            else if (type === 'F_ChaMethod') act = { ...act, target: 'owner', method: 'TakeDamage', args: 'stack * 4, DmgT.HP' };
             else if (type === 'StackChange') act = { ...act, op: '-=', val: '1' };
             else if (type === 'IfCondition') act = { ...act, condition: 'stack > 0' };
+            else if (type === 'ElseIfCondition') act = { ...act, condition: 'stack == 0' };
+            else if (type === 'ElseCondition') act = { ...act };
             else if (type === 'AddBuff') act = { ...act, target: 'owner', buffClass: 'Power_1T', caster: 'caster', stack: '1' };
             else if (type === 'DCModify') act = { ...act, field: 'PlusDamage', op: '+=', val: '1' };
             else if (type === 'BaseCall') act = { ...act };
