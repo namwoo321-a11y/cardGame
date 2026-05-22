@@ -2,9 +2,6 @@ using System;
 
 /// <summary>
 /// BuffEx
-///
-/// GitHub raw 파일 예시로 사용할 수 있는 버프 클래스 모음입니다.
-/// Unity 프로젝트에서 이 파일을 그대로 복사하거나 GitHub raw 주소로 불러와 사용할 수 있습니다.
 /// </summary>
 Public class BuffCS
 {
