@@ -3,40 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unity Buff Code Maker (V16 - Bug Fixed)</title>
+    <title>Unity Buff Code Maker (Dark Mode V17)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .code-panel::-webkit-scrollbar-thumb { background: #475569; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        .code-panel::-webkit-scrollbar-thumb { background: #334155; }
         textarea { transition: height 0.1s ease-in-out; }
     </style>
 </head>
-<body class="bg-slate-100 h-screen w-screen overflow-hidden flex flex-col font-sans text-sm md:text-base relative">
+<body class="bg-slate-950 h-screen w-screen overflow-hidden flex flex-col font-sans text-sm md:text-base text-slate-100 relative">
 
-    <header class="bg-blue-800 text-white p-3 shadow-md flex justify-between items-center z-20 shrink-0">
+    <!-- 상단 헤더 -->
+    <header class="bg-slate-900 border-b border-slate-800 text-white p-3 shadow-md flex justify-between items-center z-20 shrink-0">
         <div class="flex items-center gap-2">
-            <i data-lucide="swords" class="w-5 h-5 md:w-6 md:h-6"></i>
-            <h1 class="text-lg md:text-xl font-bold tracking-wide">Buff Code Maker</h1>
+            <i data-lucide="swords" class="w-5 h-5 md:w-6 md:h-6 text-blue-400"></i>
+            <h1 class="text-lg md:text-xl font-bold tracking-wide text-slate-100">Buff Code Maker</h1>
         </div>
         <div class="flex gap-2">
             <!-- 통합 다운로드 버튼 -->
-            <button onclick="mergeAndDownloadAll(this)" class="flex items-center gap-1 bg-amber-600 hover:bg-amber-500 text-white px-2 py-1.5 md:px-3 md:py-1.5 rounded text-xs md:text-sm font-bold transition shadow" title="모든 파일을 병합하여 1개의 C# 파일로 다운로드합니다.">
+            <button onclick="mergeAndDownloadAll(this)" class="flex items-center gap-1 bg-amber-700 hover:bg-amber-600 text-white px-2 py-1.5 md:px-3 md:py-1.5 rounded text-xs md:text-sm font-bold transition shadow" title="모든 파일을 병합하여 1개의 C# 파일로 다운로드합니다.">
                 <i data-lucide="package-search" class="w-4 h-4"></i> <span class="hidden md:inline">통합 다운로드 (BuffCS.cs)</span><span class="md:hidden">통합 다운로드</span>
             </button>
             <!-- GitHub에서 불러오기 버튼 (모달 연결) -->
-            <button onclick="openGitHubModal()" class="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1.5 md:px-3 md:py-1.5 rounded text-xs md:text-sm font-bold transition shadow">
+            <button onclick="openGitHubModal()" class="flex items-center gap-1 bg-indigo-700 hover:bg-indigo-600 text-white px-2 py-1.5 md:px-3 md:py-1.5 rounded text-xs md:text-sm font-bold transition shadow">
                 <i data-lucide="cloud-download" class="w-4 h-4"></i> <span class="hidden md:inline">GitHub에서 불러오기</span><span class="md:hidden">불러오기</span>
             </button>
             <!-- 모바일 전용 코드 보기 토글 -->
-            <button onclick="toggleMobileCode()" class="md:hidden flex items-center gap-1 bg-slate-700 text-white px-2 py-1.5 rounded text-xs font-bold shadow">
+            <button onclick="toggleMobileCode()" class="md:hidden flex items-center gap-1 bg-slate-800 text-white px-2 py-1.5 rounded text-xs font-bold shadow">
                 <i data-lucide="code-2" class="w-4 h-4"></i> 코드 확인
             </button>
             <!-- GitHub 덮어씌우기 버튼 -->
-            <button onclick="copyAndOpenGitHub()" class="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1.5 md:px-3 md:py-1.5 rounded text-xs md:text-sm font-bold transition shadow">
+            <button onclick="copyAndOpenGitHub()" class="flex items-center gap-1 bg-emerald-700 hover:bg-emerald-600 text-white px-2 py-1.5 md:px-3 md:py-1.5 rounded text-xs md:text-sm font-bold transition shadow">
                 <i data-lucide="github" class="w-4 h-4"></i> <span class="hidden md:inline">코드 복사 및 GitHub 덮어씌우기</span><span class="md:hidden">GitHub 적용</span>
             </button>
         </div>
@@ -44,40 +45,40 @@
 
     <main class="flex flex-1 overflow-hidden relative">
         <!-- 좌측 패널: 버프 리스트 -->
-        <div class="w-24 md:w-64 bg-slate-200 border-r border-slate-300 flex flex-col shrink-0 z-10">
-            <div class="p-2 md:p-3 bg-slate-300 font-bold text-slate-700 flex justify-between items-center text-xs md:text-sm">
+        <div class="w-24 md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 z-10">
+            <div class="p-2 md:p-3 bg-slate-850 font-bold text-slate-300 border-b border-slate-850 flex justify-between items-center text-xs md:text-sm">
                 <span class="hidden md:inline">버프 목록</span>
                 <span class="md:hidden">목록</span>
                 <button onclick="addNewBuff()" class="bg-blue-600 text-white p-1 rounded hover:bg-blue-500 transition" title="새 버프 추가">
                     <i data-lucide="plus" class="w-4 h-4"></i>
                 </button>
             </div>
-            <div id="buff-list" class="flex flex-col overflow-y-auto p-2 gap-2 flex-1"></div>
+            <div id="buff-list" class="flex flex-col overflow-y-auto p-2 gap-2 flex-1 animate-fade-in"></div>
         </div>
 
         <!-- 중앙 패널: 단일 버프 편집기 -->
-        <div id="editor-panel" class="flex-1 h-full overflow-y-auto p-3 md:p-6 space-y-4 md:space-y-6 pb-20">
-            <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+        <div id="editor-panel" class="flex-1 h-full overflow-y-auto p-3 md:p-6 space-y-4 md:space-y-6 pb-20 bg-slate-950">
+            <section class="bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-800">
                 <div class="flex justify-between items-center mb-3">
-                    <h2 class="text-base md:text-lg font-bold text-slate-800 flex items-center gap-2">
-                        <i data-lucide="info" class="w-4 h-4 text-blue-600"></i> 메타 데이터
+                    <h2 class="text-base md:text-lg font-bold text-slate-200 flex items-center gap-2">
+                        <i data-lucide="info" class="w-4 h-4 text-blue-400"></i> 메타 데이터
                     </h2>
-                    <button onclick="deleteCurrentBuff()" class="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 font-bold">
+                    <button onclick="deleteCurrentBuff()" class="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 font-bold">
                         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 이 버프 삭제
                     </button>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Class Name (영문)</label>
-                        <input type="text" id="inp-className" data-bind="className" placeholder="예: Prote_A" class="w-full border border-slate-300 rounded p-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Class Name (영문)</label>
+                        <input type="text" id="inp-className" data-bind="className" placeholder="예: Prote_A" class="w-full bg-slate-850 border border-slate-750 text-slate-100 rounded p-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">BnameKR (인게임 명칭)</label>
-                        <input type="text" id="inp-bNameKR" data-bind="bNameKR" placeholder="예: 자세 - 공세" class="w-full border border-slate-300 rounded p-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">BnameKR (인게임 명칭)</label>
+                        <input type="text" id="inp-bNameKR" data-bind="bNameKR" placeholder="예: 자세 - 공세" class="w-full bg-slate-850 border border-slate-750 text-slate-100 rounded p-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">BuffType</label>
-                        <select id="inp-buffType" data-bind="buffType" class="w-full border border-slate-300 rounded p-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">BuffType</label>
+                        <select id="inp-buffType" data-bind="buffType" class="w-full bg-slate-850 border border-slate-750 text-slate-100 rounded p-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
                             <option value="Good">Good (긍정)</option>
                             <option value="Bad">Bad (부정)</option>
                             <option value="Power">Power (지속)</option>
@@ -87,50 +88,52 @@
                         </select>
                     </div>
                     <div class="md:col-span-3">
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Description (설명 툴팁 - 최대 3줄)</label>
-                        <textarea id="inp-description" data-bind="description" class="w-full border border-slate-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none font-mono text-xs md:text-sm resize-none" rows="3" onkeydown="if(event.key === 'Enter' && this.value.split('\n').length >= 3) event.preventDefault();"></textarea>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Description (설명 툴팁 - 최대 3줄)</label>
+                        <!-- 메타데이터 비주얼 통일: bg-slate-850 border-slate-750 text-slate-100 적용 -->
+                        <textarea id="inp-description" data-bind="description" class="w-full bg-slate-850 border border-slate-750 text-slate-100 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none font-mono text-xs md:text-sm resize-none" rows="3" placeholder="예: 힘 +{stack}&#10;턴 종료시 제거" onkeydown="if(event.key === 'Enter' && this.value.split('\n').length >= 3) event.preventDefault();"></textarea>
                     </div>
                     <div class="md:col-span-3">
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">클래스 내부 전역 코드 (변수 등)</label>
-                        <textarea id="inp-classCustomCode" data-bind="classCustomCode" class="w-full border border-slate-300 rounded p-2 bg-slate-800 text-emerald-400 outline-none font-mono text-xs md:text-sm resize-y" oninput="this.rows = Math.max(2, this.value.split('\n').length);"></textarea>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">클래스 내부 전역 코드 (변수 등)</label>
+                        <textarea id="inp-classCustomCode" data-bind="classCustomCode" class="w-full border border-slate-750 rounded p-2 bg-slate-850 text-emerald-400 outline-none font-mono text-xs md:text-sm resize-y" placeholder="예: private int damageThisTurn = 0;" oninput="this.rows = Math.max(2, this.value.split('\n').length);"></textarea>
                     </div>
                 </div>
             </section>
 
             <section>
-                <h2 class="text-base md:text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
-                    <i data-lucide="zap" class="w-4 h-4 text-amber-500"></i> 발동 로직 설정 (F_Cha 연산 지원)
+                <h2 class="text-base md:text-lg font-bold text-slate-200 mb-3 flex items-center gap-2">
+                    <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i> 발동 로직 설정 (F_Cha 연산 지원)
                 </h2>
                 <div id="event-list-container" class="space-y-2 pb-10"></div>
             </section>
         </div>
 
-        <div id="code-viewer-panel" class="hidden md:flex flex-col absolute inset-0 z-30 md:static md:w-[400px] lg:w-[500px] bg-slate-900 border-l border-slate-700 shrink-0 h-full">
-            <div class="flex justify-between items-center bg-slate-800 px-3 py-2 shrink-0 border-b border-slate-700">
+        <!-- 우측 패널: 코드 뷰어 -->
+        <div id="code-viewer-panel" class="hidden md:flex flex-col absolute inset-0 z-30 md:static md:w-[400px] lg:w-[500px] bg-slate-900 border-l border-slate-800 shrink-0 h-full">
+            <div class="flex justify-between items-center bg-slate-850 px-3 py-2 shrink-0 border-b border-slate-800">
                 <div class="flex gap-2">
-                    <button onclick="setViewMode('single')" id="btn-view-single" class="text-xs px-2 py-1 rounded bg-slate-600 text-white font-bold">현재 버프</button>
+                    <button onclick="setViewMode('single')" id="btn-view-single" class="text-xs px-2 py-1 rounded bg-slate-700 text-white font-bold border border-slate-700">현재 버프</button>
                     <button onclick="setViewMode('full')" id="btn-view-full" class="text-xs px-2 py-1 rounded bg-transparent text-slate-400 hover:text-white">전체(<span id="target-file-label">BuffCS.cs</span>)</button>
                 </div>
                 <button onclick="toggleMobileCode()" class="md:hidden text-slate-300 hover:text-white">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
-            <div class="p-3 overflow-y-auto flex-1 code-panel relative">
+            <div class="p-3 overflow-y-auto flex-1 code-panel relative bg-slate-900">
                 <pre><code id="preview-code" class="text-emerald-400 font-mono text-[11px] md:text-[13px] leading-relaxed break-all whitespace-pre-wrap"></code></pre>
             </div>
         </div>
     </main>
 
     <!-- GitHub 리스트 불러오기 모달 -->
-    <div id="github-modal" class="hidden fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm flex flex-col">
-            <div class="p-4 border-b border-slate-200 font-bold text-lg flex justify-between items-center bg-slate-50 rounded-t-lg">
-                <span class="flex items-center gap-2"><i data-lucide="cloud-download" class="w-5 h-5 text-indigo-600"></i> GitHub 파일 불러오기</span>
-                <button onclick="closeGitHubModal()" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+    <div id="github-modal" class="hidden fixed inset-0 bg-slate-950/70 z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 rounded-lg shadow-xl w-full max-w-sm flex flex-col border border-slate-800">
+            <div class="p-4 border-b border-slate-800 font-bold text-lg flex justify-between items-center bg-slate-850 rounded-t-lg">
+                <span class="flex items-center gap-2"><i data-lucide="cloud-download" class="w-5 h-5 text-indigo-400"></i> GitHub 파일 불러오기</span>
+                <button onclick="closeGitHubModal()" class="text-slate-400 hover:text-slate-200"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <div class="p-4 flex flex-col gap-3">
-                <label class="text-sm font-bold text-slate-700">대상 파일 선택 (Buffs/ 폴더)</label>
-                <select id="github-file-select" class="w-full border border-slate-300 rounded p-2 focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-sm bg-slate-50">
+                <label class="text-sm font-bold text-slate-700 text-slate-300">대상 파일 선택 (Buffs/ 폴더)</label>
+                <select id="github-file-select" class="w-full border border-slate-750 rounded p-2 focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-sm bg-slate-850 text-slate-200">
                     <option value="BuffCS.cs">BuffCS.cs</option>
                     <option value="BuffCS_E_0.cs">BuffCS_E_0.cs</option>
                     <option value="BuffCS_E_1.cs">BuffCS_E_1.cs</option>
@@ -144,10 +147,10 @@
                     <option value="BuffCS_UG.cs">BuffCS_UG.cs</option>
                     <option value="BuffCS_Whai.cs">BuffCS_Whai.cs</option>
                 </select>
-                <p class="text-xs text-red-500 font-semibold mt-2">※ 주의: 불러올 경우 현재 작성 중인 목록이 모두 덮어씌워집니다.</p>
+                <p class="text-xs text-red-400 font-semibold mt-2">※ 주의: 불러올 경우 현재 작성 중인 목록이 모두 덮어씌워집니다.</p>
             </div>
-            <div class="p-4 border-t border-slate-200 flex justify-end gap-2 bg-slate-50 rounded-b-lg">
-                <button onclick="closeGitHubModal()" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded hover:bg-slate-100 font-bold text-sm">취소</button>
+            <div class="p-4 border-t border-slate-800 flex justify-end gap-2 bg-slate-850 rounded-b-lg">
+                <button onclick="closeGitHubModal()" class="px-4 py-2 bg-slate-850 border border-slate-750 text-slate-300 rounded hover:bg-slate-750 font-bold text-sm">취소</button>
                 <button onclick="confirmGitHubImport()" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 font-bold text-sm">불러오기</button>
             </div>
         </div>
@@ -266,8 +269,8 @@
             buffCollection.forEach((buff, idx) => {
                 const isSelected = idx === currentIndex;
                 html += `
-                    <div class="flex flex-col p-2 rounded cursor-pointer transition ${isSelected ? 'bg-blue-100 border-blue-400 border shadow-sm' : 'bg-white border-slate-200 border hover:bg-slate-50'}" onclick="selectBuff(${idx})">
-                        <div class="font-bold text-slate-800 text-xs truncate w-full">${escapeHtml(buff.className)}</div>
+                    <div class="flex flex-col p-2 rounded cursor-pointer transition ${isSelected ? 'bg-blue-950/50 border-blue-500 border shadow-sm text-blue-200' : 'bg-slate-900 border-slate-800 border hover:bg-slate-800 text-slate-300'}" onclick="selectBuff(${idx})">
+                        <div class="font-bold text-xs truncate w-full">${escapeHtml(buff.className)}</div>
                         <div class="text-[10px] text-slate-500 truncate w-full">${escapeHtml(buff.bNameKR) || '이름 없음'}</div>
                     </div>
                 `;
@@ -296,18 +299,18 @@
                 const isActive = evData.active;
                 
                 html += `
-                <div class="bg-white rounded-lg shadow-sm border transition-all duration-200 ${isActive ? 'border-blue-500 ring-1 ring-blue-500' : 'border-slate-200'}">
-                    <div class="flex items-center justify-between p-2.5 cursor-pointer hover:bg-slate-50 rounded-lg" onclick="toggleEvent('${ev.id}')">
+                <div class="bg-slate-900 rounded-lg shadow-sm border transition-all duration-200 ${isActive ? 'border-blue-500 ring-1 ring-blue-500/50' : 'border-slate-800'}">
+                    <div class="flex items-center justify-between p-2.5 cursor-pointer hover:bg-slate-850 rounded-lg animate-fade-in" onclick="toggleEvent('${ev.id}')">
                         <div class="flex items-center gap-2">
-                            <input type="checkbox" ${isActive ? 'checked' : ''} onclick="event.stopPropagation(); toggleEvent('${ev.id}')" class="w-4 h-4 text-blue-600 rounded">
-                            <span class="font-bold font-mono text-slate-800 text-xs md:text-sm">${ev.name}</span>
+                            <input type="checkbox" ${isActive ? 'checked' : ''} onclick="event.stopPropagation(); toggleEvent('${ev.id}')" class="w-4 h-4 text-blue-600 rounded bg-slate-800 border-slate-750">
+                            <span class="font-bold font-mono text-slate-200 text-xs md:text-sm">${ev.name}</span>
                         </div>
                         <span class="text-[10px] text-slate-400 hidden md:block">${ev.desc}</span>
                     </div>
                 `;
 
                 if (isActive) {
-                    html += `<div class="p-2 md:p-4 pt-0 border-t border-slate-100 bg-slate-50/50 rounded-b-lg">`;
+                    html += `<div class="p-2 md:p-4 pt-0 border-t border-slate-800 bg-slate-950/40 rounded-b-lg">`;
                     html += `<div class="space-y-1 mt-2">`;
                     evData.actions.forEach((act, idx) => {
                         html += renderAction(ev.id, idx, act, evData.actions.length);
@@ -316,19 +319,19 @@
                     
                     html += `
                         <div class="mt-3 flex flex-wrap gap-1.5">
-                            <button onclick="addAction('${ev.id}', 'StatChange')" class="bg-teal-50 border border-teal-200 text-teal-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">스탯 증감</button>
-                            <button onclick="addAction('${ev.id}', 'F_ChaMethod')" class="bg-indigo-50 border border-indigo-200 text-indigo-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">F_Cha 행동</button>
-                            <button onclick="addAction('${ev.id}', 'StackChange')" class="bg-fuchsia-50 border border-fuchsia-200 text-fuchsia-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">스택 조작 (+/-)</button>
-                            <button onclick="addAction('${ev.id}', 'AddBuff')" class="bg-blue-50 border border-blue-200 text-blue-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">버프 부여</button>
-                            <button onclick="addAction('${ev.id}', 'IfCondition')" class="bg-amber-50 border border-amber-200 text-amber-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">If</button>
-                            <button onclick="addAction('${ev.id}', 'ElseIfCondition')" class="bg-amber-50 border border-amber-200 text-amber-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">else if</button>
-                            <button onclick="addAction('${ev.id}', 'ElseCondition')" class="bg-amber-50 border border-amber-200 text-amber-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">else</button>
-                            <button onclick="addAction('${ev.id}', 'EndIf')" class="bg-amber-50 border border-amber-200 text-amber-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">조건 닫기 (})</button>
-                            <button onclick="addAction('${ev.id}', 'RemoveThis')" class="bg-red-50 border border-red-200 text-red-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">자신 제거</button>
-                            <button onclick="addAction('${ev.id}', 'StackCheckCall')" class="bg-fuchsia-50 border border-fuchsia-200 text-fuchsia-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">StackCheck()</button>
-                            <button onclick="addAction('${ev.id}', 'Custom')" class="bg-slate-800 text-white px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">C# 커스텀</button>
+                            <button onclick="addAction('${ev.id}', 'StatChange')" class="bg-teal-950/40 border border-teal-850 text-teal-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-teal-900/40 transition">스탯 증감</button>
+                            <button onclick="addAction('${ev.id}', 'F_ChaMethod')" class="bg-indigo-50 border border-indigo-200 text-indigo-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-indigo-900/40 transition">F_Cha 행동</button>
+                            <button onclick="addAction('${ev.id}', 'StackChange')" class="bg-fuchsia-50 border border-fuchsia-200 text-fuchsia-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-fuchsia-900/40 transition">스택 조작 (+/-)</button>
+                            <button onclick="addAction('${ev.id}', 'AddBuff')" class="bg-blue-50 border border-blue-200 text-blue-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-blue-900/40 transition">버프 부여</button>
+                            <button onclick="addAction('${ev.id}', 'IfCondition')" class="bg-amber-50 border border-amber-200 text-amber-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-900/40 transition">If</button>
+                            <button onclick="addAction('${ev.id}', 'ElseIfCondition')" class="bg-amber-50 border border-amber-200 text-amber-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-900/40 transition">else if</button>
+                            <button onclick="addAction('${ev.id}', 'ElseCondition')" class="bg-amber-50 border border-amber-200 text-amber-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-900/40 transition">else</button>
+                            <button onclick="addAction('${ev.id}', 'EndIf')" class="bg-amber-50 border border-amber-200 text-amber-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-900/40 transition">조건 닫기 (})</button>
+                            <button onclick="addAction('${ev.id}', 'RemoveThis')" class="bg-red-50 border border-red-200 text-red-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-red-900/40 transition">자신 제거</button>
+                            <button onclick="addAction('${ev.id}', 'StackCheckCall')" class="bg-fuchsia-50 border border-fuchsia-200 text-fuchsia-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-fuchsia-900/40 transition">StackCheck()</button>
+                            <button onclick="addAction('${ev.id}', 'Custom')" class="bg-slate-800 text-white px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-slate-700 transition">C# 커스텀</button>
                     `;
-                    if(ev.id === 'BeforeAttack' || ev.id === 'BeforeDamaged') html += `<button onclick="addAction('${ev.id}', 'DCModify')" class="bg-purple-50 border border-purple-200 text-purple-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">DC 수정</button>`;
+                    if(ev.id === 'BeforeAttack' || ev.id === 'BeforeDamaged') html += `<button onclick="addAction('${ev.id}', 'DCModify')" class="bg-purple-50 border border-purple-200 text-purple-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-purple-900/40 transition">DC 수정</button>`;
                     
                     html += `</div></div>`;
                 }
@@ -342,68 +345,70 @@
             
             if(act.type === 'StatChange') {
                 const targets = ['owner', 'caster', 'DC.Target', 'DC.Attacker'].map(t => `<option ${act.target===t?'selected':''}>${t}</option>`).join('');
-                const stats = ['Power', 'DefPower', 'HP', 'MP', 'SD', 'Block'].map(t => `<option ${act.stat===t?'selected':''}>${t}</option>`).join('');
+                const stats = ['this', 'Power', 'DefPower', 'HP', 'MP', 'SD', 'Block'].map(t => `<option ${act.stat===t?'selected':''}>${t}</option>`).join('');
                 const ops = ['Gain', 'Consume'].map(t => `<option ${act.op===t?'selected':''}>${t}</option>`).join('');
+                
+                const isThis = act.stat === 'this';
                 inner = `
-                    <select onchange="updateAction('${eventId}', ${idx}, 'target', this.value)" class="bg-transparent text-slate-800 p-1 text-[10px] md:text-xs rounded border border-slate-300">${targets}</select>
-                    <span class="text-slate-500 font-bold">.</span>
-                    <select onchange="updateAction('${eventId}', ${idx}, 'op', this.value)" class="bg-transparent p-1 text-[10px] md:text-xs rounded font-bold text-teal-700 border border-slate-300">${ops}</select>
-                    <span class="text-slate-700 font-mono text-[10px] md:text-xs">("</span>
-                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'stat', this.value)" value="${escapeHtml(act.stat)}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded w-16" list="statOptions">
-                    <span class="text-slate-700 font-mono text-[10px] md:text-xs">", </span>
-                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'val', this.value)" value="${escapeHtml(act.val)}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded w-12 font-mono" placeholder="값">
-                    <span class="text-slate-700 font-mono text-[10px] md:text-xs">);</span>
+                    <select onchange="updateAction('${eventId}', ${idx}, 'target', this.value)" class="bg-slate-850 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-750 focus:ring-1 focus:ring-blue-500 outline-none">${targets}</select>
+                    <span class="text-slate-400 font-bold">.</span>
+                    <select onchange="updateAction('${eventId}', ${idx}, 'op', this.value)" class="bg-slate-850 p-1 text-[10px] md:text-xs rounded font-bold text-teal-400 border border-slate-750 focus:ring-1 focus:ring-blue-500 outline-none">${ops}</select>
+                    <span class="text-slate-300 font-mono text-[10px] md:text-xs">${isThis ? '(' : '("'}</span>
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'stat', this.value)" value="${escapeHtml(act.stat)}" class="bg-slate-850 text-slate-100 border border-slate-750 p-1 text-[10px] md:text-xs rounded w-16 focus:ring-1 focus:ring-blue-500 outline-none" list="statOptions">
+                    <span class="text-slate-300 font-mono text-[10px] md:text-xs">${isThis ? ',' : '",'} </span>
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'val', this.value)" value="${escapeHtml(act.val)}" class="bg-slate-850 text-slate-100 border border-slate-750 p-1 text-[10px] md:text-xs rounded w-12 font-mono focus:ring-1 focus:ring-blue-500 outline-none" placeholder="값">
+                    <span class="text-slate-300 font-mono text-[10px] md:text-xs">);</span>
                     <datalist id="statOptions">${stats}</datalist>
                 `;
             } else if(act.type === 'F_ChaMethod') {
                 const targets = ['owner', 'caster', 'DC.Target', 'DC.Attacker'].map(t => `<option ${act.target===t?'selected':''}>${t}</option>`).join('');
                 const methods = ['TakeDamage', 'Heal', 'DrawCard'].map(t => `<option ${act.method===t?'selected':''}>${t}</option>`).join('');
                 inner = `
-                    <select onchange="updateAction('${eventId}', ${idx}, 'target', this.value)" class="bg-transparent p-1 text-[10px] md:text-xs rounded border border-slate-300">${targets}</select>
-                    <span class="text-slate-500 font-bold">.</span>
-                    <select onchange="updateAction('${eventId}', ${idx}, 'method', this.value)" class="bg-transparent p-1 text-[10px] md:text-xs rounded font-bold text-indigo-700 border border-slate-300">${methods}</select>
-                    <span class="text-slate-700 font-mono text-[10px] md:text-xs">(</span>
-                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'args', this.value)" value="${escapeHtml(act.args)}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded w-32 font-mono" placeholder="매개변수 입력">
-                    <span class="text-slate-700 font-mono text-[10px] md:text-xs">);</span>
+                    <select onchange="updateAction('${eventId}', ${idx}, 'target', this.value)" class="bg-slate-850 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-750 focus:ring-1 focus:ring-blue-500 outline-none">${targets}</select>
+                    <span class="text-slate-400 font-bold">.</span>
+                    <select onchange="updateAction('${eventId}', ${idx}, 'method', this.value)" class="bg-slate-850 p-1 text-[10px] md:text-xs rounded font-bold text-indigo-700 border border-slate-750 focus:ring-1 focus:ring-blue-500 outline-none">${methods}</select>
+                    <span class="text-slate-300 font-mono text-[10px] md:text-xs">(</span>
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'args', this.value)" value="${escapeHtml(act.args)}" class="bg-slate-850 text-slate-100 border border-slate-750 p-1 text-[10px] md:text-xs rounded w-32 font-mono focus:ring-1 focus:ring-blue-500 outline-none" placeholder="매개변수 입력">
+                    <span class="text-slate-300 font-mono text-[10px] md:text-xs">);</span>
                 `;
             } else if(act.type === 'StackChange') {
                 const ops = ['+=', '-=', '*=', '/=', '==', '=', '++', '--'].map(t => `<option ${act.op===t?'selected':''}>${t}</option>`).join('');
                 inner = `
-                    <span class="text-slate-700 font-mono text-[10px] md:text-xs font-bold">stack </span>
-                    <select onchange="updateAction('${eventId}', ${idx}, 'op', this.value)" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded font-bold text-fuchsia-700">${ops}</select>
-                    ${(act.op !== '++' && act.op !== '--') ? `<input type="text" oninput="updateAction('${eventId}', ${idx}, 'val', this.value)" value="${escapeHtml(act.val)}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded w-12 font-mono">` : ''}
-                    <span class="text-slate-700 font-mono text-[10px] md:text-xs">;</span>
+                    <span class="text-slate-200 font-mono text-[10px] md:text-xs font-bold">stack </span>
+                    <select onchange="updateAction('${eventId}', ${idx}, 'op', this.value)" class="bg-slate-850 text-slate-100 p-1 text-[10px] md:text-xs rounded font-bold text-fuchsia-400 border border-slate-750 focus:ring-1 focus:ring-blue-500 outline-none">${ops}</select>
+                    ${(act.op !== '++' && act.op !== '--') ? `<input type="text" oninput="updateAction('${eventId}', ${idx}, 'val', this.value)" value="${escapeHtml(act.val)}" class="bg-slate-850 text-slate-100 border border-slate-750 p-1 text-[10px] md:text-xs rounded w-12 font-mono focus:ring-1 focus:ring-blue-500 outline-none">` : ''}
+                    <span class="text-slate-200 font-mono text-[10px] md:text-xs">;</span>
                 `;
             } else if(act.type === 'IfCondition') {
                 inner = `
-                    <span class="text-amber-700 font-mono text-[10px] md:text-xs font-bold">if (</span>
-                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'condition', this.value)" value="${escapeHtml(act.condition)}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded flex-1 min-w-[150px] font-mono outline-none focus:ring-1 focus:ring-amber-500" placeholder="조건식 자유 입력 (예: stack > 0)">
-                    <span class="text-amber-700 font-mono text-[10px] md:text-xs font-bold">) {</span>
+                    <span class="text-amber-400 font-mono text-[10px] md:text-xs font-bold">if (</span>
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'condition', this.value)" value="${escapeHtml(act.condition)}" class="bg-slate-850 text-slate-100 border border-slate-750 p-1 text-[10px] md:text-xs rounded flex-1 min-w-[150px] font-mono outline-none focus:ring-1 focus:ring-amber-500" placeholder="조건식 자유 입력 (예: stack > 0)">
+                    <span class="text-amber-400 font-mono text-[10px] md:text-xs font-bold">) {</span>
                 `;
             } else if(act.type === 'ElseIfCondition') {
                 inner = `
-                    <span class="text-amber-700 font-mono text-[10px] md:text-xs font-bold">} else if (</span>
-                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'condition', this.value)" value="${escapeHtml(act.condition)}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded flex-1 min-w-[150px] font-mono outline-none focus:ring-1 focus:ring-amber-500" placeholder="조건식 (예: owner.name == &quot;El&quot;)">
-                    <span class="text-amber-700 font-mono text-[10px] md:text-xs font-bold">) {</span>
+                    <span class="text-amber-400 font-mono text-[10px] md:text-xs font-bold">} else if (</span>
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'condition', this.value)" value="${escapeHtml(act.condition)}" class="bg-slate-850 text-slate-100 border border-slate-750 p-1 text-[10px] md:text-xs rounded flex-1 min-w-[150px] font-mono outline-none focus:ring-1 focus:ring-amber-500" placeholder="조건식 (예: owner.name == &quot;El&quot;)">
+                    <span class="text-amber-400 font-mono text-[10px] md:text-xs font-bold">) {</span>
                 `;
             } else if(act.type === 'ElseCondition') {
                 inner = `
-                    <span class="text-amber-700 font-mono text-[10px] md:text-xs font-bold">} else {</span>
+                    <span class="text-amber-400 font-mono text-[10px] md:text-xs font-bold">} else {</span>
                 `;
             } else if(act.type === 'EndIf') {
-                inner = `<span class="text-amber-700 font-mono text-[10px] md:text-xs font-bold">}</span>`;
+                inner = `<span class="text-amber-400 font-mono text-[10px] md:text-xs font-bold">}</span>`;
             } else if(act.type === 'AddBuff') {
                 const targets = ['owner', 'caster', 'DC.Target', 'DC.Attacker'].map(t => `<option ${act.target===t?'selected':''}>${t}</option>`).join('');
                 const casterOpts = ['caster', 'owner'].map(t => `<option ${act.caster===t?'selected':''}>${t}</option>`).join('');
                 inner = `
-                    <select onchange="updateAction('${eventId}', ${idx}, 'target', this.value)" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded">${targets}</select>
-                    <span class="text-slate-700 font-mono text-[10px] md:text-xs">.AddBuff(new </span>
-                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'buffClass', this.value)" value="${escapeHtml(act.buffClass)}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded w-20 text-blue-600 font-bold" placeholder="Class">
-                    <span class="text-slate-700 font-mono text-[10px] md:text-xs">(${act.target}, </span>
-                    <select onchange="updateAction('${eventId}', ${idx}, 'caster', this.value)" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded">${casterOpts}</select>
-                    <span class="text-slate-700 font-mono text-[10px] md:text-xs">,</span>
-                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'stack', this.value)" value="${escapeHtml(act.stack)}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded w-10 font-mono">
-                    <span class="text-slate-700 font-mono text-[10px] md:text-xs">));</span>
+                    <select onchange="updateAction('${eventId}', ${idx}, 'target', this.value)" class="bg-slate-850 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-750 focus:ring-1 focus:ring-blue-500 outline-none">${targets}</select>
+                    <span class="text-slate-300 font-mono text-[10px] md:text-xs">.AddBuff(new </span>
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'buffClass', this.value)" value="${escapeHtml(act.buffClass)}" class="bg-slate-850 border border-slate-750 p-1 text-[10px] md:text-xs rounded w-20 text-blue-400 font-bold focus:ring-1 focus:ring-blue-500 outline-none" placeholder="Class">
+                    <span class="text-slate-300 font-mono text-[10px] md:text-xs">(${act.target}, </span>
+                    <select onchange="updateAction('${eventId}', ${idx}, 'caster', this.value)" class="bg-slate-850 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-750 focus:ring-1 focus:ring-blue-500 outline-none">${casterOpts}</select>
+                    <span class="text-slate-300 font-mono text-[10px] md:text-xs">,</span>
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'stack', this.value)" value="${escapeHtml(act.stack)}" class="bg-slate-850 text-slate-100 border border-slate-750 p-1 text-[10px] md:text-xs rounded w-10 font-mono focus:ring-1 focus:ring-blue-500 outline-none">
+                    <span class="text-slate-300 font-mono text-[10px] md:text-xs">));</span>
                 `;
             } else if(act.type === 'DCModify') {
                 const fields = ['PlusDamage', 'PercentDamage', 'Damage', 'FixDamage'].map(t => `<option ${act.field===t?'selected':''}>${t}</option>`).join('');
@@ -411,32 +416,32 @@
                 let valLen = act.val ? act.val.length : 1;
                 
                 inner = `
-                    <span class="font-mono text-[10px] md:text-xs font-bold text-purple-700">DC.</span>
-                    <select onchange="updateAction('${eventId}', ${idx}, 'field', this.value)" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded">${fields}</select>
-                    <select onchange="updateAction('${eventId}', ${idx}, 'op', this.value)" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded font-bold">${ops}</select>
-                    <input type="text" oninput="this.style.width = Math.max(8, this.value.length + 4) + 'ch'; updateAction('${eventId}', ${idx}, 'val', this.value)" value="${escapeHtml(act.val)}" style="width: ${Math.max(8, valLen + 4)}ch;" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded font-mono outline-none focus:ring-1 focus:ring-purple-500" placeholder="값">
+                    <span class="font-mono text-[10px] md:text-xs font-bold text-purple-400">DC.</span>
+                    <select onchange="updateAction('${eventId}', ${idx}, 'field', this.value)" class="bg-slate-850 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-750 focus:ring-1 focus:ring-blue-500 outline-none">${fields}</select>
+                    <select onchange="updateAction('${eventId}', ${idx}, 'op', this.value)" class="bg-slate-850 text-slate-100 p-1 text-[10px] md:text-xs rounded font-bold border border-slate-750 focus:ring-1 focus:ring-blue-500 outline-none">${ops}</select>
+                    <input type="text" oninput="this.style.width = Math.max(8, this.value.length + 4) + 'ch'; updateAction('${eventId}', ${idx}, 'val', this.value)" value="${escapeHtml(act.val)}" style="width: ${Math.max(8, valLen + 4)}ch;" class="bg-slate-850 text-slate-100 border border-slate-750 p-1 text-[10px] md:text-xs rounded font-mono outline-none focus:ring-1 focus:ring-purple-500" placeholder="값">
                     <span class="text-slate-500 font-bold">;</span>
                 `;
             } else if(act.type === 'RemoveThis') {
-                inner = `<span class="font-mono text-[10px] md:text-xs text-red-600 font-semibold">owner.RemoveBuff(this);</span>`;
+                inner = `<span class="font-mono text-[10px] md:text-xs text-red-400 font-semibold">owner.RemoveBuff(this);</span>`;
             } else if(act.type === 'StackCheckCall') {
-                inner = `<span class="font-mono text-[10px] md:text-xs text-fuchsia-600 font-semibold">StackCheck();</span>`;
+                inner = `<span class="font-mono text-[10px] md:text-xs text-fuchsia-400 font-semibold">StackCheck();</span>`;
             } else if(act.type === 'Custom') {
                 let codeLines = act.code ? act.code.split('\n').length : 2;
-                inner = `<textarea oninput="this.rows = Math.max(2, this.value.split('\\n').length); updateAction('${eventId}', ${idx}, 'code', this.value)" class="w-full border border-slate-700 rounded p-2 font-mono text-[11px] md:text-xs bg-slate-800 text-emerald-400 outline-none resize-y" rows="${Math.max(2, codeLines)}">${escapeHtml(act.code)}</textarea>`;
+                inner = `<textarea oninput="this.rows = Math.max(2, this.value.split('\\n').length); updateAction('${eventId}', ${idx}, 'code', this.value)" class="w-full border border-slate-750 rounded p-2 font-mono text-[11px] md:text-xs bg-slate-850 text-emerald-400 outline-none resize-y" rows="${Math.max(2, codeLines)}">${escapeHtml(act.code)}</textarea>`;
             } else if(act.type === 'BaseCall') {
-                inner = `<span class="font-mono text-[10px] md:text-xs text-indigo-600 font-semibold">base.${eventId}(${eventId === 'OnUpdate' ? 'val' : ''});</span>`;
+                inner = `<span class="font-mono text-[10px] md:text-xs text-indigo-400 font-semibold">base.${eventId}(${eventId === 'OnUpdate' ? 'val' : ''});</span>`;
             }
 
             return `
-            <div class="flex flex-col md:flex-row items-start md:items-center gap-1.5 md:gap-2 bg-white p-1.5 md:p-2 rounded border border-slate-200 relative group pr-24">
+            <div class="flex flex-col md:flex-row items-start md:items-center gap-1.5 md:gap-2 bg-slate-900 border border-slate-800 p-1.5 md:p-2 rounded relative group pr-24">
                 <div class="flex-1 flex flex-wrap items-center gap-1 w-full">
                     ${inner}
                 </div>
-                <div class="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white pl-2 py-1 rounded">
-                    ${idx > 0 ? `<button onclick="moveAction('${eventId}', ${idx}, -1)" class="text-slate-400 hover:text-blue-500 p-1" title="위로 이동"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>` : `<div class="w-6"></div>`}
-                    ${idx < totalLen - 1 ? `<button onclick="moveAction('${eventId}', ${idx}, 1)" class="text-slate-400 hover:text-blue-500 p-1" title="아래로 이동"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>` : `<div class="w-6"></div>`}
-                    <button onclick="removeAction('${eventId}', ${idx})" class="text-slate-400 hover:text-red-500 p-1" title="삭제"><i data-lucide="x" class="w-4 h-4"></i></button>
+                <div class="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 border border-slate-850 pl-2 py-1 rounded shadow-sm">
+                    ${idx > 0 ? `<button onclick="moveAction('${eventId}', ${idx}, -1)" class="text-slate-400 hover:text-blue-400 p-1" title="위로 이동"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>` : `<div class="w-6"></div>`}
+                    ${idx < totalLen - 1 ? `<button onclick="moveAction('${eventId}', ${idx}, 1)" class="text-slate-400 hover:text-blue-400 p-1" title="아래로 이동"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>` : `<div class="w-6"></div>`}
+                    <button onclick="removeAction('${eventId}', ${idx})" class="text-slate-400 hover:text-red-400 p-1" title="삭제"><i data-lucide="x" class="w-4 h-4"></i></button>
                 </div>
             </div>
             `;
@@ -499,7 +504,13 @@
                         
                         let indentStr = "    ".repeat(indentLvl);
 
-                        if(act.type === 'StatChange') line = `${act.target}.${act.op}("${act.stat}", ${act.val});`;
+                        if(act.type === 'StatChange') {
+                            if(act.stat === 'this') {
+                                line = `${act.target}.${act.op}(this, ${act.val});`;
+                            } else {
+                                line = `${act.target}.${act.op}("${act.stat}", ${act.val});`;
+                            }
+                        }
                         else if(act.type === 'F_ChaMethod') line = `${act.target}.${act.method}(${act.args});`;
                         else if(act.type === 'StackChange') line = (act.op === '++' || act.op === '--') ? `stack${act.op};` : `stack ${act.op} ${act.val};`;
                         else if(act.type === 'AddBuff') line = `${act.target}.AddBuff(new ${act.buffClass}(${act.target}, ${act.caster}, ${act.stack}));`;
@@ -549,12 +560,12 @@
 
         function renderCode() {
             if (viewMode === 'single') {
-                document.getElementById('btn-view-single').className = 'text-xs px-2 py-1 rounded bg-slate-600 text-white font-bold';
+                document.getElementById('btn-view-single').className = 'text-xs px-2 py-1 rounded bg-slate-750 text-white font-bold border border-slate-700';
                 document.getElementById('btn-view-full').className = 'text-xs px-2 py-1 rounded bg-transparent text-slate-400 hover:text-white';
                 document.getElementById('preview-code').textContent = buffCollection.length > 0 ? generateBuffClassString(buffCollection[currentIndex]) : "// 버프가 없습니다.";
             } else {
                 document.getElementById('btn-view-single').className = 'text-xs px-2 py-1 rounded bg-transparent text-slate-400 hover:text-white';
-                document.getElementById('btn-view-full').className = 'text-xs px-2 py-1 rounded bg-slate-600 text-white font-bold';
+                document.getElementById('btn-view-full').className = 'text-xs px-2 py-1 rounded bg-slate-750 text-white font-bold border border-slate-700';
                 document.getElementById('preview-code').textContent = generateFullFileString();
             }
         }
@@ -727,6 +738,14 @@
                 if (baseMatch) {
                     flushCustom(); actions.push({ type: 'BaseCall' }); continue;
                 }
+                // 3-1. StatChange (this 오버로드 매칭)
+                const statThisMatch = line.match(/^(owner|caster|DC\.Target|DC\.Attacker)\.(Gain|Consume)\(this,\s*([^)]+)\);$/);
+                if (statThisMatch) {
+                    flushCustom(); 
+                    actions.push({ type: 'StatChange', target: statThisMatch[1], op: statThisMatch[2], stat: 'this', val: statThisMatch[3] }); 
+                    continue;
+                }
+                // 3-2. StatChange (일반 문자열 기반 매칭)
                 const statMatch = line.match(/^(owner|caster|DC\.Target|DC\.Attacker)\.(Gain|Consume)\("([^"]+)",\s*([^)]+)\);$/);
                 if (statMatch) {
                     flushCustom(); 
@@ -892,6 +911,9 @@
         window.updateAction = function(eventId, idx, prop, val) {
             buffCollection[currentIndex].events[eventId].actions[idx][prop] = val;
             saveData(); renderCode();
+            if (prop === 'stat') {
+                renderEditor();
+            }
         }
 
         window.setViewMode = function(mode) {
