@@ -1,3 +1,12 @@
+﻿using System;
+using UnityEngine;
+using System.Collections.Generic;
+using System.Linq;
+
+/// <summary>
+/// BuffCase Auto Generated - BuffCS.cs
+/// </summary>
+
 public class Power : Buff
 {
     // information
