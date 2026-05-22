@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unity Buff Code Maker (Bug Fixed)</title>
+    <title>Unity Buff Code Maker (Dynamic Layout & Sort)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -12,6 +12,7 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         .code-panel::-webkit-scrollbar-thumb { background: #475569; }
+        /* 텍스트 영역 부드러운 높이 전환 */
         textarea { transition: height 0.1s ease-in-out; }
     </style>
 </head>
@@ -24,6 +25,11 @@
             <h1 class="text-lg md:text-xl font-bold tracking-wide">Buff Code Maker</h1>
         </div>
         <div class="flex gap-2">
+            <!-- 통합 다운로드 버튼 추가 -->
+            <button onclick="mergeAndDownloadAll(this)" class="flex items-center gap-1 bg-amber-600 hover:bg-amber-500 text-white px-2 py-1.5 md:px-3 md:py-1.5 rounded text-xs md:text-sm font-bold transition shadow" title="모든 파일을 병합하여 1개의 C# 파일로 다운로드합니다.">
+                <i data-lucide="package-search" class="w-4 h-4"></i> <span class="hidden md:inline">통합 다운로드 (BuffCS.cs)</span><span class="md:hidden">통합 다운로드</span>
+            </button>
+
             <!-- GitHub에서 불러오기 버튼 (모달 연결) -->
             <button onclick="openGitHubModal()" class="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1.5 md:px-3 md:py-1.5 rounded text-xs md:text-sm font-bold transition shadow">
                 <i data-lucide="cloud-download" class="w-4 h-4"></i> <span class="hidden md:inline">GitHub에서 불러오기</span><span class="md:hidden">불러오기</span>
@@ -139,7 +145,6 @@
                 <label class="text-sm font-bold text-slate-700">대상 파일 선택</label>
                 <select id="github-file-select" class="w-full border border-slate-300 rounded p-2 focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-sm bg-slate-50">
                     <option value="BuffCase.cs">BuffCase.cs</option>
-                    <option value="BuffCS.cs">BuffCS.cs</option>
                     <option value="BuffCS_E_0.cs">BuffCS_E_0.cs</option>
                     <option value="BuffCS_E_1.cs">BuffCS_E_1.cs</option>
                     <option value="BuffCS_Anima.cs">BuffCS_Anima.cs</option>
@@ -162,7 +167,7 @@
     </div>
 
     <script>
-        // HTML 안전 이스케이프 함수 (따옴표 깨짐 방지용)
+        // HTML 안전 이스케이프 함수
         const escapeHtml = (str) => {
             if (str === null || str === undefined) return '';
             return String(str)
@@ -172,6 +177,13 @@
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#039;');
         };
+
+        // GitHub 병합 타겟 파일 리스트
+        const MERGE_TARGET_FILES = [
+            "BuffCase.cs", "BuffCS_E_0.cs", "BuffCS_E_1.cs", "BuffCS_Anima.cs",
+            "BuffCS_El.cs", "BuffCS_Hana.cs", "BuffCS_Hina.cs", "BuffCS_Kira.cs",
+            "BuffCS_Manity.cs", "BuffCS_Prote.cs", "BuffCS_UG.cs", "BuffCS_Whai.cs"
+        ];
 
         // --- 1. 상수 및 데이터 구조 ---
         const EVENT_DEF = [
@@ -210,7 +222,7 @@
 
         // --- 2. 초기화 ---
         function initApp() {
-            const saved = localStorage.getItem('buffMakerData_v13'); // 버전업
+            const saved = localStorage.getItem('buffMakerData_v14');
             if (saved) {
                 try { buffCollection = JSON.parse(saved); } catch (e) { buffCollection = []; }
             }
@@ -226,7 +238,7 @@
         }
 
         function saveData() {
-            localStorage.setItem('buffMakerData_v13', JSON.stringify(buffCollection));
+            localStorage.setItem('buffMakerData_v14', JSON.stringify(buffCollection));
             localStorage.setItem('buffMakerTargetFile', currentTargetFile);
         }
 
@@ -285,7 +297,6 @@
             } else {
                 document.getElementById('inp-buffType').value = buff.buffType || "Good";
             }
-            // ActivatedTurn을 제거했으므로 더이상 렌더링(value 조작)하지 않음! Null 에러 해결
             
             document.getElementById('inp-description').value = buff.description || "";
             document.getElementById('inp-classCustomCode').value = buff.classCustomCode || "";
@@ -456,7 +467,6 @@
                 code += `    public override string BnameKR => "${buff.bNameKR}";\n`;
             }
             
-            // Description (최대 3줄) 다중 보간 포맷팅 로직
             let descLines = (buff.description || "").split('\n').slice(0, 3);
             if (descLines.length === 0 || (descLines.length === 1 && descLines[0] === "")) {
                 code += `    public override string Description => "";\n`;
@@ -476,7 +486,6 @@
                 code += buff.classCustomCode.trim().split('\n').map(l => `    ${l}`).join('\n') + `\n\n`;
             }
 
-            // 생성자를 한 줄로 깔끔하게 처리
             code += `    public ${className}(F_Cha target, F_Cha user, int s) : base(target, user, s) { }\n\n`;
 
             EVENT_DEF.forEach(ev => {
@@ -485,7 +494,6 @@
                     code += `    ${EVENT_SIGNATURES[ev.id]}\n`;
                     let indentLvl = 2;
 
-                    // OnUpdate는 무조건 base 고정 추가
                     if (ev.id === 'OnUpdate') {
                         code += `        base.OnUpdate(val);\n`;
                     }
@@ -566,7 +574,7 @@
 
         async function confirmGitHubImport() {
             const fileName = document.getElementById('github-file-select').value;
-            const baseUrl = "https://raw.githubusercontent.com/namwoo321-a11y/cardGame/main/";
+            const baseUrl = "https://raw.githubusercontent.com/namwoo321-a11y/cardGame/main/Buffs/";
             const url = baseUrl + fileName;
             
             closeGitHubModal();
@@ -576,7 +584,7 @@
                 if (!res.ok) throw new Error("Network response was not ok");
                 const text = await res.text();
                 
-                currentTargetFile = fileName; // 현재 파일명 업데이트
+                currentTargetFile = fileName;
                 parseBuffCaseCS(text);
             } catch (e) {
                 console.error(e);
@@ -747,7 +755,6 @@
                     continue;
                 }
                 
-                // Else If문 파서
                 const elseIfMatch = line.match(/^(\}?)\s*else\s+if\s*\((.*)\)\s*\{?$/);
                 if (elseIfMatch) {
                     flushCustom();
@@ -760,7 +767,6 @@
                     continue;
                 }
                 
-                // Else문 파서
                 const elseMatch = line.match(/^(\}?)\s*else\s*\{?$/);
                 if (elseMatch) {
                     flushCustom();
@@ -773,7 +779,6 @@
                     continue;
                 }
 
-                // If문 파서 (자유 조건식)
                 const ifMatch = line.match(/^if\s*\((.*)\)\s*\{?$/);
                 if (ifMatch) {
                     flushCustom();
@@ -782,7 +787,6 @@
                     continue;
                 }
                 
-                // { } 안전 처리
                 if (line === "{") {
                     if (customBlock.length === 0 && actions.length > 0 && ['IfCondition', 'ElseIfCondition', 'ElseCondition'].includes(actions[actions.length - 1].type)) {
                         continue; 
@@ -804,7 +808,62 @@
             return actions;
         }
 
-        // --- 6. 사용자 이벤트 라우팅 ---
+        // --- 6. 다중 파일 다운로드 통합 기능 ---
+        async function mergeAndDownloadAll(btnElement) {
+            const originalHtml = btnElement.innerHTML;
+            btnElement.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> 병합 중...`;
+            lucide.createIcons();
+            
+            try {
+                let combinedCode = "";
+                let usingSet = new Set();
+                
+                const responses = await Promise.all(MERGE_TARGET_FILES.map(file => 
+                    fetch("https://raw.githubusercontent.com/namwoo321-a11y/cardGame/main/" + file + '?' + Date.now())
+                ));
+                
+                const texts = await Promise.all(responses.map(async (res) => {
+                    if (!res.ok) return ""; // 파일이 깃허브에 없으면 빈 문자열 반환 (무시)
+                    return await res.text();
+                }));
+                
+                texts.forEach(text => {
+                    if(!text) return;
+                    const lines = text.split('\n');
+                    lines.forEach(line => {
+                        let cleanLine = line.trim();
+                        // using 구문만 빼서 모으기
+                        if (cleanLine.startsWith('using ') && cleanLine.endsWith(';')) {
+                            usingSet.add(cleanLine);
+                        } else {
+                            combinedCode += line + '\n';
+                        }
+                    });
+                });
+                
+                const finalCode = Array.from(usingSet).join('\n') + "\n\n" + combinedCode;
+                
+                const blob = new Blob([finalCode], { type: "text/plain;charset=utf-8" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = "BuffCS.cs";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                alert("성공적으로 모든 파일을 병합하여 BuffCS.cs로 다운로드했습니다!");
+            } catch (e) {
+                console.error(e);
+                alert("파일 병합 중 오류가 발생했습니다.");
+            } finally {
+                btnElement.innerHTML = originalHtml;
+                lucide.createIcons();
+            }
+        }
+
+        // --- 7. 사용자 이벤트 라우팅 ---
         document.addEventListener('input', e => {
             if(e.target.matches('[data-bind]')) {
                 buffCollection[currentIndex][e.target.getAttribute('data-bind')] = e.target.type === 'number' ? parseInt(e.target.value) || 0 : e.target.value;
