@@ -70,12 +70,10 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1">Class Name (영문)</label>
-                        <!-- bg-slate-800, border-slate-600 으로 픽스 -->
                         <input type="text" id="inp-className" data-bind="className" placeholder="예: Prote_A" class="w-full bg-slate-800 border border-slate-600 text-slate-100 placeholder-slate-500 rounded p-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1">BnameKR (인게임 명칭)</label>
-                        <!-- 자동 생성 힌트 제공 -->
                         <input type="text" id="inp-bNameKR" data-bind="bNameKR" placeholder="공백 시 Class Name 자동 적용" class="w-full bg-slate-800 border border-slate-600 text-slate-100 placeholder-slate-500 rounded p-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
                     </div>
                     <div>
@@ -112,7 +110,7 @@
         <div id="code-viewer-panel" class="hidden md:flex flex-col absolute inset-0 z-30 md:static md:w-[400px] lg:w-[500px] bg-slate-900 border-l border-slate-800 shrink-0 h-full">
             <div class="flex justify-between items-center bg-slate-800 px-3 py-2 shrink-0 border-b border-slate-800">
                 <div class="flex gap-2">
-                    <button onclick="setViewMode('single')" id="btn-view-single" class="text-xs px-2 py-1 rounded bg-slate-700 text-white font-bold border border-slate-600">현재 버프</button>
+                    <button onclick="setViewMode('single')" id="btn-view-single" class="text-xs px-2 py-1 rounded bg-slate-700 text-white font-bold border border-slate-700">현재 버프</button>
                     <button onclick="setViewMode('full')" id="btn-view-full" class="text-xs px-2 py-1 rounded bg-transparent text-slate-400 hover:text-white">전체(<span id="target-file-label">BuffCS.cs</span>)</button>
                 </div>
                 <button onclick="toggleMobileCode()" class="md:hidden text-slate-300 hover:text-white">
@@ -134,7 +132,6 @@
             </div>
             <div class="p-4 flex flex-col gap-3">
                 <label class="text-sm font-bold text-slate-400">대상 파일 선택 (Buffs/ 폴더)</label>
-                <!-- Select 옵션 내부에 다크모드 클래스 명시 -->
                 <select id="github-file-select" class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded p-2 focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-sm">
                     <option value="BuffCS.cs" class="bg-slate-800 text-slate-100">BuffCS.cs</option>
                     <option value="BuffCS_E_0.cs" class="bg-slate-800 text-slate-100">BuffCS_E_0.cs</option>
@@ -215,7 +212,7 @@
 
         // --- 2. 초기화 ---
         function initApp() {
-            const saved = localStorage.getItem('buffMakerData_v20');
+            const saved = localStorage.getItem('buffMakerData_v21');
             if (saved) {
                 try { buffCollection = JSON.parse(saved); } catch (e) { buffCollection = []; }
             }
@@ -231,7 +228,7 @@
         }
 
         function saveData() {
-            localStorage.setItem('buffMakerData_v20', JSON.stringify(buffCollection));
+            localStorage.setItem('buffMakerData_v21', JSON.stringify(buffCollection));
             localStorage.setItem('buffMakerTargetFile', currentTargetFile);
         }
 
@@ -332,7 +329,7 @@
                                 <button onclick="addAction('${ev.id}', 'IfCondition')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">If</button>
                                 <button onclick="addAction('${ev.id}', 'ElseIfCondition')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">else if</button>
                                 <button onclick="addAction('${ev.id}', 'ElseCondition')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">else</button>
-                                <button onclick="addAction('${ev.id}', 'EndIf')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">조건 닫기 (})</button>
+                                <button onclick="addAction('${ev.id}', 'EndIf')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">}</button>
                                 <button onclick="addAction('${ev.id}', 'RemoveThis')" class="bg-red-900/40 border border-red-700 text-red-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-red-800/40 transition">자신 제거</button>
                                 <button onclick="addAction('${ev.id}', 'StackCheckCall')" class="bg-fuchsia-900/40 border border-fuchsia-700 text-fuchsia-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-fuchsia-800/40 transition">StackCheck()</button>
                                 <button onclick="addAction('${ev.id}', 'Custom')" class="bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm transition">C# 커스텀</button>
@@ -351,7 +348,6 @@
         function renderAction(eventId, idx, act, totalLen = 0) {
             let inner = '';
             
-            // stat칸에 this가 입력된 경우 따옴표 없이(객체 형태로) 전달됨
             if(act.type === 'StatChange') {
                 const targets = ['owner', 'caster', 'DC.Target', 'DC.Attacker'].map(t => `<option ${act.target===t?'selected':''}>${t}</option>`).join('');
                 const stats = ['this', 'Power', 'DefPower', 'HP', 'MP', 'SD', 'Block'].map(t => `<option ${act.stat===t?'selected':''}>${t}</option>`).join('');
@@ -385,7 +381,7 @@
                 inner = `
                     <span class="text-slate-200 font-mono text-[10px] md:text-xs font-bold">stack </span>
                     <select onchange="updateAction('${eventId}', ${idx}, 'op', this.value)" class="bg-slate-800 text-slate-100 p-1 text-[10px] md:text-xs rounded font-bold text-fuchsia-400 border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none">${ops}</select>
-                    ${(act.op !== '++' && act.op !== '--') ? `<input type="text" oninput="updateAction('${eventId}', ${idx}, 'val', this.value)" value="${escapeHtml(act.val)}" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded w-12 font-mono focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500" placeholder="값">` : ''}
+                    ${(act.op !== '++' && act.op !== '--') ? `<input type="text" oninput="updateAction('${eventId}', ${idx}, 'val', this.value)" value="${escapeHtml(act.val)}" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded w-12 font-mono focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500">` : ''}
                     <span class="text-slate-200 font-mono text-[10px] md:text-xs">;</span>
                 `;
             } else if(act.type === 'IfCondition') {
@@ -409,15 +405,23 @@
             } else if(act.type === 'AddBuff') {
                 const targets = ['owner', 'caster', 'DC.Target', 'DC.Attacker'].map(t => `<option ${act.target===t?'selected':''}>${t}</option>`).join('');
                 const casterOpts = ['caster', 'owner'].map(t => `<option ${act.caster===t?'selected':''}>${t}</option>`).join('');
+                
+                let stackLen = act.stack ? act.stack.length : 1;
+                let propsLen = act.props ? act.props.length : 0;
+                
                 inner = `
                     <select onchange="updateAction('${eventId}', ${idx}, 'target', this.value)" class="bg-slate-800 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none">${targets}</select>
                     <span class="text-slate-300 font-mono text-[10px] md:text-xs">.AddBuff(new </span>
                     <input type="text" oninput="updateAction('${eventId}', ${idx}, 'buffClass', this.value)" value="${escapeHtml(act.buffClass)}" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded w-20 text-blue-400 font-bold focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500" placeholder="Class">
                     <span class="text-slate-300 font-mono text-[10px] md:text-xs">(${act.target}, </span>
                     <select onchange="updateAction('${eventId}', ${idx}, 'caster', this.value)" class="bg-slate-800 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none">${casterOpts}</select>
-                    <span class="text-slate-300 font-mono text-[10px] md:text-xs">,</span>
-                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'stack', this.value)" value="${escapeHtml(act.stack)}" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded w-10 font-mono focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500" placeholder="값">
-                    <span class="text-slate-300 font-mono text-[10px] md:text-xs">));</span>
+                    <span class="text-slate-300 font-mono text-[10px] md:text-xs">, </span>
+                    <input type="text" oninput="this.style.width = Math.max(4, this.value.length + 3) + 'ch'; updateAction('${eventId}', ${idx}, 'stack', this.value)" value="${escapeHtml(act.stack)}" style="width: ${Math.max(4, stackLen + 3)}ch;" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded font-mono focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500" placeholder="값">
+                    <span class="text-slate-300 font-mono text-[10px] md:text-xs">)</span>
+                    <span class="text-slate-300 font-mono text-[10px] md:text-xs"> { </span>
+                    <input type="text" oninput="this.style.width = Math.max(6, this.value.length + 2) + 'ch'; updateAction('${eventId}', ${idx}, 'props', this.value)" value="${escapeHtml(act.props || '')}" style="width: ${Math.max(6, propsLen + 2)}ch;" class="bg-slate-800 text-amber-300 border border-slate-600 p-1 text-[10px] md:text-xs rounded font-mono focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500" placeholder="옵션(비움가능)">
+                    <span class="text-slate-300 font-mono text-[10px] md:text-xs"> }</span>
+                    <span class="text-slate-300 font-mono text-[10px] md:text-xs">);</span>
                 `;
             } else if(act.type === 'DCModify') {
                 const fields = ['PlusDamage', 'PercentDamage', 'Damage', 'FixDamage'].map(t => `<option ${act.field===t?'selected':''}>${t}</option>`).join('');
@@ -515,7 +519,6 @@
                         
                         let indentStr = "    ".repeat(indentLvl);
 
-                        // this 오버로드 생성 지원
                         if(act.type === 'StatChange') {
                             if(act.stat === 'this') {
                                 line = `${act.target}.${act.op}(this, ${act.val});`;
@@ -525,7 +528,13 @@
                         }
                         else if(act.type === 'F_ChaMethod') line = `${act.target}.${act.method}(${act.args});`;
                         else if(act.type === 'StackChange') line = (act.op === '++' || act.op === '--') ? `stack${act.op};` : `stack ${act.op} ${act.val};`;
-                        else if(act.type === 'AddBuff') line = `${act.target}.AddBuff(new ${act.buffClass}(${act.target}, ${act.caster}, ${act.stack}));`;
+                        else if(act.type === 'AddBuff') {
+                            if(act.props && act.props.trim() !== "") {
+                                line = `${act.target}.AddBuff(new ${act.buffClass}(${act.target}, ${act.caster}, ${act.stack}){ ${act.props.trim()} });`;
+                            } else {
+                                line = `${act.target}.AddBuff(new ${act.buffClass}(${act.target}, ${act.caster}, ${act.stack}));`;
+                            }
+                        }
                         else if(act.type === 'IfCondition') { line = `if (${act.condition})\n${indentStr}{`; }
                         else if(act.type === 'ElseIfCondition') { 
                             indentLvl = Math.max(2, indentLvl - 1); 
@@ -727,7 +736,7 @@
                 let line = lines[i].trim();
                 if (!line) continue;
                 
-                // 주석 지능형 파싱 (Code; // Comment -> Comment \n Code;)
+                // 주석 지능형 파싱
                 const commentIndex = line.indexOf('//');
                 if (commentIndex > 0) { 
                     const codePart = line.substring(0, commentIndex).trim();
@@ -751,7 +760,6 @@
                     flushCustom(); actions.push({ type: 'BaseCall' }); continue;
                 }
                 
-                // this 매개변수 전용 StatChange 파싱
                 const statThisMatch = line.match(/^(owner|caster|DC\.Target|DC\.Attacker)\.(Gain|Consume)\(this,\s*([^)]+)\);$/);
                 if (statThisMatch) {
                     flushCustom(); 
@@ -759,7 +767,6 @@
                     continue;
                 }
                 
-                // 문자열 매개변수 StatChange
                 const statMatch = line.match(/^(owner|caster|DC\.Target|DC\.Attacker)\.(Gain|Consume)\("([^"]+)",\s*([^)]+)\);$/);
                 if (statMatch) {
                     flushCustom(); 
@@ -790,10 +797,19 @@
                     actions.push({ type: 'DCModify', field: dcMatch[1], op: dcMatch[2], val: dcMatch[3] });
                     continue;
                 }
-                const addBuffMatch = line.match(/^(owner|caster|DC\.Target|DC\.Attacker)\.AddBuff\(new\s+(\w+)\(([^,]+),\s*([^,]+),\s*([^)]+)\)\);$/);
+                
+                // AddBuff 파서 고도화 (옵션 속성 { } 지원)
+                const addBuffMatch = line.match(/^(owner|caster|DC\.Target|DC\.Attacker)\.AddBuff\(new\s+(\w+)\(([^,]+),\s*([^,]+),\s*([^)]+)\)(?:\s*\{\s*(.*?)\s*\})?\s*\);$/);
                 if (addBuffMatch) {
                     flushCustom();
-                    actions.push({ type: 'AddBuff', target: addBuffMatch[1], buffClass: addBuffMatch[2], caster: addBuffMatch[4].trim(), stack: addBuffMatch[5].trim() });
+                    actions.push({ 
+                        type: 'AddBuff', 
+                        target: addBuffMatch[1], 
+                        buffClass: addBuffMatch[2], 
+                        caster: addBuffMatch[4].trim(), 
+                        stack: addBuffMatch[5].trim(),
+                        props: addBuffMatch[6] ? addBuffMatch[6].trim() : ''
+                    });
                     continue;
                 }
                 
@@ -912,7 +928,7 @@
             else if (type === 'IfCondition') act = { ...act, condition: 'stack > 0' };
             else if (type === 'ElseIfCondition') act = { ...act, condition: 'stack == 0' };
             else if (type === 'ElseCondition') act = { ...act };
-            else if (type === 'AddBuff') act = { ...act, target: 'owner', buffClass: 'Power_1T', caster: 'caster', stack: '1' };
+            else if (type === 'AddBuff') act = { ...act, target: 'owner', buffClass: 'Power_1T', caster: 'caster', stack: '1', props: '' };
             else if (type === 'DCModify') act = { ...act, field: 'PlusDamage', op: '+=', val: '1' };
             else if (type === 'BaseCall') act = { ...act };
             else if (type === 'StackCheckCall') act = { ...act };
