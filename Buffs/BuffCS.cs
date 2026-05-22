@@ -233,7 +233,7 @@ public class Hurt : Buff
             // 수치의 절반만큼 스택 감소")
             owner.Consume(this, stack / 2);
         }
-        } else
+         else
         {
             // 스택이 0이하가 되면 버프 제거
             owner.RemoveBuff(this);
@@ -294,4 +294,3 @@ public class Cure : Buff
     public Cure(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
 }
-
