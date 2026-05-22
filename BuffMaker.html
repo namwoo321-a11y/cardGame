@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unity Buff Code Maker (Dark Mode Fixed)</title>
+    <title>Unity Buff Code Maker (Toggle UI & Auto-fill)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -40,7 +40,7 @@
 
     <main class="flex flex-1 overflow-hidden relative">
         <div class="w-24 md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 z-10">
-            <div class="p-2 md:p-3 bg-slate-800 font-bold text-slate-300 border-b border-slate-800 flex justify-between items-center text-xs md:text-sm">
+            <div class="p-2 md:p-3 bg-slate-850 font-bold text-slate-300 border-b border-slate-850 flex justify-between items-center text-xs md:text-sm">
                 <span class="hidden md:inline">버프 목록</span>
                 <span class="md:hidden">목록</span>
                 <button onclick="addNewBuff()" class="bg-blue-600 text-white p-1 rounded hover:bg-blue-500 transition" title="새 버프 추가">
@@ -63,15 +63,15 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1">Class Name (영문)</label>
-                        <input type="text" id="inp-className" data-bind="className" placeholder="예: Prote_A" class="w-full bg-slate-800 border border-slate-600 text-slate-100 placeholder-slate-500 rounded p-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                        <input type="text" id="inp-className" data-bind="className" placeholder="예: Prote_A" class="w-full bg-slate-850 border border-slate-750 text-slate-100 rounded p-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1">BnameKR (인게임 명칭)</label>
-                        <input type="text" id="inp-bNameKR" data-bind="bNameKR" placeholder="예: 자세 - 공세" class="w-full bg-slate-800 border border-slate-600 text-slate-100 placeholder-slate-500 rounded p-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                        <input type="text" id="inp-bNameKR" data-bind="bNameKR" placeholder="공백 시 Class Name 자동 적용" class="w-full bg-slate-850 border border-slate-750 text-slate-100 rounded p-1.5 focus:ring-2 focus:ring-blue-500 outline-none placeholder-slate-500">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1">BuffType</label>
-                        <select id="inp-buffType" data-bind="buffType" class="w-full bg-slate-800 border border-slate-600 text-slate-100 rounded p-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                        <select id="inp-buffType" data-bind="buffType" class="w-full bg-slate-850 border border-slate-750 text-slate-100 rounded p-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
                             <option value="Good">Good (긍정)</option>
                             <option value="Bad">Bad (부정)</option>
                             <option value="Power">Power (지속)</option>
@@ -82,11 +82,11 @@
                     </div>
                     <div class="md:col-span-3">
                         <label class="block text-xs font-semibold text-slate-400 mb-1">Description (설명 툴팁 - 최대 3줄)</label>
-                        <textarea id="inp-description" data-bind="description" class="w-full bg-slate-800 border border-slate-600 text-slate-100 placeholder-slate-500 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none font-mono text-xs md:text-sm resize-none" rows="3" placeholder="예: 힘 +{stack}&#10;턴 종료시 제거" onkeydown="if(event.key === 'Enter' && this.value.split('\n').length >= 3) event.preventDefault();"></textarea>
+                        <textarea id="inp-description" data-bind="description" class="w-full bg-slate-850 border border-slate-750 text-slate-100 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none font-mono text-xs md:text-sm resize-none" rows="3" placeholder="예: 힘 +{stack}&#10;턴 종료시 제거" onkeydown="if(event.key === 'Enter' && this.value.split('\n').length >= 3) event.preventDefault();"></textarea>
                     </div>
                     <div class="md:col-span-3">
                         <label class="block text-xs font-semibold text-slate-400 mb-1">클래스 내부 전역 코드 (변수 등)</label>
-                        <textarea id="inp-classCustomCode" data-bind="classCustomCode" class="w-full border border-slate-600 rounded p-2 bg-slate-800 text-emerald-400 placeholder-slate-500 outline-none font-mono text-xs md:text-sm resize-y" placeholder="예: private int damageThisTurn = 0;" oninput="this.rows = Math.max(2, this.value.split('\n').length);"></textarea>
+                        <textarea id="inp-classCustomCode" data-bind="classCustomCode" class="w-full border border-slate-750 rounded p-2 bg-slate-850 text-emerald-400 outline-none font-mono text-xs md:text-sm resize-y placeholder-slate-500" placeholder="예: private int damageThisTurn = 0;" oninput="this.rows = Math.max(2, this.value.split('\n').length);"></textarea>
                     </div>
                 </div>
             </section>
@@ -100,7 +100,7 @@
         </div>
 
         <div id="code-viewer-panel" class="hidden md:flex flex-col absolute inset-0 z-30 md:static md:w-[400px] lg:w-[500px] bg-slate-900 border-l border-slate-800 shrink-0 h-full">
-            <div class="flex justify-between items-center bg-slate-800 px-3 py-2 shrink-0 border-b border-slate-800">
+            <div class="flex justify-between items-center bg-slate-850 px-3 py-2 shrink-0 border-b border-slate-800">
                 <div class="flex gap-2">
                     <button onclick="setViewMode('single')" id="btn-view-single" class="text-xs px-2 py-1 rounded bg-slate-700 text-white font-bold border border-slate-700">현재 버프</button>
                     <button onclick="setViewMode('full')" id="btn-view-full" class="text-xs px-2 py-1 rounded bg-transparent text-slate-400 hover:text-white">전체(<span id="target-file-label">BuffCS.cs</span>)</button>
@@ -117,13 +117,13 @@
 
     <div id="github-modal" class="hidden fixed inset-0 bg-slate-950/70 z-50 flex items-center justify-center p-4">
         <div class="bg-slate-900 rounded-lg shadow-xl w-full max-w-sm flex flex-col border border-slate-800">
-            <div class="p-4 border-b border-slate-800 font-bold text-lg flex justify-between items-center bg-slate-800 rounded-t-lg">
+            <div class="p-4 border-b border-slate-800 font-bold text-lg flex justify-between items-center bg-slate-850 rounded-t-lg">
                 <span class="flex items-center gap-2"><i data-lucide="cloud-download" class="w-5 h-5 text-indigo-400"></i> GitHub 파일 불러오기</span>
                 <button onclick="closeGitHubModal()" class="text-slate-400 hover:text-slate-200"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <div class="p-4 flex flex-col gap-3">
                 <label class="text-sm font-bold text-slate-400">대상 파일 선택 (Buffs/ 폴더)</label>
-                <select id="github-file-select" class="w-full border border-slate-700 rounded p-2 focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-sm bg-slate-800 text-slate-200">
+                <select id="github-file-select" class="w-full border border-slate-750 rounded p-2 focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-sm bg-slate-850 text-slate-200">
                     <option value="BuffCS.cs">BuffCS.cs</option>
                     <option value="BuffCS_E_0.cs">BuffCS_E_0.cs</option>
                     <option value="BuffCS_E_1.cs">BuffCS_E_1.cs</option>
@@ -139,8 +139,8 @@
                 </select>
                 <p class="text-xs text-red-400 font-semibold mt-2">※ 주의: 불러올 경우 현재 작성 중인 목록이 모두 덮어씌워집니다.</p>
             </div>
-            <div class="p-4 border-t border-slate-800 flex justify-end gap-2 bg-slate-800 rounded-b-lg">
-                <button onclick="closeGitHubModal()" class="px-4 py-2 bg-slate-800 border border-slate-700 text-slate-300 rounded hover:bg-slate-700 font-bold text-sm">취소</button>
+            <div class="p-4 border-t border-slate-800 flex justify-end gap-2 bg-slate-850 rounded-b-lg">
+                <button onclick="closeGitHubModal()" class="px-4 py-2 bg-slate-850 border border-slate-750 text-slate-300 rounded hover:bg-slate-750 font-bold text-sm">취소</button>
                 <button onclick="confirmGitHubImport()" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 font-bold text-sm">불러오기</button>
             </div>
         </div>
@@ -164,6 +164,7 @@
             "BuffCS_Manity.cs", "BuffCS_Prote.cs", "BuffCS_UG.cs", "BuffCS_Whai.cs"
         ];
 
+        // --- 1. 상수 및 데이터 구조 ---
         const EVENT_DEF = [
             { id: 'OnActivate', name: 'OnActivate()', desc: '최초 부여 시' },
             { id: 'OnUpdate', name: 'OnUpdate(int val)', desc: '스택 갱신 시' },
@@ -200,8 +201,9 @@
         let viewMode = 'single';
         let currentTargetFile = "BuffCS.cs"; 
 
+        // --- 2. 초기화 ---
         function initApp() {
-            const saved = localStorage.getItem('buffMakerData_v18');
+            const saved = localStorage.getItem('buffMakerData_v19');
             if (saved) {
                 try { buffCollection = JSON.parse(saved); } catch (e) { buffCollection = []; }
             }
@@ -217,7 +219,7 @@
         }
 
         function saveData() {
-            localStorage.setItem('buffMakerData_v18', JSON.stringify(buffCollection));
+            localStorage.setItem('buffMakerData_v19', JSON.stringify(buffCollection));
             localStorage.setItem('buffMakerTargetFile', currentTargetFile);
         }
 
@@ -232,10 +234,12 @@
                 classCustomCode: "",
                 events: {}
             };
-            EVENT_DEF.forEach(ev => b.events[ev.id] = { active: false, actions: [] });
+            // showButtons: 버튼 펼침/접힘 상태 속성 추가
+            EVENT_DEF.forEach(ev => b.events[ev.id] = { active: false, showButtons: false, actions: [] });
             return b;
         }
 
+        // --- 3. UI 렌더링 ---
         function renderAll() {
             document.getElementById('target-file-label').innerText = currentTargetFile;
             renderBuffList();
@@ -283,6 +287,7 @@
             EVENT_DEF.forEach(ev => {
                 const evData = buff.events[ev.id];
                 const isActive = evData.active;
+                const showBtns = evData.showButtons; // 버튼 토글 상태
                 
                 html += `
                 <div class="bg-slate-900 rounded-lg shadow-sm border transition-all duration-200 ${isActive ? 'border-blue-500 ring-1 ring-blue-500/50' : 'border-slate-800'}">
@@ -303,21 +308,28 @@
                     });
                     html += `</div>`;
                     
+                    // 토글 버튼 및 액션 버튼 묶음
                     html += `
-                        <div class="mt-3 flex flex-wrap gap-1.5">
-                            <button onclick="addAction('${ev.id}', 'StatChange')" class="bg-teal-900/40 border border-teal-700 text-teal-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-teal-800/40 transition">스탯 증감</button>
-                            <button onclick="addAction('${ev.id}', 'F_ChaMethod')" class="bg-indigo-900/40 border border-indigo-700 text-indigo-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-indigo-800/40 transition">F_Cha 행동</button>
-                            <button onclick="addAction('${ev.id}', 'StackChange')" class="bg-fuchsia-900/40 border border-fuchsia-700 text-fuchsia-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-fuchsia-800/40 transition">스택 조작 (+/-)</button>
-                            <button onclick="addAction('${ev.id}', 'AddBuff')" class="bg-blue-900/40 border border-blue-700 text-blue-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-blue-800/40 transition">버프 부여</button>
-                            <button onclick="addAction('${ev.id}', 'IfCondition')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">If</button>
-                            <button onclick="addAction('${ev.id}', 'ElseIfCondition')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">else if</button>
-                            <button onclick="addAction('${ev.id}', 'ElseCondition')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">else</button>
-                            <button onclick="addAction('${ev.id}', 'EndIf')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">조건 닫기 (})</button>
-                            <button onclick="addAction('${ev.id}', 'RemoveThis')" class="bg-red-900/40 border border-red-700 text-red-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-red-800/40 transition">자신 제거</button>
-                            <button onclick="addAction('${ev.id}', 'StackCheckCall')" class="bg-fuchsia-900/40 border border-fuchsia-700 text-fuchsia-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-fuchsia-800/40 transition">StackCheck()</button>
-                            <button onclick="addAction('${ev.id}', 'Custom')" class="bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm transition">C# 커스텀</button>
+                        <div class="mt-3 flex items-start gap-1.5 border-t border-slate-800 pt-3">
+                            <button onclick="toggleActionButtons('${ev.id}')" class="bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 px-2.5 py-1 text-xs rounded shadow-sm transition font-bold flex items-center justify-center shrink-0 h-6">
+                                ${showBtns ? '&lt;' : '&gt;'}
+                            </button>
+                            <div class="${showBtns ? 'flex' : 'hidden'} flex-wrap gap-1.5 flex-1 transition-all">
+                                <button onclick="addAction('${ev.id}', 'StatChange')" class="bg-teal-900/40 border border-teal-700 text-teal-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-teal-800/40 transition">스탯 증감</button>
+                                <button onclick="addAction('${ev.id}', 'F_ChaMethod')" class="bg-indigo-900/40 border border-indigo-700 text-indigo-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-indigo-800/40 transition">F_Cha 행동</button>
+                                <button onclick="addAction('${ev.id}', 'StackChange')" class="bg-fuchsia-900/40 border border-fuchsia-700 text-fuchsia-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-fuchsia-800/40 transition">스택 조작 (+/-)</button>
+                                <button onclick="addAction('${ev.id}', 'AddBuff')" class="bg-blue-900/40 border border-blue-700 text-blue-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-blue-800/40 transition">버프 부여</button>
+                                <button onclick="addAction('${ev.id}', 'IfCondition')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">If</button>
+                                <button onclick="addAction('${ev.id}', 'ElseIfCondition')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">else if</button>
+                                <button onclick="addAction('${ev.id}', 'ElseCondition')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">else</button>
+                                <button onclick="addAction('${ev.id}', 'EndIf')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">조건 닫기 (})</button>
+                                <button onclick="addAction('${ev.id}', 'RemoveThis')" class="bg-red-900/40 border border-red-700 text-red-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-red-800/40 transition">자신 제거</button>
+                                <button onclick="addAction('${ev.id}', 'StackCheckCall')" class="bg-fuchsia-900/40 border border-fuchsia-700 text-fuchsia-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-fuchsia-800/40 transition">StackCheck()</button>
+                                <button onclick="addAction('${ev.id}', 'Custom')" class="bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm transition">C# 커스텀</button>
+                                ${(ev.id === 'BeforeAttack' || ev.id === 'BeforeDamaged') ? `<button onclick="addAction('${ev.id}', 'DCModify')" class="bg-purple-900/40 border border-purple-700 text-purple-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-purple-800/40 transition">DC 수정</button>` : ''}
+                            </div>
+                        </div>
                     `;
-                    if(ev.id === 'BeforeAttack' || ev.id === 'BeforeDamaged') html += `<button onclick="addAction('${ev.id}', 'DCModify')" class="bg-purple-900/40 border border-purple-700 text-purple-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-purple-800/40 transition">DC 수정</button>`;
                     
                     html += `</div></div>`;
                 }
@@ -362,7 +374,7 @@
                 inner = `
                     <span class="text-slate-200 font-mono text-[10px] md:text-xs font-bold">stack </span>
                     <select onchange="updateAction('${eventId}', ${idx}, 'op', this.value)" class="bg-slate-800 text-slate-100 p-1 text-[10px] md:text-xs rounded font-bold text-fuchsia-400 border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none">${ops}</select>
-                    ${(act.op !== '++' && act.op !== '--') ? `<input type="text" oninput="updateAction('${eventId}', ${idx}, 'val', this.value)" value="${escapeHtml(act.val)}" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded w-12 font-mono focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500" placeholder="값">` : ''}
+                    ${(act.op !== '++' && act.op !== '--') ? `<input type="text" oninput="updateAction('${eventId}', ${idx}, 'val', this.value)" value="${escapeHtml(act.val)}" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded w-12 font-mono focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500">` : ''}
                     <span class="text-slate-200 font-mono text-[10px] md:text-xs">;</span>
                 `;
             } else if(act.type === 'IfCondition') {
@@ -446,11 +458,12 @@
             }
             
             code += `    public override string Bname => "${className}";\n`;
-            if (buff.bNameKR) {
-                code += `    public override string BnameKR => "${buff.bNameKR}";\n`;
-            }
             
-            // Description (최대 3줄) 다중 보간 포맷팅 로직
+            // BnameKR 공백/미입력시 자동 적용
+            let krName = (buff.bNameKR || "").trim();
+            if (!krName) krName = className;
+            code += `    public override string BnameKR => "${krName}";\n`;
+            
             let descLines = (buff.description || "").split('\n').slice(0, 3);
             if (descLines.length === 0 || (descLines.length === 1 && descLines[0] === "")) {
                 code += `    public override string Description => "";\n`;
@@ -470,7 +483,6 @@
                 code += buff.classCustomCode.trim().split('\n').map(l => `    ${l}`).join('\n') + `\n\n`;
             }
 
-            // 생성자를 한 줄로 깔끔하게 처리
             code += `    public ${className}(F_Cha target, F_Cha user, int s) : base(target, user, s) { }\n\n`;
 
             EVENT_DEF.forEach(ev => {
@@ -479,7 +491,6 @@
                     code += `    ${EVENT_SIGNATURES[ev.id]}\n`;
                     let indentLvl = 2;
 
-                    // OnUpdate는 무조건 base 고정 추가
                     if (ev.id === 'OnUpdate') {
                         code += `        base.OnUpdate(val);\n`;
                     }
@@ -725,7 +736,7 @@
                     flushCustom(); actions.push({ type: 'BaseCall' }); continue;
                 }
                 
-                // this 매개변수 전용 StatChange
+                // this 매개변수 전용 StatChange 파싱 (새로 추가됨)
                 const statThisMatch = line.match(/^(owner|caster|DC\.Target|DC\.Attacker)\.(Gain|Consume)\(this,\s*([^)]+)\);$/);
                 if (statThisMatch) {
                     flushCustom(); 
@@ -733,7 +744,7 @@
                     continue;
                 }
                 
-                // 기존 문자열 매개변수 StatChange
+                // 문자열 매개변수 StatChange
                 const statMatch = line.match(/^(owner|caster|DC\.Target|DC\.Attacker)\.(Gain|Consume)\("([^"]+)",\s*([^)]+)\);$/);
                 if (statMatch) {
                     flushCustom(); 
@@ -824,7 +835,7 @@
             return actions;
         }
 
-        // --- 7. 사용자 이벤트 라우팅 (메타데이터 실시간 동기화) ---
+        // --- 7. 사용자 이벤트 라우팅 (메타데이터 실시간 동기화 복구 및 검증) ---
         document.addEventListener('input', e => {
             if(e.target.matches('[data-bind]')) {
                 buffCollection[currentIndex][e.target.getAttribute('data-bind')] = e.target.type === 'number' ? parseInt(e.target.value) || 0 : e.target.value;
@@ -859,6 +870,11 @@
 
         window.toggleEvent = function(id) {
             buffCollection[currentIndex].events[id].active = !buffCollection[currentIndex].events[id].active;
+            saveData(); renderEditor(); renderCode(); lucide.createIcons();
+        }
+
+        window.toggleActionButtons = function(eventId) {
+            buffCollection[currentIndex].events[eventId].showButtons = !buffCollection[currentIndex].events[eventId].showButtons;
             saveData(); renderEditor(); renderCode(); lucide.createIcons();
         }
 
@@ -899,9 +915,6 @@
         window.updateAction = function(eventId, idx, prop, val) {
             buffCollection[currentIndex].events[eventId].actions[idx][prop] = val;
             saveData(); renderCode();
-            if (prop === 'stat') {
-                renderEditor();
-            }
         }
 
         window.setViewMode = function(mode) {
@@ -983,7 +996,6 @@
             }
         }
 
-        // 실행
         initApp();
     </script>
 </body>
