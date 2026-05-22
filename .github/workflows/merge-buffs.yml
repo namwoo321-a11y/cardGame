@@ -1,0 +1,36 @@
+name: Auto Merge BuffCS
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      # 다음 파일들이 수정되었을 때만 이 액션이 실행됩니다.
+      - 'BuffCS*.cs'
+      - 'BuffCase.cs'
+      - 'merge_buffs.py'
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Run Python script to merge
+        run: python merge_buffs.py
+
+      - name: Commit and Push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add BuffCS.cs
+          # 변경사항이 있을 때만 커밋
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-generated BuffCS.cs"
+          git push
