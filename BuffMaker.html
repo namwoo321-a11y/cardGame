@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unity Buff Code Maker (Dynamic Layout & Sort)</title>
+    <title>Unity Buff Code Maker (V16 - Bug Fixed)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -12,34 +12,29 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         .code-panel::-webkit-scrollbar-thumb { background: #475569; }
-        /* 텍스트 영역 부드러운 높이 전환 */
         textarea { transition: height 0.1s ease-in-out; }
     </style>
 </head>
 <body class="bg-slate-100 h-screen w-screen overflow-hidden flex flex-col font-sans text-sm md:text-base relative">
 
-    <!-- 상단 헤더 -->
     <header class="bg-blue-800 text-white p-3 shadow-md flex justify-between items-center z-20 shrink-0">
         <div class="flex items-center gap-2">
             <i data-lucide="swords" class="w-5 h-5 md:w-6 md:h-6"></i>
             <h1 class="text-lg md:text-xl font-bold tracking-wide">Buff Code Maker</h1>
         </div>
         <div class="flex gap-2">
-            <!-- 통합 다운로드 버튼 추가 -->
+            <!-- 통합 다운로드 버튼 -->
             <button onclick="mergeAndDownloadAll(this)" class="flex items-center gap-1 bg-amber-600 hover:bg-amber-500 text-white px-2 py-1.5 md:px-3 md:py-1.5 rounded text-xs md:text-sm font-bold transition shadow" title="모든 파일을 병합하여 1개의 C# 파일로 다운로드합니다.">
                 <i data-lucide="package-search" class="w-4 h-4"></i> <span class="hidden md:inline">통합 다운로드 (BuffCS.cs)</span><span class="md:hidden">통합 다운로드</span>
             </button>
-
             <!-- GitHub에서 불러오기 버튼 (모달 연결) -->
             <button onclick="openGitHubModal()" class="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1.5 md:px-3 md:py-1.5 rounded text-xs md:text-sm font-bold transition shadow">
                 <i data-lucide="cloud-download" class="w-4 h-4"></i> <span class="hidden md:inline">GitHub에서 불러오기</span><span class="md:hidden">불러오기</span>
             </button>
-
             <!-- 모바일 전용 코드 보기 토글 -->
             <button onclick="toggleMobileCode()" class="md:hidden flex items-center gap-1 bg-slate-700 text-white px-2 py-1.5 rounded text-xs font-bold shadow">
                 <i data-lucide="code-2" class="w-4 h-4"></i> 코드 확인
             </button>
-
             <!-- GitHub 덮어씌우기 버튼 -->
             <button onclick="copyAndOpenGitHub()" class="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1.5 md:px-3 md:py-1.5 rounded text-xs md:text-sm font-bold transition shadow">
                 <i data-lucide="github" class="w-4 h-4"></i> <span class="hidden md:inline">코드 복사 및 GitHub 덮어씌우기</span><span class="md:hidden">GitHub 적용</span>
@@ -48,7 +43,6 @@
     </header>
 
     <main class="flex flex-1 overflow-hidden relative">
-        
         <!-- 좌측 패널: 버프 리스트 -->
         <div class="w-24 md:w-64 bg-slate-200 border-r border-slate-300 flex flex-col shrink-0 z-10">
             <div class="p-2 md:p-3 bg-slate-300 font-bold text-slate-700 flex justify-between items-center text-xs md:text-sm">
@@ -58,14 +52,11 @@
                     <i data-lucide="plus" class="w-4 h-4"></i>
                 </button>
             </div>
-            <div id="buff-list" class="flex flex-col overflow-y-auto p-2 gap-2 flex-1">
-                <!-- JS 렌더링 -->
-            </div>
+            <div id="buff-list" class="flex flex-col overflow-y-auto p-2 gap-2 flex-1"></div>
         </div>
 
         <!-- 중앙 패널: 단일 버프 편집기 -->
         <div id="editor-panel" class="flex-1 h-full overflow-y-auto p-3 md:p-6 space-y-4 md:space-y-6 pb-20">
-            
             <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
                 <div class="flex justify-between items-center mb-3">
                     <h2 class="text-base md:text-lg font-bold text-slate-800 flex items-center gap-2">
@@ -75,7 +66,6 @@
                         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 이 버프 삭제
                     </button>
                 </div>
-
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">Class Name (영문)</label>
@@ -98,11 +88,11 @@
                     </div>
                     <div class="md:col-span-3">
                         <label class="block text-xs font-semibold text-slate-600 mb-1">Description (설명 툴팁 - 최대 3줄)</label>
-                        <textarea id="inp-description" data-bind="description" class="w-full border border-slate-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none font-mono text-xs md:text-sm resize-none" rows="3" placeholder="예: 힘 +{stack}&#10;턴 종료시 제거" onkeydown="if(event.key === 'Enter' && this.value.split('\n').length >= 3) event.preventDefault();"></textarea>
+                        <textarea id="inp-description" data-bind="description" class="w-full border border-slate-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none font-mono text-xs md:text-sm resize-none" rows="3" onkeydown="if(event.key === 'Enter' && this.value.split('\n').length >= 3) event.preventDefault();"></textarea>
                     </div>
                     <div class="md:col-span-3">
                         <label class="block text-xs font-semibold text-slate-600 mb-1">클래스 내부 전역 코드 (변수 등)</label>
-                        <textarea id="inp-classCustomCode" data-bind="classCustomCode" class="w-full border border-slate-300 rounded p-2 bg-slate-800 text-emerald-400 outline-none font-mono text-xs md:text-sm resize-y" placeholder="예: private int damageThisTurn = 0;" oninput="this.rows = Math.max(2, this.value.split('\n').length);"></textarea>
+                        <textarea id="inp-classCustomCode" data-bind="classCustomCode" class="w-full border border-slate-300 rounded p-2 bg-slate-800 text-emerald-400 outline-none font-mono text-xs md:text-sm resize-y" oninput="this.rows = Math.max(2, this.value.split('\n').length);"></textarea>
                     </div>
                 </div>
             </section>
@@ -111,13 +101,10 @@
                 <h2 class="text-base md:text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
                     <i data-lucide="zap" class="w-4 h-4 text-amber-500"></i> 발동 로직 설정 (F_Cha 연산 지원)
                 </h2>
-                <div id="event-list-container" class="space-y-2 pb-10">
-                    <!-- JS 렌더링 -->
-                </div>
+                <div id="event-list-container" class="space-y-2 pb-10"></div>
             </section>
         </div>
 
-        <!-- 우측 패널: 모바일에서는 숨김, 토글시 등장 -->
         <div id="code-viewer-panel" class="hidden md:flex flex-col absolute inset-0 z-30 md:static md:w-[400px] lg:w-[500px] bg-slate-900 border-l border-slate-700 shrink-0 h-full">
             <div class="flex justify-between items-center bg-slate-800 px-3 py-2 shrink-0 border-b border-slate-700">
                 <div class="flex gap-2">
@@ -178,7 +165,7 @@
                 .replace(/'/g, '&#039;');
         };
 
-        // GitHub 병합 타겟 파일 리스트 (업데이트됨)
+        // GitHub 병합 타겟 파일 리스트
         const MERGE_TARGET_FILES = [
             "BuffCS.cs", "BuffCS_E_0.cs", "BuffCS_E_1.cs", "BuffCS_Anima.cs",
             "BuffCS_El.cs", "BuffCS_Hana.cs", "BuffCS_Hina.cs", "BuffCS_Kira.cs",
@@ -195,7 +182,8 @@
             { id: 'BeforeDamaged', name: 'BeforeDamaged(DamContext DC)', desc: '피격 전 (피해량 조작)' },
             { id: 'AfterDamaged', name: 'AfterDamaged(DamContext DC)', desc: '피격 후' },
             { id: 'BeforeAttack', name: 'BeforeAttack(DamContext DC)', desc: '공격 전 (조건 검사)' },
-            { id: 'AfterAttack', name: 'AfterAttack(DamContext DC)', desc: '공격 후' }
+            { id: 'AfterAttack', name: 'AfterAttack(DamContext DC)', desc: '공격 후' },
+            { id: 'StackCheck', name: 'StackCheck()', desc: '스택 조건 검사(사라짐 조건 오버라이드)' }
         ];
 
         const EVENT_SIGNATURES = {
@@ -207,7 +195,8 @@
             BeforeDamaged: "public override DamContext BeforeDamaged(DamContext DC)\n    {",
             AfterDamaged: "public override void AfterDamaged(DamContext DC)\n    {",
             BeforeAttack: "public override DamContext BeforeAttack(DamContext DC)\n    {",
-            AfterAttack: "public override void AfterAttack(DamContext DC)\n    {"
+            AfterAttack: "public override void AfterAttack(DamContext DC)\n    {",
+            StackCheck: "public override void StackCheck()\n    {"
         };
 
         const RETURN_STATEMENTS = {
@@ -222,7 +211,7 @@
 
         // --- 2. 초기화 ---
         function initApp() {
-            const saved = localStorage.getItem('buffMakerData_v15');
+            const saved = localStorage.getItem('buffMakerData_v16');
             if (saved) {
                 try { buffCollection = JSON.parse(saved); } catch (e) { buffCollection = []; }
             }
@@ -238,7 +227,7 @@
         }
 
         function saveData() {
-            localStorage.setItem('buffMakerData_v15', JSON.stringify(buffCollection));
+            localStorage.setItem('buffMakerData_v16', JSON.stringify(buffCollection));
             localStorage.setItem('buffMakerTargetFile', currentTargetFile);
         }
 
@@ -336,6 +325,7 @@
                             <button onclick="addAction('${ev.id}', 'ElseCondition')" class="bg-amber-50 border border-amber-200 text-amber-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">else</button>
                             <button onclick="addAction('${ev.id}', 'EndIf')" class="bg-amber-50 border border-amber-200 text-amber-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">조건 닫기 (})</button>
                             <button onclick="addAction('${ev.id}', 'RemoveThis')" class="bg-red-50 border border-red-200 text-red-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">자신 제거</button>
+                            <button onclick="addAction('${ev.id}', 'StackCheckCall')" class="bg-fuchsia-50 border border-fuchsia-200 text-fuchsia-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">StackCheck()</button>
                             <button onclick="addAction('${ev.id}', 'Custom')" class="bg-slate-800 text-white px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">C# 커스텀</button>
                     `;
                     if(ev.id === 'BeforeAttack' || ev.id === 'BeforeDamaged') html += `<button onclick="addAction('${ev.id}', 'DCModify')" class="bg-purple-50 border border-purple-200 text-purple-800 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm">DC 수정</button>`;
@@ -381,7 +371,7 @@
                 inner = `
                     <span class="text-slate-700 font-mono text-[10px] md:text-xs font-bold">stack </span>
                     <select onchange="updateAction('${eventId}', ${idx}, 'op', this.value)" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded font-bold text-fuchsia-700">${ops}</select>
-                    ${(act.op !== '++' && act.op !== '--') ? `<input type="text" oninput="updateAction('${eventId}', ${idx}, 'val', this.value)" value="${escapeHtml(act.val)}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded w-12 font-mono" placeholder="값">` : ''}
+                    ${(act.op !== '++' && act.op !== '--') ? `<input type="text" oninput="updateAction('${eventId}', ${idx}, 'val', this.value)" value="${escapeHtml(act.val)}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded w-12 font-mono">` : ''}
                     <span class="text-slate-700 font-mono text-[10px] md:text-xs">;</span>
                 `;
             } else if(act.type === 'IfCondition') {
@@ -429,6 +419,8 @@
                 `;
             } else if(act.type === 'RemoveThis') {
                 inner = `<span class="font-mono text-[10px] md:text-xs text-red-600 font-semibold">owner.RemoveBuff(this);</span>`;
+            } else if(act.type === 'StackCheckCall') {
+                inner = `<span class="font-mono text-[10px] md:text-xs text-fuchsia-600 font-semibold">StackCheck();</span>`;
             } else if(act.type === 'Custom') {
                 let codeLines = act.code ? act.code.split('\n').length : 2;
                 inner = `<textarea oninput="this.rows = Math.max(2, this.value.split('\\n').length); updateAction('${eventId}', ${idx}, 'code', this.value)" class="w-full border border-slate-700 rounded p-2 font-mono text-[11px] md:text-xs bg-slate-800 text-emerald-400 outline-none resize-y" rows="${Math.max(2, codeLines)}">${escapeHtml(act.code)}</textarea>`;
@@ -467,6 +459,7 @@
                 code += `    public override string BnameKR => "${buff.bNameKR}";\n`;
             }
             
+            // Description (최대 3줄) 다중 보간 포맷팅 로직
             let descLines = (buff.description || "").split('\n').slice(0, 3);
             if (descLines.length === 0 || (descLines.length === 1 && descLines[0] === "")) {
                 code += `    public override string Description => "";\n`;
@@ -486,6 +479,7 @@
                 code += buff.classCustomCode.trim().split('\n').map(l => `    ${l}`).join('\n') + `\n\n`;
             }
 
+            // 생성자를 한 줄로 깔끔하게 처리
             code += `    public ${className}(F_Cha target, F_Cha user, int s) : base(target, user, s) { }\n\n`;
 
             EVENT_DEF.forEach(ev => {
@@ -494,6 +488,7 @@
                     code += `    ${EVENT_SIGNATURES[ev.id]}\n`;
                     let indentLvl = 2;
 
+                    // OnUpdate는 무조건 base 고정 추가
                     if (ev.id === 'OnUpdate') {
                         code += `        base.OnUpdate(val);\n`;
                     }
@@ -519,6 +514,7 @@
                         }
                         else if(act.type === 'EndIf') { line = `}`; }
                         else if(act.type === 'RemoveThis') line = `owner.RemoveBuff(this);`;
+                        else if(act.type === 'StackCheckCall') line = `StackCheck();`;
                         else if(act.type === 'DCModify') line = `DC.${act.field} ${act.op} ${act.val};`;
                         else if(act.type === 'BaseCall') line = `base.${ev.id}(${ev.id === 'OnUpdate' ? 'val' : ''});`;
                         else if(act.type === 'Custom') line = act.code;
@@ -708,8 +704,21 @@
                 let line = lines[i].trim();
                 if (!line) continue;
                 
+                // 주석 지능형 파싱 (Code; // Comment -> Comment \n Code;)
+                const commentIndex = line.indexOf('//');
+                if (commentIndex > 0) { 
+                    const codePart = line.substring(0, commentIndex).trim();
+                    const commentPart = line.substring(commentIndex + 2).trim();
+                    
+                    actions.push({ type: 'Custom', code: "// " + commentPart });
+                    line = codePart;
+                }
+
                 if (line === "owner.RemoveBuff(this);") {
                     flushCustom(); actions.push({ type: 'RemoveThis' }); continue;
+                }
+                if (line === "StackCheck();" || line === "stackCheck();") {
+                    flushCustom(); actions.push({ type: 'StackCheckCall' }); continue;
                 }
                 if (line === "base.OnUpdate(val);") { 
                     continue; 
@@ -808,64 +817,7 @@
             return actions;
         }
 
-        // --- 6. 다중 파일 다운로드 통합 기능 ---
-        async function mergeAndDownloadAll(btnElement) {
-            const originalHtml = btnElement.innerHTML;
-            btnElement.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> 병합 중...`;
-            lucide.createIcons();
-            
-            try {
-                let combinedCode = "";
-                let usingSet = new Set();
-                
-                // GitHub에서 fetch할 때 최신 스크립트처럼 BOM 이슈를 방지하고 통합
-                const responses = await Promise.all(MERGE_TARGET_FILES.map(file => 
-                    fetch("https://raw.githubusercontent.com/namwoo321-a11y/cardGame/main/Buffs/" + file + '?' + Date.now())
-                ));
-                
-                const texts = await Promise.all(responses.map(async (res) => {
-                    if (!res.ok) return ""; 
-                    let t = await res.text();
-                    return t.replace(/^\uFEFF/, ''); // BOM 제거 (가장 중요)
-                }));
-                
-                texts.forEach(text => {
-                    if(!text) return;
-                    const lines = text.split('\n');
-                    lines.forEach(line => {
-                        let cleanLine = line.trim();
-                        if (cleanLine.startsWith('using ') && cleanLine.endsWith(';')) {
-                            usingSet.add(cleanLine);
-                        } else {
-                            combinedCode += line + '\n';
-                        }
-                    });
-                });
-                
-                const finalCode = Array.from(usingSet).join('\n') + "\n\n" + combinedCode;
-                
-                // C# 파일 다운로드 트리거
-                const blob = new Blob([finalCode], { type: "text/plain;charset=utf-8" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = "BuffCS.cs";
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
-                alert("성공적으로 모든 파일을 병합하여 BuffCS.cs로 다운로드했습니다!");
-            } catch (e) {
-                console.error(e);
-                alert("파일 병합 중 오류가 발생했습니다.");
-            } finally {
-                btnElement.innerHTML = originalHtml;
-                lucide.createIcons();
-            }
-        }
-
-        // --- 7. 사용자 이벤트 라우팅 ---
+        // --- 7. 사용자 이벤트 라우팅 (메타데이터 실시간 동기화 복구 및 검증) ---
         document.addEventListener('input', e => {
             if(e.target.matches('[data-bind]')) {
                 buffCollection[currentIndex][e.target.getAttribute('data-bind')] = e.target.type === 'number' ? parseInt(e.target.value) || 0 : e.target.value;
@@ -925,6 +877,7 @@
             else if (type === 'AddBuff') act = { ...act, target: 'owner', buffClass: 'Power_1T', caster: 'caster', stack: '1' };
             else if (type === 'DCModify') act = { ...act, field: 'PlusDamage', op: '+=', val: '1' };
             else if (type === 'BaseCall') act = { ...act };
+            else if (type === 'StackCheckCall') act = { ...act };
             else if (type === 'Custom') act = { ...act, code: "// 직접 입력" };
             
             buffCollection[currentIndex].events[id].actions.push(act);
@@ -964,6 +917,60 @@
                 alert('클립보드 복사에 실패했습니다. 우측 코드를 직접 복사해주세요.');
                 window.open(editUrl, '_blank');
             });
+        }
+
+        async function mergeAndDownloadAll(btnElement) {
+            const originalHtml = btnElement.innerHTML;
+            btnElement.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> 병합 중...`;
+            lucide.createIcons();
+            
+            try {
+                let combinedCode = "";
+                let usingSet = new Set();
+                
+                const responses = await Promise.all(MERGE_TARGET_FILES.map(file => 
+                    fetch("https://raw.githubusercontent.com/namwoo321-a11y/cardGame/main/Buffs/" + file + '?' + Date.now())
+                ));
+                
+                const texts = await Promise.all(responses.map(async (res) => {
+                    if (!res.ok) return ""; 
+                    let t = await res.text();
+                    return t.replace(/^\uFEFF/, ''); 
+                }));
+                
+                texts.forEach(text => {
+                    if(!text) return;
+                    const lines = text.split('\n');
+                    lines.forEach(line => {
+                        let cleanLine = line.trim();
+                        if (cleanLine.startsWith('using ') && cleanLine.endsWith(';')) {
+                            usingSet.add(cleanLine);
+                        } else {
+                            combinedCode += line + '\n';
+                        }
+                    });
+                });
+                
+                const finalCode = Array.from(usingSet).join('\n') + "\n\n" + combinedCode;
+                
+                const blob = new Blob([finalCode], { type: "text/plain;charset=utf-8" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = "BuffCS.cs";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                alert("성공적으로 모든 파일을 병합하여 BuffCS.cs로 다운로드했습니다!");
+            } catch (e) {
+                console.error(e);
+                alert("파일 병합 중 오류가 발생했습니다.");
+            } finally {
+                btnElement.innerHTML = originalHtml;
+                lucide.createIcons();
+            }
         }
 
         initApp();
