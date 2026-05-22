@@ -39,9 +39,15 @@ public class Thorns : Buff
     public override BuffType BuffType => BuffType.Good;
     public override string Bname => "Thorns";
     public override string BnameKR => "가시";
-    public override string Description => $"받은 피해 반사 | {stack}회 남음";
+    public override string Description => $"피격: 받은 피해 반사 | {stack}회 남음" +
+        $"\n턴 종료: 제거";
 
     public Thorns(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
+
+    public override void OnTurnEnd()
+    {
+        owner.RemoveBuff(this);
+    }
 
     public override void AfterDamaged(DamContext DC)
     {
@@ -57,9 +63,26 @@ public class MotherboardEnhance : Buff
     public override BuffType BuffType => BuffType.Good;
     public override string Bname => "MotherboardEnhance";
     public override string BnameKR => "마더보드 강화";
-    public override string Description => $"임시 - 수치만큼 힘 +{stack}, 마더보드 영구 강화";
+    public override string Description => $"임시 - 수치만큼 힘 +{stack}," +
+        $"\n수치만큼 마더보드 영구 강화";
 
     public MotherboardEnhance(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
+
+    public override void OnActivate()
+    {
+        owner.AddBuff(new Power(owner, caster, stack));
+    }
+
+    public override void OnUpdate(int val)
+    {
+        base.OnUpdate(val);
+        owner.AddBuff(new Power(owner, caster, val));
+    }
+
+    public override void OnDeactivate()
+    {
+        owner.AddBuff(new Power_1T(owner, caster, -stack));
+    }
 
 }
 
@@ -67,10 +90,15 @@ public class Retreat : Buff
 {
     public override BuffType BuffType => BuffType.Good;
     public override string Bname => "Retreat";
-    public override string BnameKR => "Retreat";
-    public override string Description => $"[옵저버] 자동생성 버프";
+    public override string BnameKR => "후퇴";
+    public override string Description => $"{stack}턴 뒤 안전하게 후퇴," +
+        $"\n전투 시작시 부여 (옵저버)";
 
     public Retreat(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
+
+    public override void OnTurnEnd()
+    {
+    }
 
 }
 
