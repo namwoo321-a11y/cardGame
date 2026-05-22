@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +17,10 @@ public class GPRand : Buff
 
     public GPRand(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
+    public override void OnActivate()
+    {
+    }
+
 }
 
 public class Explosion : Buff
@@ -24,7 +28,7 @@ public class Explosion : Buff
     public override BuffType BuffType => BuffType.Good;
     public override string Bname => "Explosion";
     public override string BnameKR => "폭발";
-    public override string Description => $"적 대상으로 폭발,";
+    public override string Description => $"적 대상 폭발, 피해";
 
     public Explosion(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
@@ -49,7 +53,7 @@ public class GPY : Buff
 
     public override void OnActivate()
     {
-        AddBuff(new GP(owner, caster,stack){Y = stack;});
+        owner.AddBuff(new GP(owner, caster,stack){Y = stack});
         owner.RemoveBuff(this);
     }
 
@@ -66,7 +70,7 @@ public class GPP : Buff
 
     public override void OnActivate()
     {
-        AddBuff(new GP(owner, caster,stack){P = stack;});
+        owner.AddBuff(new GP(owner, caster,stack){P = stack});
         owner.RemoveBuff(this);
     }
 
@@ -83,7 +87,7 @@ public class GPR : Buff
 
     public override void OnActivate()
     {
-        AddBuff(new GP(owner, caster,stack){R = stack;});
+        owner.AddBuff(new GP(owner, caster,stack){R = stack});
         owner.RemoveBuff(this);
     }
 
@@ -94,7 +98,7 @@ public class GPSelf : Buff
     public override BuffType BuffType => BuffType.Good;
     public override string Bname => "GPSelf";
     public override string BnameKR => "자신 화약?";
-    public override string Description => $"????";
+    public override string Description => $"???";
 
     public GPSelf(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
@@ -150,13 +154,13 @@ public class GP : Buff
     public override string Bname => "GP";
     public override string BnameKR => "화약";
     public override string Description => $"화약 {stack} |적 {Red} | 자 {Purple} | 황 {Yellow}" +
-        $"\n예상 피해 {Red*6, Purple*5, Yellow*4}";
+        $"\n예상 피해 {R*6 + P*5 + Y*4}";
 
     public int R = 0;
-        public int P = 0;
-        public int Y = 0;
-        // public string[] GPC = new string[3]{null,null,null}
-        // 최대 크기 3인 string이거 만듬
+            public int P = 0;
+            public int Y = 0;
+            // public string[] GPC = new string[3]{null,null,null}
+            // 최대 크기 3인 string이거 만듬
 
     public GP(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
@@ -166,7 +170,7 @@ public class GP : Buff
         if (stack > 3)
         {
             stack -= 3;
-            if (R>0)
+            if (R > 0)
             {
                 owner.TakeDamage(3 * 7);
                 owner.AddBuff(new Burn(owner, caster, 3));
