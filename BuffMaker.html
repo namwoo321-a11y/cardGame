@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unity Buff Code Maker (Dynamic Layout & Sort)</title>
+    <title>Unity Buff Code Maker (Bug Fixed)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -12,7 +12,6 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         .code-panel::-webkit-scrollbar-thumb { background: #475569; }
-        /* 텍스트 영역 부드러운 높이 전환 */
         textarea { transition: height 0.1s ease-in-out; }
     </style>
 </head>
@@ -93,7 +92,6 @@
                     </div>
                     <div class="md:col-span-3">
                         <label class="block text-xs font-semibold text-slate-600 mb-1">Description (설명 툴팁 - 최대 3줄)</label>
-                        <!-- 최대 3줄까지만 입력되도록 제한 추가 -->
                         <textarea id="inp-description" data-bind="description" class="w-full border border-slate-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none font-mono text-xs md:text-sm resize-none" rows="3" placeholder="예: 힘 +{stack}&#10;턴 종료시 제거" onkeydown="if(event.key === 'Enter' && this.value.split('\n').length >= 3) event.preventDefault();"></textarea>
                     </div>
                     <div class="md:col-span-3">
@@ -164,6 +162,17 @@
     </div>
 
     <script>
+        // HTML 안전 이스케이프 함수 (따옴표 깨짐 방지용)
+        const escapeHtml = (str) => {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        };
+
         // --- 1. 상수 및 데이터 구조 ---
         const EVENT_DEF = [
             { id: 'OnActivate', name: 'OnActivate()', desc: '최초 부여 시' },
@@ -197,11 +206,11 @@
         let buffCollection = [];
         let currentIndex = 0;
         let viewMode = 'single';
-        let currentTargetFile = "BuffCase.cs"; // 현재 연동중인 파일명 보관
+        let currentTargetFile = "BuffCase.cs"; 
 
         // --- 2. 초기화 ---
         function initApp() {
-            const saved = localStorage.getItem('buffMakerData_v12');
+            const saved = localStorage.getItem('buffMakerData_v13'); // 버전업
             if (saved) {
                 try { buffCollection = JSON.parse(saved); } catch (e) { buffCollection = []; }
             }
@@ -209,7 +218,6 @@
                 buffCollection.push(createEmptyBuff("NewBuff", "새 버프"));
             }
             
-            // 저장된 타겟 파일명이 있다면 복구
             const savedFile = localStorage.getItem('buffMakerTargetFile');
             if (savedFile) currentTargetFile = savedFile;
             
@@ -218,7 +226,7 @@
         }
 
         function saveData() {
-            localStorage.setItem('buffMakerData_v12', JSON.stringify(buffCollection));
+            localStorage.setItem('buffMakerData_v13', JSON.stringify(buffCollection));
             localStorage.setItem('buffMakerTargetFile', currentTargetFile);
         }
 
@@ -258,8 +266,8 @@
                 const isSelected = idx === currentIndex;
                 html += `
                     <div class="flex flex-col p-2 rounded cursor-pointer transition ${isSelected ? 'bg-blue-100 border-blue-400 border shadow-sm' : 'bg-white border-slate-200 border hover:bg-slate-50'}" onclick="selectBuff(${idx})">
-                        <div class="font-bold text-slate-800 text-xs truncate w-full">${buff.className}</div>
-                        <div class="text-[10px] text-slate-500 truncate w-full">${buff.bNameKR || '이름 없음'}</div>
+                        <div class="font-bold text-slate-800 text-xs truncate w-full">${escapeHtml(buff.className)}</div>
+                        <div class="text-[10px] text-slate-500 truncate w-full">${escapeHtml(buff.bNameKR) || '이름 없음'}</div>
                     </div>
                 `;
             });
@@ -277,6 +285,8 @@
             } else {
                 document.getElementById('inp-buffType').value = buff.buffType || "Good";
             }
+            // ActivatedTurn을 제거했으므로 더이상 렌더링(value 조작)하지 않음! Null 에러 해결
+            
             document.getElementById('inp-description').value = buff.description || "";
             document.getElementById('inp-classCustomCode').value = buff.classCustomCode || "";
 
@@ -338,9 +348,9 @@
                     <span class="text-slate-500 font-bold">.</span>
                     <select onchange="updateAction('${eventId}', ${idx}, 'op', this.value)" class="bg-transparent p-1 text-[10px] md:text-xs rounded font-bold text-teal-700 border border-slate-300">${ops}</select>
                     <span class="text-slate-700 font-mono text-[10px] md:text-xs">("</span>
-                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'stat', this.value)" value="${act.stat}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded w-16" list="statOptions">
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'stat', this.value)" value="${escapeHtml(act.stat)}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded w-16" list="statOptions">
                     <span class="text-slate-700 font-mono text-[10px] md:text-xs">", </span>
-                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'val', this.value)" value="${act.val}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded w-12 font-mono" placeholder="값">
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'val', this.value)" value="${escapeHtml(act.val)}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded w-12 font-mono" placeholder="값">
                     <span class="text-slate-700 font-mono text-[10px] md:text-xs">);</span>
                     <datalist id="statOptions">${stats}</datalist>
                 `;
@@ -352,7 +362,7 @@
                     <span class="text-slate-500 font-bold">.</span>
                     <select onchange="updateAction('${eventId}', ${idx}, 'method', this.value)" class="bg-transparent p-1 text-[10px] md:text-xs rounded font-bold text-indigo-700 border border-slate-300">${methods}</select>
                     <span class="text-slate-700 font-mono text-[10px] md:text-xs">(</span>
-                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'args', this.value)" value="${act.args}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded w-32 font-mono" placeholder="매개변수 입력">
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'args', this.value)" value="${escapeHtml(act.args)}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded w-32 font-mono" placeholder="매개변수 입력">
                     <span class="text-slate-700 font-mono text-[10px] md:text-xs">);</span>
                 `;
             } else if(act.type === 'StackChange') {
@@ -360,19 +370,19 @@
                 inner = `
                     <span class="text-slate-700 font-mono text-[10px] md:text-xs font-bold">stack </span>
                     <select onchange="updateAction('${eventId}', ${idx}, 'op', this.value)" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded font-bold text-fuchsia-700">${ops}</select>
-                    ${(act.op !== '++' && act.op !== '--') ? `<input type="text" oninput="updateAction('${eventId}', ${idx}, 'val', this.value)" value="${act.val}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded w-12 font-mono" placeholder="값">` : ''}
+                    ${(act.op !== '++' && act.op !== '--') ? `<input type="text" oninput="updateAction('${eventId}', ${idx}, 'val', this.value)" value="${escapeHtml(act.val)}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded w-12 font-mono" placeholder="값">` : ''}
                     <span class="text-slate-700 font-mono text-[10px] md:text-xs">;</span>
                 `;
             } else if(act.type === 'IfCondition') {
                 inner = `
                     <span class="text-amber-700 font-mono text-[10px] md:text-xs font-bold">if (</span>
-                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'condition', this.value)" value="${act.condition}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded flex-1 min-w-[150px] font-mono outline-none focus:ring-1 focus:ring-amber-500" placeholder="조건식 자유 입력 (예: stack > 0)">
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'condition', this.value)" value="${escapeHtml(act.condition)}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded flex-1 min-w-[150px] font-mono outline-none focus:ring-1 focus:ring-amber-500" placeholder="조건식 자유 입력 (예: stack > 0)">
                     <span class="text-amber-700 font-mono text-[10px] md:text-xs font-bold">) {</span>
                 `;
             } else if(act.type === 'ElseIfCondition') {
                 inner = `
                     <span class="text-amber-700 font-mono text-[10px] md:text-xs font-bold">} else if (</span>
-                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'condition', this.value)" value="${act.condition}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded flex-1 min-w-[150px] font-mono outline-none focus:ring-1 focus:ring-amber-500" placeholder="조건식 (예: owner.name == &quot;El&quot;)">
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'condition', this.value)" value="${escapeHtml(act.condition)}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded flex-1 min-w-[150px] font-mono outline-none focus:ring-1 focus:ring-amber-500" placeholder="조건식 (예: owner.name == &quot;El&quot;)">
                     <span class="text-amber-700 font-mono text-[10px] md:text-xs font-bold">) {</span>
                 `;
             } else if(act.type === 'ElseCondition') {
@@ -387,11 +397,11 @@
                 inner = `
                     <select onchange="updateAction('${eventId}', ${idx}, 'target', this.value)" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded">${targets}</select>
                     <span class="text-slate-700 font-mono text-[10px] md:text-xs">.AddBuff(new </span>
-                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'buffClass', this.value)" value="${act.buffClass}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded w-20 text-blue-600 font-bold" placeholder="Class">
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'buffClass', this.value)" value="${escapeHtml(act.buffClass)}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded w-20 text-blue-600 font-bold" placeholder="Class">
                     <span class="text-slate-700 font-mono text-[10px] md:text-xs">(${act.target}, </span>
                     <select onchange="updateAction('${eventId}', ${idx}, 'caster', this.value)" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded">${casterOpts}</select>
                     <span class="text-slate-700 font-mono text-[10px] md:text-xs">,</span>
-                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'stack', this.value)" value="${act.stack}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded w-10 font-mono">
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'stack', this.value)" value="${escapeHtml(act.stack)}" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded w-10 font-mono">
                     <span class="text-slate-700 font-mono text-[10px] md:text-xs">));</span>
                 `;
             } else if(act.type === 'DCModify') {
@@ -403,14 +413,14 @@
                     <span class="font-mono text-[10px] md:text-xs font-bold text-purple-700">DC.</span>
                     <select onchange="updateAction('${eventId}', ${idx}, 'field', this.value)" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded">${fields}</select>
                     <select onchange="updateAction('${eventId}', ${idx}, 'op', this.value)" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded font-bold">${ops}</select>
-                    <input type="text" oninput="this.style.width = Math.max(8, this.value.length + 4) + 'ch'; updateAction('${eventId}', ${idx}, 'val', this.value)" value="${act.val}" style="width: ${Math.max(8, valLen + 4)}ch;" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded font-mono outline-none focus:ring-1 focus:ring-purple-500" placeholder="값">
+                    <input type="text" oninput="this.style.width = Math.max(8, this.value.length + 4) + 'ch'; updateAction('${eventId}', ${idx}, 'val', this.value)" value="${escapeHtml(act.val)}" style="width: ${Math.max(8, valLen + 4)}ch;" class="bg-transparent border border-slate-300 p-1 text-[10px] md:text-xs rounded font-mono outline-none focus:ring-1 focus:ring-purple-500" placeholder="값">
                     <span class="text-slate-500 font-bold">;</span>
                 `;
             } else if(act.type === 'RemoveThis') {
                 inner = `<span class="font-mono text-[10px] md:text-xs text-red-600 font-semibold">owner.RemoveBuff(this);</span>`;
             } else if(act.type === 'Custom') {
                 let codeLines = act.code ? act.code.split('\n').length : 2;
-                inner = `<textarea oninput="this.rows = Math.max(2, this.value.split('\\n').length); updateAction('${eventId}', ${idx}, 'code', this.value)" class="w-full border border-slate-700 rounded p-2 font-mono text-[11px] md:text-xs bg-slate-800 text-emerald-400 outline-none resize-y" rows="${Math.max(2, codeLines)}">${act.code}</textarea>`;
+                inner = `<textarea oninput="this.rows = Math.max(2, this.value.split('\\n').length); updateAction('${eventId}', ${idx}, 'code', this.value)" class="w-full border border-slate-700 rounded p-2 font-mono text-[11px] md:text-xs bg-slate-800 text-emerald-400 outline-none resize-y" rows="${Math.max(2, codeLines)}">${escapeHtml(act.code)}</textarea>`;
             } else if(act.type === 'BaseCall') {
                 inner = `<span class="font-mono text-[10px] md:text-xs text-indigo-600 font-semibold">base.${eventId}(${eventId === 'OnUpdate' ? 'val' : ''});</span>`;
             }
