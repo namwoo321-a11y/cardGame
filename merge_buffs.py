@@ -1,23 +1,30 @@
 import os
 
+# 소스 파일들이 위치할 하위 폴더 이름
+SOURCE_DIR = "Buffs"
+# 병합 후 루트 경로에 생성될 최종 통합 파일
+OUTPUT_FILE = "BuffCS.cs"
+
 # 합칠 대상 파일 목록
 TARGET_FILES = [
     "BuffCase.cs", "BuffCS_E_0.cs", "BuffCS_E_1.cs", "BuffCS_Anima.cs",
     "BuffCS_El.cs", "BuffCS_Hana.cs", "BuffCS_Hina.cs", "BuffCS_Kira.cs",
     "BuffCS_Manity.cs", "BuffCS_Prote.cs", "BuffCS_UG.cs", "BuffCS_Whai.cs"
 ]
-OUTPUT_FILE = "BuffCS.cs"
 
 def main():
     usings = set()
     combined_code = []
 
     for file_name in TARGET_FILES:
-        if not os.path.exists(file_name):
-            print(f"[Warning] {file_name} not found. Skipping...")
+        # SOURCE_DIR(Buffs 폴더) 내부의 파일 경로로 연결
+        file_path = os.path.join(SOURCE_DIR, file_name)
+        
+        if not os.path.exists(file_path):
+            print(f"[Warning] {file_path} not found. Skipping...")
             continue
             
-        with open(file_name, 'r', encoding='utf-8') as f:
+        with open(file_path, 'r', encoding='utf-8') as f:
             lines = f.readlines()
             
         for line in lines:
@@ -28,7 +35,7 @@ def main():
             else:
                 combined_code.append(line)
 
-    # 최종 코드 작성
+    # 최종 통합 코드 작성 (루트 폴더에 생성)
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as out_file:
         # 1. Usings
         for using in sorted(list(usings)):
