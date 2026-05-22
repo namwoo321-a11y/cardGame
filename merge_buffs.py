@@ -7,7 +7,7 @@ OUTPUT_FILE = "BuffCS.cs"
 
 # 합칠 대상 파일 목록
 TARGET_FILES = [
-    "BuffCase.cs", "BuffCS_E_0.cs", "BuffCS_E_1.cs", "BuffCS_Anima.cs",
+    "BuffCS.cs", "BuffCS_E_0.cs", "BuffCS_E_1.cs", "BuffCS_Anima.cs",
     "BuffCS_El.cs", "BuffCS_Hana.cs", "BuffCS_Hina.cs", "BuffCS_Kira.cs",
     "BuffCS_Manity.cs", "BuffCS_Prote.cs", "BuffCS_UG.cs", "BuffCS_Whai.cs"
 ]
