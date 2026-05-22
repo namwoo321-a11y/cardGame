@@ -819,7 +819,7 @@
                 let usingSet = new Set();
                 
                 const responses = await Promise.all(MERGE_TARGET_FILES.map(file => 
-                    fetch("https://raw.githubusercontent.com/namwoo321-a11y/cardGame/main/" + file + '?' + Date.now())
+                    fetch("https://raw.githubusercontent.com/namwoo321-a11y/cardGame/main/Buffs/" + file + '?' + Date.now())
                 ));
                 
                 const texts = await Promise.all(responses.map(async (res) => {
@@ -954,7 +954,7 @@
 
         window.copyAndOpenGitHub = function() {
             const code = generateFullFileString();
-            const editUrl = `https://github.com/namwoo321-a11y/cardGame/edit/main/${currentTargetFile}`;
+            const editUrl = `https://github.com/namwoo321-a11y/cardGame/edit/main/Buffs/${currentTargetFile}`;
             navigator.clipboard.writeText(code).then(() => {
                 alert(`✨ 전체 코드가 클립보드에 복사되었습니다!\n\n이제 자동으로 GitHub 수정 페이지[ ${currentTargetFile} ]가 열립니다.\n[전체 선택(Ctrl+A)] 후 [붙여넣기(Ctrl+V)] 하시고 Commit 버튼을 누르시면 됩니다.`);
                 window.open(editUrl, '_blank');
