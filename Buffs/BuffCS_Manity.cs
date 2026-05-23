@@ -16,33 +16,33 @@ public class Durability : Buff
         $"\n강화 효과 발동 후 감소 (0 되면 모든 강화 제거)";
 
     /// <summary>
-        /// 내구도 감소 - 강화 효과가 발동되었을 때 호출됨
-        /// </summary>
-        public void DecreaseOnceDurability()
-        {
-            if (stack > 0)
+            /// 내구도 감소 - 강화 효과가 발동되었을 때 호출됨
+            /// </summary>
+            public void DecreaseOnceDurability()
             {
-                stack--;
-                if (stack <= 0)
+                if (stack > 0)
                 {
-                    // 내구도 0 = 모든 강화 효과 제거
-                    RemoveAllEnhancementBuffs();
+                    stack--;
+                    if (stack <= 0)
+                    {
+                        // 내구도 0 = 모든 강화 효과 제거
+                        RemoveAllEnhancementBuffs();
+                    }
                 }
             }
-        }
-    
-        private void RemoveAllEnhancementBuffs()
-        {
-            // 모든 "Up" 버프를 찾아서 제거
-            var buffsToRemove = owner.activeBuffs
-                .Where(b => b.Bname.Contains("강화") || b.Bname.Contains("반격"))
-                .ToList();
-    
-            foreach (var buff in buffsToRemove)
+        
+            private void RemoveAllEnhancementBuffs()
             {
-                owner.RemoveBuff(buff);
+                // 모든 "Up" 버프를 찾아서 제거
+                var buffsToRemove = owner.activeBuffs
+                    .Where(b => b.Bname.Contains("강화") || b.Bname.Contains("반격"))
+                    .ToList();
+        
+                foreach (var buff in buffsToRemove)
+                {
+                    owner.RemoveBuff(buff);
+                }
             }
-        }
 
     public Durability(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
@@ -83,26 +83,26 @@ public class CounterUp : Buff
     public override string Description => $"다음 반격 피해 {stack}";
 
     private void TryDecreaseEquipmentDurability()
-        {
-            // 내구도 감소 보호 확인
-            Buff protectBuff = owner.activeBuffs.FirstOrDefault(b => b.Bname == "내구도 감소 보호");
-            if (protectBuff != null)
             {
-                return; // 보호 중이므로 감소하지 않음
+                // 내구도 감소 보호 확인
+                Buff protectBuff = owner.activeBuffs.FirstOrDefault(b => b.Bname == "내구도 감소 보호");
+                if (protectBuff != null)
+                {
+                    return; // 보호 중이므로 감소하지 않음
+                }
+        
+                // 내구도 감소
+                Durability durability = owner.activeBuffs.FirstOrDefault(b => b is Durability) as Durability;
+                if (durability != null)
+                {
+                    durability.DecreaseOnceDurability();
+                }
+                else
+                {
+                    // 내구도 없으면 이 버프 제거
+                    owner.RemoveBuff(this);
+                }
             }
-    
-            // 내구도 감소
-            Durability durability = owner.activeBuffs.FirstOrDefault(b => b is Durability) as Durability;
-            if (durability != null)
-            {
-                durability.DecreaseOnceDurability();
-            }
-            else
-            {
-                // 내구도 없으면 이 버프 제거
-                owner.RemoveBuff(this);
-            }
-        }
 
     public CounterUp(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
@@ -123,26 +123,26 @@ public class DamageUp : Buff
     public override string Description => $"다음 공격 피해 {stack}";
 
     private void TryDecreaseEquipmentDurability()
-        {
-            // 내구도 감소 보호 확인
-            Buff protectBuff = owner.activeBuffs.FirstOrDefault(b => b.Bname == "내구도 감소 보호");
-            if (protectBuff != null)
             {
-                return; // 보호 중이므로 감소하지 않음
+                // 내구도 감소 보호 확인
+                Buff protectBuff = owner.activeBuffs.FirstOrDefault(b => b.Bname == "내구도 감소 보호");
+                if (protectBuff != null)
+                {
+                    return; // 보호 중이므로 감소하지 않음
+                }
+        
+                // 내구도 감소
+                Durability durability = owner.activeBuffs.FirstOrDefault(b => b is Durability) as Durability;
+                if (durability != null)
+                {
+                    durability.DecreaseOnceDurability();
+                }
+                else
+                {
+                    // 내구도 없으면 이 버프 제거
+                    owner.RemoveBuff(this);
+                }
             }
-    
-            // 내구도 감소
-            Durability durability = owner.activeBuffs.FirstOrDefault(b => b is Durability) as Durability;
-            if (durability != null)
-            {
-                durability.DecreaseOnceDurability();
-            }
-            else
-            {
-                // 내구도 없으면 이 버프 제거
-                owner.RemoveBuff(this);
-            }
-        }
 
     public DamageUp(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
@@ -167,26 +167,26 @@ public class BlockUp : Buff
     public override string Description => $"다음 방어 부여 {stack}";
 
     private void TryDecreaseEquipmentDurability()
-        {
-            // 내구도 감소 보호 확인
-            Buff protectBuff = owner.activeBuffs.FirstOrDefault(b => b.Bname == "DuraProtect");
-            if (protectBuff != null)
             {
-                return; // 보호 중이므로 감소하지 않음
+                // 내구도 감소 보호 확인
+                Buff protectBuff = owner.activeBuffs.FirstOrDefault(b => b.Bname == "DuraProtect");
+                if (protectBuff != null)
+                {
+                    return; // 보호 중이므로 감소하지 않음
+                }
+        
+                // 내구도 감소
+                Durability durability = owner.activeBuffs.FirstOrDefault(b => b is Durability) as Durability;
+                if (durability != null)
+                {
+                    durability.DecreaseOnceDurability();
+                }
+                else
+                {
+                    // 내구도 없으면 이 버프 제거
+                    owner.RemoveBuff(this);
+                }
             }
-    
-            // 내구도 감소
-            Durability durability = owner.activeBuffs.FirstOrDefault(b => b is Durability) as Durability;
-            if (durability != null)
-            {
-                durability.DecreaseOnceDurability();
-            }
-            else
-            {
-                // 내구도 없으면 이 버프 제거
-                owner.RemoveBuff(this);
-            }
-        }
 
     public BlockUp(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
@@ -228,13 +228,9 @@ public class GravUp : Buff
     public override DamContext BeforeAttack(DamContext DC)
     {
         // 상대가 중력 약화를 가지고 있으면 피해 -50%
-        if (DC.Target != null)
+        if (DC.Target.HasCValue("GravDown"))
         {
-            Buff gravDownBuff = DC.Target.activeBuffs.FirstOrDefault(b => b.Bname == "중력 약화");
-            if (gravDownBuff != null)
-            {
-                DC.PlusDamage *= 0.5f;
-            }
+            DC.PercentDamage -= 0.5f;
         }
         return DC;
     }
@@ -276,6 +272,7 @@ public class CounterReflect : Buff
 {
     public override BuffType BuffType => BuffType.Good;
     public override string Bname => "CounterReflect";
+    public override string BnameKR => "CounterReflect";
     public override string Description => $"피격 후 {stack} 반사 피해" +
         $"\n1턴 지속";
 
