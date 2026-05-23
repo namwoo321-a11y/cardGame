@@ -70,8 +70,215 @@ public class Explosion : Buff
     }
 }
 
-// (GPY, GPP, GPR, GPSelf, LimitBreak 클래스는 기존 코드와 동일하므로 생략)
+public class GPY : Buff
 
+{
+
+public override BuffType BuffType => BuffType.Bad;
+
+public override string Bname => "GPY";
+
+public override string BnameKR => "노랑 [화약]";
+
+public override string Description => "";
+
+
+
+public GPY(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
+
+
+
+public override void OnActivate()
+
+{
+
+owner.AddBuff(new GP(owner, caster, stack){ Y = stack });
+
+owner.RemoveBuff(this);
+
+}
+
+
+
+}
+
+
+
+public class GPP : Buff
+
+{
+
+public override BuffType BuffType => BuffType.Good;
+
+public override string Bname => "GPP";
+
+public override string BnameKR => "보라 [화약]";
+
+public override string Description => $"[Anima] 자동생성 버프";
+
+
+
+public GPP(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
+
+
+
+public override void OnActivate()
+
+{
+
+owner.AddBuff(new GP(owner, caster, stack){ P = stack });
+
+owner.RemoveBuff(this);
+
+}
+
+
+
+}
+
+
+
+public class GPR : Buff
+
+{
+
+public override BuffType BuffType => BuffType.Good;
+
+public override string Bname => "GPR";
+
+public override string BnameKR => "적색 [화약]";
+
+public override string Description => $"[Anima] 자동생성 버프";
+
+
+
+public GPR(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
+
+
+
+public override void OnActivate()
+
+{
+
+owner.AddBuff(new GP(owner, caster, stack){ R = stack });
+
+owner.RemoveBuff(this);
+
+}
+
+
+
+}
+
+
+
+public class GPSelf : Buff
+
+{
+
+public override BuffType BuffType => BuffType.Good;
+
+public override string Bname => "GPSelf";
+
+public override string BnameKR => "자신 화약?";
+
+public override string Description => $"???";
+
+
+
+public GPSelf(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
+
+
+
+}
+
+
+
+public class LimitBreak : Buff
+
+{
+
+public override BuffType BuffType => BuffType.Good;
+
+public override string Bname => "LimitBreak";
+
+public override string BnameKR => "한계 해제";
+
+public override string Description => $"의지 최대치 1," +
+
+$"\n공격, 피격, 폭발 피해 25%," +
+
+$"\n턴 종료 | 수치 1, 수치가 3가 되면 기절, 버프 제거";
+
+
+
+public LimitBreak(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
+
+
+
+public override void OnActivate()
+
+{
+
+owner.Gain("MaxWill", 1);
+
+}
+
+
+
+public override void OnDeactivate()
+
+{
+
+owner.Gain("MaxWill", -1);
+
+}
+
+
+
+public override void OnTurnStart()
+
+{
+
+stack += 1;
+
+if (stack == 4)
+
+{
+
+owner.RemoveBuff(this);
+
+}
+
+}
+
+
+
+public override DamContext BeforeDamaged(DamContext DC)
+
+{
+
+DC.PercentDamage += 0.25f;
+
+return DC;
+
+}
+
+
+
+public override DamContext BeforeAttack(DamContext DC)
+
+{
+
+DC.PercentDamage += 0.25f;
+
+return DC;
+
+}
+
+
+
+}
 public class GP : Buff
 {
     public override BuffType BuffType => BuffType.Bad;
