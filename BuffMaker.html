@@ -126,7 +126,7 @@
     <!-- 도움말(Info) 모달 -->
     <div id="info-modal" class="hidden fixed inset-0 bg-slate-950/70 z-50 flex items-center justify-center p-4">
         <div class="bg-slate-900 rounded-lg shadow-xl w-full max-w-md flex flex-col border border-slate-800">
-            <div class="p-4 border-b border-slate-800 font-bold text-lg flex justify-between items-center bg-slate-850 rounded-t-lg">
+            <div class="p-4 border-b border-slate-800 font-bold text-lg flex justify-between items-center bg-slate-800 rounded-t-lg">
                 <span class="flex items-center gap-2 text-blue-400"><i data-lucide="info" class="w-5 h-5"></i> C# 함수 도움말</span>
                 <button onclick="closeInfoModal()" class="text-slate-400 hover:text-slate-200"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
@@ -141,10 +141,10 @@
                 </div>
                 <div>
                     <p class="font-mono text-purple-400 font-bold mb-1">DamContext.GetFinalDamage()</p>
-                    <p class="pl-2 border-l-2 border-slate-700">최종 피해량을 계산합니다. (피격 후 or 피격 전 예상 피해량)</p>
+                    <p class="pl-2 border-l-2 border-slate-700">최종 피해량을 계산합니다. (피격 후 or 피격 전 피해량)</p>
                 </div>
             </div>
-            <div class="p-4 border-t border-slate-800 flex justify-end bg-slate-850 rounded-b-lg">
+            <div class="p-4 border-t border-slate-800 flex justify-end bg-slate-800 rounded-b-lg">
                 <button onclick="closeInfoModal()" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 font-bold text-sm">확인</button>
             </div>
         </div>
@@ -185,7 +185,12 @@
     <script>
         const escapeHtml = (str) => {
             if (str === null || str === undefined) return '';
-            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
         };
 
         const MERGE_TARGET_FILES = [
@@ -231,7 +236,7 @@
         let currentTargetFile = "BuffCS.cs"; 
 
         function initApp() {
-            const saved = localStorage.getItem('buffMakerData_v22');
+            const saved = localStorage.getItem('buffMakerData_v23'); // 캐시 갱신
             if (saved) { try { buffCollection = JSON.parse(saved); } catch (e) { buffCollection = []; } }
             if (buffCollection.length === 0) buffCollection.push(createEmptyBuff("NewBuff", "새 버프"));
             const savedFile = localStorage.getItem('buffMakerTargetFile');
@@ -241,7 +246,7 @@
         }
 
         function saveData() {
-            localStorage.setItem('buffMakerData_v22', JSON.stringify(buffCollection));
+            localStorage.setItem('buffMakerData_v23', JSON.stringify(buffCollection));
             localStorage.setItem('buffMakerTargetFile', currentTargetFile);
         }
 
@@ -292,10 +297,10 @@
                 const isActive = evData.active;
                 const showBtns = evData.showButtons;
                 
-                // --- 괄호 개수 짝 검증 (Bracket Check) 로직 ---
                 let bracketBalance = 0;
                 evData.actions.forEach(act => {
                     if (act.type === 'IfCondition') bracketBalance++;
+                    else if (act.type === 'ElseIfCondition' || act.type === 'ElseCondition') { }
                     else if (act.type === 'EndIf') bracketBalance--;
                     else if (act.type === 'Custom' && act.code) {
                         bracketBalance += (act.code.match(/\{/g) || []).length;
@@ -322,14 +327,12 @@
                     
                     let currentIndent = 0;
                     evData.actions.forEach((act, idx) => {
-                        // 닫는 블록일 경우 렌더링 전 들여쓰기 감소
                         if(act.type === 'EndIf' || act.type === 'ElseIfCondition' || act.type === 'ElseCondition') {
                             currentIndent = Math.max(0, currentIndent - 1);
                         }
                         
                         html += renderAction(ev.id, idx, act, evData.actions.length, currentIndent);
                         
-                        // 여는 블록일 경우 렌더링 후 들여쓰기 증가
                         if(act.type === 'IfCondition' || act.type === 'ElseIfCondition' || act.type === 'ElseCondition') {
                             currentIndent++;
                         }
@@ -461,7 +464,6 @@
                 inner = `<span class="font-mono text-[10px] md:text-xs text-indigo-400 font-semibold">base.${eventId}(${eventId === 'OnUpdate' ? 'val' : ''});</span>`;
             }
 
-            // 들여쓰기 마진 적용 (1단계당 1.25rem = 20px)
             let marginStyle = indentLevel > 0 ? `margin-left: ${indentLevel * 1.25}rem;` : '';
 
             return `
@@ -641,6 +643,11 @@
                         let startIdx = leftover.indexOf('{', idx);
                         let braceCount = 1; let endIdx = startIdx + 1;
                         while(braceCount > 0 && endIdx < leftover.length) {
+                            // 방어 코드: 중괄호 오류로 다음 메서드까지 집어삼키는 것을 방지
+                            let lookAhead = leftover.substring(endIdx, endIdx + 30);
+                            if (lookAhead.match(/^\s*public override/) && braceCount <= 1) {
+                                break;
+                            }
                             if (leftover[endIdx] === '{') braceCount++;
                             else if (leftover[endIdx] === '}') braceCount--;
                             endIdx++;
@@ -714,7 +721,9 @@
                 const elseIfMatch = line.match(/^(\}?)\s*else\s+if\s*\((.*)\)\s*\{?$/);
                 if (elseIfMatch) {
                     flushCustom();
-                    if (elseIfMatch[1] === '}') { if (openIfs > 0) openIfs--; actions.push({ type: 'EndIf' }); }
+                    // 이중 괄호 방지 로직
+                    if (elseIfMatch[1] === '}') { if (openIfs > 0) openIfs--; }
+                    if (actions.length > 0 && actions[actions.length - 1].type === 'EndIf') actions.pop();
                     actions.push({ type: 'ElseIfCondition', condition: elseIfMatch[2] }); openIfs++;
                     continue;
                 }
@@ -722,7 +731,8 @@
                 const elseMatch = line.match(/^(\}?)\s*else\s*\{?$/);
                 if (elseMatch) {
                     flushCustom();
-                    if (elseMatch[1] === '}') { if (openIfs > 0) openIfs--; actions.push({ type: 'EndIf' }); }
+                    if (elseMatch[1] === '}') { if (openIfs > 0) openIfs--; }
+                    if (actions.length > 0 && actions[actions.length - 1].type === 'EndIf') actions.pop();
                     actions.push({ type: 'ElseCondition' }); openIfs++;
                     continue;
                 }
@@ -820,32 +830,5 @@
 
         initApp();
     </script>
-
-    <!-- 도움말(Info) 모달 -->
-    <div id="info-modal" class="hidden fixed inset-0 bg-slate-950/70 z-50 flex items-center justify-center p-4">
-        <div class="bg-slate-900 rounded-lg shadow-xl w-full max-w-md flex flex-col border border-slate-800">
-            <div class="p-4 border-b border-slate-800 font-bold text-lg flex justify-between items-center bg-slate-850 rounded-t-lg">
-                <span class="flex items-center gap-2 text-blue-400"><i data-lucide="info" class="w-5 h-5"></i> C# 함수 도움말</span>
-                <button onclick="closeInfoModal()" class="text-slate-400 hover:text-slate-200"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
-            <div class="p-5 flex flex-col gap-4 text-slate-300 text-sm leading-relaxed">
-                <div>
-                    <p class="font-mono text-indigo-400 font-bold mb-1">F_Cha.HasCValue(string Name)</p>
-                    <p class="pl-2 border-l-2 border-slate-700">캐릭터가 해당 이름의 변수를 가지고 있는지 확인합니다.</p>
-                </div>
-                <div>
-                    <p class="font-mono text-indigo-400 font-bold mb-1">F_Cha.CValue(string Name)</p>
-                    <p class="pl-2 border-l-2 border-slate-700">해당 이름의 변수값을 반환합니다. (없으면 0)</p>
-                </div>
-                <div>
-                    <p class="font-mono text-purple-400 font-bold mb-1">DamContext.GetFinalDamage()</p>
-                    <p class="pl-2 border-l-2 border-slate-700">최종 피해량을 계산합니다. (피격 후 or 피격 전 피해량)</p>
-                </div>
-            </div>
-            <div class="p-4 border-t border-slate-800 flex justify-end bg-slate-850 rounded-b-lg">
-                <button onclick="closeInfoModal()" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 font-bold text-sm">확인</button>
-            </div>
-        </div>
-    </div>
 </body>
 </html>
