@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
@@ -75,7 +75,7 @@ public class IceArmor : Buff
 
     public override void AfterDamaged(DamContext DC)
     {
-        DC.Attacker.AddBuff(new chill(DC.Attacker, caster, stack/5));
+        DC.Attacker.AddBuff(new Chill(DC.Attacker, caster, stack/5));
     }
 
 }
@@ -89,33 +89,31 @@ public class NextChillAura : Buff
         $"\n다음 턴 한기 {stack} 부여 (캐릭터 당 1회)";
 
     // 캐릭터별로 누적 횟수를 저장 (Key: 캐릭터, Value: 발동 횟수)
-        private Dictionary<F_Cha, int> _appliedCounts = new Dictionary<F_Cha, int>();
-        private const int MAX_COUNT = 2; // 제한 횟수
+            private Dictionary<F_Cha, int> _appliedCounts = new Dictionary<F_Cha, int>();
+            private const int MAX_COUNT = 2; // 제한 횟수
 
     public NextChillAura(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
     public override void OnTurnStart()
     {
-        _appliedCounts.Clear(); 
+        _appliedCounts.Clear();
     }
 
     public override void AfterAttack(DamContext DC)
     {
-        F_Cha target = DC.Target; 
+        F_Cha target = DC.Target;
         if (target == null) return;
-        
-                // 1. 현재까지의 발동 횟수 확인
-                if (!_appliedCounts.ContainsKey(target))
-                {
-                    _appliedCounts[target] = 0;
-                }
-        
-                // 2. 제한 횟수 도달 여부 체크
-                if (_appliedCounts[target] >= MAX_COUNT) 
+        // 1. 현재까지의 발동 횟수 확인
+        if (!_appliedCounts.ContainsKey(target))
+        {
+            _appliedCounts[target] = 0;
+            }
+            // 2. 제한 횟수 도달 여부 체크
+            if (_appliedCounts[target] >= MAX_COUNT)
+            {
                 {return;}
-        
                 // 3. 효과 발동 로직 (여기에 한기 부여 로직 작성)
-        DC.Target.AddBuff(new chill(DC.Target, caster, stack));
+                DC.Target.AddBuff(new Chill(DC.Target, caster, stack));
                 // 4. 횟수 증가
                 _appliedCounts[target]++;
     }
@@ -161,7 +159,7 @@ public class ChillDamageUp : Buff
     public override BuffType BuffType => BuffType.Power;
     public override string Bname => "ChillDamageUp";
     public override string BnameKR => "차갑게";
-    public override string Description => $"한기를 가진 캐릭터에 가하는 피해 2 상승 (공격, ";
+    public override string Description => $"한기를 가진 캐릭터에 가하는 피해 2 상승 (공격,";
 
     public ChillDamageUp(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
@@ -192,3 +190,4 @@ public class NextWill : Buff
     }
 
 }
+
