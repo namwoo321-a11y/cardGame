@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unity Buff Code Maker (Smart Indent & Validation)</title>
+    <title>Unity Buff Code Maker (Smart Variables & Custom Methods)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -22,7 +22,7 @@
         <div class="flex items-center gap-2">
             <i data-lucide="swords" class="w-5 h-5 md:w-6 md:h-6 text-blue-400"></i>
             <h1 class="text-lg md:text-xl font-bold tracking-wide text-slate-100">Buff Code Maker</h1>
-            <!-- 정보 아이콘 버튼 추가 -->
+            <!-- 정보 아이콘 버튼 -->
             <button onclick="openInfoModal()" class="text-slate-400 hover:text-blue-300 ml-1 transition" title="도움말 보기">
                 <i data-lucide="info" class="w-4 h-4 md:w-5 md:h-5"></i>
             </button>
@@ -56,12 +56,12 @@
             <div id="buff-list" class="flex flex-col overflow-y-auto p-2 gap-2 flex-1 animate-fade-in"></div>
         </div>
 
-        <!-- 중앙 패널: 단일 버프 편집기 -->
+        <!-- 중앙 패널: 에디터 -->
         <div id="editor-panel" class="flex-1 h-full overflow-y-auto p-3 md:p-6 space-y-4 md:space-y-6 pb-20 bg-slate-950">
             <section class="bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-800">
                 <div class="flex justify-between items-center mb-3">
                     <h2 class="text-base md:text-lg font-bold text-slate-200 flex items-center gap-2">
-                        <i data-lucide="info" class="w-4 h-4 text-blue-400"></i> 메타 데이터
+                        <i data-lucide="info" class="w-4 h-4 text-blue-400"></i> 메타 데이터 & 변수 설정
                     </h2>
                     <button onclick="deleteCurrentBuff()" class="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 font-bold">
                         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 이 버프 삭제
@@ -91,18 +91,42 @@
                         <label class="block text-xs font-semibold text-slate-400 mb-1">Description (설명 툴팁 - 최대 3줄)</label>
                         <textarea id="inp-description" data-bind="description" class="w-full bg-slate-800 border border-slate-600 text-slate-100 placeholder-slate-500 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none font-mono text-xs md:text-sm resize-none" rows="3" placeholder="예: 힘 +{stack}&#10;턴 종료시 제거" onkeydown="if(event.key === 'Enter' && this.value.split('\n').length >= 3) event.preventDefault();"></textarea>
                     </div>
+                    
+                    <!-- 변수 선언 UI -->
+                    <div class="md:col-span-3 pt-3 border-t border-slate-800 mt-1">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-xs font-semibold text-slate-400">전역 변수 선언 (Variables)</label>
+                            <button onclick="addVariable()" class="text-[10px] bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-200 px-2 py-0.5 rounded shadow transition font-bold">+ 변수 추가</button>
+                        </div>
+                        <div id="variable-list-container" class="space-y-1.5 pb-2"></div>
+                    </div>
+
                     <div class="md:col-span-3">
-                        <label class="block text-xs font-semibold text-slate-400 mb-1">클래스 내부 전역 코드 (변수 등)</label>
-                        <textarea id="inp-classCustomCode" data-bind="classCustomCode" class="w-full bg-slate-800 border border-slate-600 text-emerald-400 placeholder-slate-500 rounded p-2 outline-none font-mono text-xs md:text-sm resize-y" placeholder="예: private int damageThisTurn = 0;" oninput="this.rows = Math.max(2, this.value.split('\n').length);"></textarea>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">기타 클래스 내부 코드 (배열, 프로퍼티 등)</label>
+                        <textarea id="inp-classCustomCode" data-bind="classCustomCode" class="w-full bg-slate-800 border border-slate-600 text-emerald-400 placeholder-slate-500 rounded p-2 outline-none font-mono text-xs md:text-sm resize-y" placeholder="// 그 외 변수나 프로퍼티가 있으면 여기에 남습니다." oninput="this.rows = Math.max(2, this.value.split('\n').length);"></textarea>
                     </div>
                 </div>
             </section>
 
+            <!-- 기본 발동 로직 -->
             <section>
                 <h2 class="text-base md:text-lg font-bold text-slate-200 mb-3 flex items-center gap-2">
-                    <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i> 발동 로직 설정
+                    <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i> 발동 로직 설정 (Standard Events)
                 </h2>
-                <div id="event-list-container" class="space-y-2 pb-10"></div>
+                <div id="event-list-container" class="space-y-2"></div>
+            </section>
+
+            <!-- 커스텀 함수 영역 -->
+            <section class="mt-6 pt-4 border-t border-slate-800 border-dashed">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-base md:text-lg font-bold text-slate-200 flex items-center gap-2">
+                        <i data-lucide="blocks" class="w-4 h-4 text-emerald-400"></i> 커스텀 함수 (Custom Methods)
+                    </h2>
+                    <button onclick="addCustomMethod()" class="text-xs bg-emerald-700 hover:bg-emerald-600 text-white px-2 py-1 rounded shadow transition font-bold">
+                        + 함수 추가
+                    </button>
+                </div>
+                <div id="custom-method-list-container" class="space-y-2 pb-10"></div>
             </section>
         </div>
 
@@ -110,7 +134,7 @@
         <div id="code-viewer-panel" class="hidden md:flex flex-col absolute inset-0 z-30 md:static md:w-[400px] lg:w-[500px] bg-slate-900 border-l border-slate-800 shrink-0 h-full">
             <div class="flex justify-between items-center bg-slate-800 px-3 py-2 shrink-0 border-b border-slate-800">
                 <div class="flex gap-2">
-                    <button onclick="setViewMode('single')" id="btn-view-single" class="text-xs px-2 py-1 rounded bg-slate-700 text-white font-bold border border-slate-700">현재 버프</button>
+                    <button onclick="setViewMode('single')" id="btn-view-single" class="text-xs px-2 py-1 rounded bg-slate-700 text-white font-bold border border-slate-600">현재 버프</button>
                     <button onclick="setViewMode('full')" id="btn-view-full" class="text-xs px-2 py-1 rounded bg-transparent text-slate-400 hover:text-white">전체(<span id="target-file-label">BuffCS.cs</span>)</button>
                 </div>
                 <button onclick="toggleMobileCode()" class="md:hidden text-slate-300 hover:text-white">
@@ -133,15 +157,15 @@
             <div class="p-5 flex flex-col gap-4 text-slate-300 text-sm leading-relaxed">
                 <div>
                     <p class="font-mono text-indigo-400 font-bold mb-1">F_Cha.HasCValue(string Name)</p>
-                    <p class="pl-2 border-l-2 border-slate-700">캐릭터가 해당 이름의 변수를 가지고 있는지 확인합니다.</p>
+                    <p class="pl-2 border-l-2 border-slate-700">캐릭터가 해당 이름의 변수(또는 버프)를 가지고 있는지 <span class="text-amber-300 font-bold">확인</span>합니다. (true/false 반환)</p>
                 </div>
                 <div>
                     <p class="font-mono text-indigo-400 font-bold mb-1">F_Cha.CValue(string Name)</p>
-                    <p class="pl-2 border-l-2 border-slate-700">해당 이름의 변수값을 반환합니다. (없으면 0)</p>
+                    <p class="pl-2 border-l-2 border-slate-700">해당 이름의 <span class="text-amber-300 font-bold">변수값(수치)을 반환</span>합니다. (존재하지 않으면 0을 반환)</p>
                 </div>
                 <div>
                     <p class="font-mono text-purple-400 font-bold mb-1">DamContext.GetFinalDamage()</p>
-                    <p class="pl-2 border-l-2 border-slate-700">최종 피해량을 계산합니다. (피격 후 or 피격 전 피해량)</p>
+                    <p class="pl-2 border-l-2 border-slate-700">가해지는 <span class="text-amber-300 font-bold">최종 피해량</span>을 정수로 계산해 가져옵니다. (피격 후 반사 피해나 흡혈 처리 시 유용)</p>
                 </div>
             </div>
             <div class="p-4 border-t border-slate-800 flex justify-end bg-slate-800 rounded-b-lg">
@@ -160,18 +184,18 @@
             <div class="p-4 flex flex-col gap-3">
                 <label class="text-sm font-bold text-slate-400">대상 파일 선택 (Buffs/ 폴더)</label>
                 <select id="github-file-select" class="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded p-2 focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-sm">
-                    <option value="BuffCS.cs" class="bg-slate-800 text-slate-100">BuffCS.cs</option>
-                    <option value="BuffCS_E_0.cs" class="bg-slate-800 text-slate-100">BuffCS_E_0.cs</option>
-                    <option value="BuffCS_E_1.cs" class="bg-slate-800 text-slate-100">BuffCS_E_1.cs</option>
-                    <option value="BuffCS_Anima.cs" class="bg-slate-800 text-slate-100">BuffCS_Anima.cs</option>
-                    <option value="BuffCS_El.cs" class="bg-slate-800 text-slate-100">BuffCS_El.cs</option>
-                    <option value="BuffCS_Hana.cs" class="bg-slate-800 text-slate-100">BuffCS_Hana.cs</option>
-                    <option value="BuffCS_Hina.cs" class="bg-slate-800 text-slate-100">BuffCS_Hina.cs</option>
-                    <option value="BuffCS_Kira.cs" class="bg-slate-800 text-slate-100">BuffCS_Kira.cs</option>
-                    <option value="BuffCS_Manity.cs" class="bg-slate-800 text-slate-100">BuffCS_Manity.cs</option>
-                    <option value="BuffCS_Prote.cs" class="bg-slate-800 text-slate-100">BuffCS_Prote.cs</option>
-                    <option value="BuffCS_UG.cs" class="bg-slate-800 text-slate-100">BuffCS_UG.cs</option>
-                    <option value="BuffCS_Whai.cs" class="bg-slate-800 text-slate-100">BuffCS_Whai.cs</option>
+                    <option value="BuffCS.cs">BuffCS.cs</option>
+                    <option value="BuffCS_E_0.cs">BuffCS_E_0.cs</option>
+                    <option value="BuffCS_E_1.cs">BuffCS_E_1.cs</option>
+                    <option value="BuffCS_Anima.cs">BuffCS_Anima.cs</option>
+                    <option value="BuffCS_El.cs">BuffCS_El.cs</option>
+                    <option value="BuffCS_Hana.cs">BuffCS_Hana.cs</option>
+                    <option value="BuffCS_Hina.cs">BuffCS_Hina.cs</option>
+                    <option value="BuffCS_Kira.cs">BuffCS_Kira.cs</option>
+                    <option value="BuffCS_Manity.cs">BuffCS_Manity.cs</option>
+                    <option value="BuffCS_Prote.cs">BuffCS_Prote.cs</option>
+                    <option value="BuffCS_UG.cs">BuffCS_UG.cs</option>
+                    <option value="BuffCS_Whai.cs">BuffCS_Whai.cs</option>
                 </select>
                 <p class="text-xs text-red-400 font-semibold mt-2">※ 주의: 불러올 경우 현재 작성 중인 목록이 모두 덮어씌워집니다.</p>
             </div>
@@ -183,6 +207,7 @@
     </div>
 
     <script>
+        // HTML 안전 이스케이프
         const escapeHtml = (str) => {
             if (str === null || str === undefined) return '';
             return String(str)
@@ -199,6 +224,7 @@
             "BuffCS_Manity.cs", "BuffCS_Prote.cs", "BuffCS_UG.cs", "BuffCS_Whai.cs"
         ];
 
+        // --- 1. 기본 제공 이벤트 목록 ---
         const EVENT_DEF = [
             { id: 'OnActivate', name: 'OnActivate()', desc: '최초 부여 시' },
             { id: 'OnUpdate', name: 'OnUpdate(int val)', desc: '스택 갱신 시' },
@@ -225,19 +251,25 @@
             StackCheck: "public override void StackCheck()\n    {"
         };
 
-        const RETURN_STATEMENTS = {
-            BeforeDamaged: "        return DC;\n",
-            BeforeAttack: "        return DC;\n"
-        };
+        const RETURN_STATEMENTS = { BeforeDamaged: "        return DC;", BeforeAttack: "        return DC;" };
 
         let buffCollection = [];
         let currentIndex = 0;
         let viewMode = 'single';
         let currentTargetFile = "BuffCS.cs"; 
 
+        // --- 2. 초기화 ---
         function initApp() {
-            const saved = localStorage.getItem('buffMakerData_v23'); // 캐시 갱신
-            if (saved) { try { buffCollection = JSON.parse(saved); } catch (e) { buffCollection = []; } }
+            const saved = localStorage.getItem('buffMakerData_v25'); // 캐시 갱신
+            if (saved) { 
+                try { 
+                    buffCollection = JSON.parse(saved); 
+                    buffCollection.forEach(b => {
+                        if(!b.variables) b.variables = [];
+                        if(!b.customMethods) b.customMethods = [];
+                    });
+                } catch (e) { buffCollection = []; } 
+            }
             if (buffCollection.length === 0) buffCollection.push(createEmptyBuff("NewBuff", "새 버프"));
             const savedFile = localStorage.getItem('buffMakerTargetFile');
             if (savedFile) currentTargetFile = savedFile;
@@ -246,16 +278,22 @@
         }
 
         function saveData() {
-            localStorage.setItem('buffMakerData_v23', JSON.stringify(buffCollection));
+            localStorage.setItem('buffMakerData_v25', JSON.stringify(buffCollection));
             localStorage.setItem('buffMakerTargetFile', currentTargetFile);
         }
 
         function createEmptyBuff(cName, kName) {
-            let b = { id: Date.now() + Math.floor(Math.random() * 1000), className: cName, bNameKR: kName, description: "", buffType: "Good", customBuffTypeStr: "", classCustomCode: "", events: {} };
+            let b = {
+                id: Date.now() + Math.floor(Math.random() * 1000),
+                className: cName, bNameKR: kName, description: "",
+                buffType: "Good", customBuffTypeStr: "", classCustomCode: "",
+                variables: [], customMethods: [], events: {}
+            };
             EVENT_DEF.forEach(ev => b.events[ev.id] = { active: false, showButtons: false, actions: [] });
             return b;
         }
 
+        // --- 3. UI 렌더링 ---
         function renderAll() {
             document.getElementById('target-file-label').innerText = currentTargetFile;
             renderBuffList();
@@ -281,6 +319,33 @@
             listEl.innerHTML = html;
         }
 
+        function renderVariables() {
+            const buff = buffCollection[currentIndex];
+            let vHtml = '';
+            buff.variables.forEach((v, idx) => {
+                vHtml += `
+                    <div class="flex flex-wrap items-center gap-2 bg-slate-900 border border-slate-800 p-1.5 rounded w-full">
+                        <select onchange="updateVar(${idx}, 'access', this.value)" class="bg-slate-800 text-slate-300 p-1 text-xs rounded border border-slate-700 outline-none">
+                            <option value="public" ${v.access==='public'?'selected':''}>public</option>
+                            <option value="private" ${v.access==='private'?'selected':''}>private</option>
+                            <option value="protected" ${v.access==='protected'?'selected':''}>protected</option>
+                        </select>
+                        <select onchange="updateVar(${idx}, 'type', this.value)" class="bg-slate-800 text-blue-400 p-1 text-xs rounded border border-slate-700 outline-none font-bold">
+                            <option value="int" ${v.type==='int'?'selected':''}>int</option>
+                            <option value="float" ${v.type==='float'?'selected':''}>float</option>
+                            <option value="string" ${v.type==='string'?'selected':''}>string</option>
+                            <option value="bool" ${v.type==='bool'?'selected':''}>bool</option>
+                        </select>
+                        <input type="text" oninput="updateVar(${idx}, 'name', this.value)" value="${escapeHtml(v.name)}" class="bg-slate-800 text-slate-100 p-1 text-xs rounded border border-slate-700 w-24 outline-none font-mono focus:ring-1 focus:ring-blue-500 placeholder-slate-500" placeholder="이름">
+                        <span class="text-slate-400 font-bold">=</span>
+                        <input type="text" oninput="updateVar(${idx}, 'value', this.value)" value="${escapeHtml(v.value)}" class="bg-slate-800 text-amber-300 p-1 text-xs rounded border border-slate-700 flex-1 min-w-[80px] outline-none font-mono focus:ring-1 focus:ring-blue-500 placeholder-slate-500" placeholder="값(옵션)">
+                        <button onclick="removeVar(${idx})" class="text-slate-500 hover:text-red-400 p-1"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+                    </div>
+                `;
+            });
+            document.getElementById('variable-list-container').innerHTML = vHtml;
+        }
+
         function renderEditor() {
             if (buffCollection.length === 0) return;
             const buff = buffCollection[currentIndex];
@@ -291,6 +356,8 @@
             document.getElementById('inp-description').value = buff.description || "";
             document.getElementById('inp-classCustomCode').value = buff.classCustomCode || "";
 
+            renderVariables();
+
             let html = '';
             EVENT_DEF.forEach(ev => {
                 const evData = buff.events[ev.id];
@@ -300,7 +367,6 @@
                 let bracketBalance = 0;
                 evData.actions.forEach(act => {
                     if (act.type === 'IfCondition') bracketBalance++;
-                    else if (act.type === 'ElseIfCondition' || act.type === 'ElseCondition') { }
                     else if (act.type === 'EndIf') bracketBalance--;
                     else if (act.type === 'Custom' && act.code) {
                         bracketBalance += (act.code.match(/\{/g) || []).length;
@@ -349,6 +415,7 @@
                                 <button onclick="addAction('${ev.id}', 'F_ChaMethod')" class="bg-indigo-900/40 border border-indigo-700 text-indigo-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-indigo-800/40 transition">F_Cha 행동</button>
                                 <button onclick="addAction('${ev.id}', 'StackChange')" class="bg-fuchsia-900/40 border border-fuchsia-700 text-fuchsia-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-fuchsia-800/40 transition">스택 조작 (+/-)</button>
                                 <button onclick="addAction('${ev.id}', 'AddBuff')" class="bg-blue-900/40 border border-blue-700 text-blue-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-blue-800/40 transition">버프 부여</button>
+                                <button onclick="addAction('${ev.id}', 'RandVar')" class="bg-indigo-900/40 border border-indigo-700 text-indigo-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-indigo-800/40 transition">Rand 변수</button>
                                 <button onclick="addAction('${ev.id}', 'IfCondition')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">If</button>
                                 <button onclick="addAction('${ev.id}', 'ElseIfCondition')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">else if</button>
                                 <button onclick="addAction('${ev.id}', 'ElseCondition')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">else</button>
@@ -360,11 +427,74 @@
                             </div>
                         </div>
                     `;
+                    
                     html += `</div></div>`;
                 }
                 html += `</div>`;
             });
             document.getElementById('event-list-container').innerHTML = html;
+
+            // 2. 커스텀 함수 (Custom Methods) 렌더링
+            let cHtml = '';
+            buff.customMethods.forEach(cm => {
+                const showBtns = cm.showButtons;
+                let bracketBalance = 0;
+                cm.actions.forEach(act => {
+                    if (act.type === 'IfCondition') bracketBalance++;
+                    else if (act.type === 'EndIf') bracketBalance--;
+                    else if (act.type === 'Custom' && act.code) {
+                        bracketBalance += (act.code.match(/\{/g) || []).length;
+                        bracketBalance -= (act.code.match(/\}/g) || []).length;
+                    }
+                });
+                const isBracketMismatch = bracketBalance !== 0;
+                const warningHtml = isBracketMismatch ? `<span class="text-red-400 text-[10px] ml-2 font-bold animate-pulse inline-flex items-center gap-0.5"><i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> 괄호 오류</span>` : '';
+
+                cHtml += `
+                <div class="bg-slate-900 rounded-lg shadow-sm border transition-all duration-200 border-emerald-800/50 mb-4">
+                    <div class="flex items-center justify-between p-2.5 bg-slate-850 rounded-t-lg border-b border-slate-800">
+                        <div class="flex-1 flex items-center gap-2 pr-2">
+                            <input type="text" oninput="updateCustomMethodSig('${cm.id}', this.value)" value="${escapeHtml(cm.signature)}" class="bg-slate-950 border border-slate-700 hover:border-slate-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-emerald-400 font-mono text-xs md:text-sm font-bold outline-none w-full px-2 py-1.5 rounded transition-colors shadow-inner" placeholder="private void CustomMethod()">
+                            ${warningHtml}
+                        </div>
+                        <button onclick="removeCustomMethod('${cm.id}')" class="text-slate-500 hover:text-red-400 ml-1 shrink-0"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                    <div class="p-2 md:p-4 pt-2 bg-slate-950/40 rounded-b-lg">
+                        <div class="space-y-1">
+                `;
+                
+                let currentIndent = 0;
+                cm.actions.forEach((act, idx) => {
+                    if(act.type === 'EndIf' || act.type === 'ElseIfCondition' || act.type === 'ElseCondition') currentIndent = Math.max(0, currentIndent - 1);
+                    cHtml += renderAction(cm.id, idx, act, cm.actions.length, currentIndent);
+                    if(act.type === 'IfCondition' || act.type === 'ElseIfCondition' || act.type === 'ElseCondition') currentIndent++;
+                });
+
+                cHtml += `</div>
+                        <div class="mt-3 flex items-start gap-1.5 border-t border-slate-800 pt-3">
+                            <button onclick="toggleActionButtons('${cm.id}')" class="bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 px-2.5 py-1 text-xs rounded shadow-sm transition font-bold flex items-center justify-center shrink-0 h-6">
+                                ${showBtns ? '&lt;' : '&gt;'}
+                            </button>
+                            <div class="${showBtns ? 'flex' : 'hidden'} flex-wrap gap-1.5 flex-1 transition-all">
+                                <button onclick="addAction('${cm.id}', 'StatChange')" class="bg-teal-900/40 border border-teal-700 text-teal-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-teal-800/40 transition">스탯 증감</button>
+                                <button onclick="addAction('${cm.id}', 'F_ChaMethod')" class="bg-indigo-900/40 border border-indigo-700 text-indigo-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-indigo-800/40 transition">F_Cha 행동</button>
+                                <button onclick="addAction('${cm.id}', 'StackChange')" class="bg-fuchsia-900/40 border border-fuchsia-700 text-fuchsia-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-fuchsia-800/40 transition">스택 조작 (+/-)</button>
+                                <button onclick="addAction('${cm.id}', 'AddBuff')" class="bg-blue-900/40 border border-blue-700 text-blue-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-blue-800/40 transition">버프 부여</button>
+                                <button onclick="addAction('${cm.id}', 'RandVar')" class="bg-indigo-900/40 border border-indigo-700 text-indigo-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-indigo-800/40 transition">Rand 변수</button>
+                                <button onclick="addAction('${cm.id}', 'IfCondition')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">If</button>
+                                <button onclick="addAction('${cm.id}', 'ElseIfCondition')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">else if</button>
+                                <button onclick="addAction('${cm.id}', 'ElseCondition')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">else</button>
+                                <button onclick="addAction('${cm.id}', 'EndIf')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">}</button>
+                                <button onclick="addAction('${cm.id}', 'RemoveThis')" class="bg-red-900/40 border border-red-700 text-red-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-red-800/40 transition">자신 제거</button>
+                                <button onclick="addAction('${cm.id}', 'StackCheckCall')" class="bg-fuchsia-900/40 border border-fuchsia-700 text-fuchsia-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-fuchsia-800/40 transition">StackCheck()</button>
+                                <button onclick="addAction('${cm.id}', 'Custom')" class="bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm transition">C# 커스텀</button>
+                                <button onclick="addAction('${cm.id}', 'DCModify')" class="bg-purple-900/40 border border-purple-700 text-purple-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-purple-800/40 transition">DC 수정</button>
+                            </div>
+                        </div>
+                    </div></div>
+                `;
+            });
+            document.getElementById('custom-method-list-container').innerHTML = cHtml;
         }
 
         function renderAction(eventId, idx, act, totalLen = 0, indentLevel = 0) {
@@ -404,6 +534,18 @@
                     <select onchange="updateAction('${eventId}', ${idx}, 'op', this.value)" class="bg-slate-800 text-slate-100 p-1 text-[10px] md:text-xs rounded font-bold text-fuchsia-400 border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none">${ops}</select>
                     ${(act.op !== '++' && act.op !== '--') ? `<input type="text" oninput="updateAction('${eventId}', ${idx}, 'val', this.value)" value="${escapeHtml(act.val)}" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded w-12 font-mono focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500">` : ''}
                     <span class="text-slate-200 font-mono text-[10px] md:text-xs">;</span>
+                `;
+            } else if(act.type === 'RandVar') {
+                inner = `
+                    <span class="text-blue-400 font-mono text-[10px] md:text-xs font-bold">int</span>
+                    <input type="text" oninput="this.style.width = Math.max(6, this.value.length + 2) + 'ch'; updateAction('${eventId}', ${idx}, 'varName', this.value)" value="${escapeHtml(act.varName)}" style="width: ${Math.max(6, (act.varName||'').length + 2)}ch;" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded font-mono outline-none focus:ring-1 focus:ring-blue-500 placeholder-slate-500">
+                    <span class="text-slate-400 font-bold">=</span>
+                    <span class="text-indigo-400 font-mono text-[10px] md:text-xs font-bold">Rand</span>
+                    <span class="text-slate-300 font-mono text-[10px] md:text-xs">(</span>
+                    <input type="text" oninput="this.style.width = Math.max(3, this.value.length + 2) + 'ch'; updateAction('${eventId}', ${idx}, 'min', this.value)" value="${escapeHtml(act.min)}" style="width: ${Math.max(3, (act.min||'').length + 2)}ch;" class="bg-slate-800 text-amber-300 border border-slate-600 p-1 text-[10px] md:text-xs rounded font-mono outline-none focus:ring-1 focus:ring-blue-500 placeholder-slate-500 text-center">
+                    <span class="text-slate-300 font-mono text-[10px] md:text-xs">,</span>
+                    <input type="text" oninput="this.style.width = Math.max(3, this.value.length + 2) + 'ch'; updateAction('${eventId}', ${idx}, 'max', this.value)" value="${escapeHtml(act.max)}" style="width: ${Math.max(3, (act.max||'').length + 2)}ch;" class="bg-slate-800 text-amber-300 border border-slate-600 p-1 text-[10px] md:text-xs rounded font-mono outline-none focus:ring-1 focus:ring-blue-500 placeholder-slate-500 text-center">
+                    <span class="text-slate-300 font-mono text-[10px] md:text-xs">);</span>
                 `;
             } else if(act.type === 'IfCondition') {
                 inner = `
@@ -461,7 +603,12 @@
                 let codeLines = act.code ? act.code.split('\n').length : 2;
                 inner = `<textarea oninput="this.rows = Math.max(2, this.value.split('\\n').length); updateAction('${eventId}', ${idx}, 'code', this.value)" class="w-full border border-slate-600 rounded p-2 font-mono text-[11px] md:text-xs bg-slate-800 text-emerald-400 outline-none resize-y placeholder-slate-500" rows="${Math.max(2, codeLines)}">${escapeHtml(act.code)}</textarea>`;
             } else if(act.type === 'BaseCall') {
-                inner = `<span class="font-mono text-[10px] md:text-xs text-indigo-400 font-semibold">base.${eventId}(${eventId === 'OnUpdate' ? 'val' : ''});</span>`;
+                let standardName = EVENT_DEF.find(e => e.id === eventId)?.id || '';
+                if(standardName) {
+                    inner = `<span class="font-mono text-[10px] md:text-xs text-indigo-400 font-semibold">base.${standardName}(${standardName === 'OnUpdate' ? 'val' : ''});</span>`;
+                } else {
+                    inner = `<span class="font-mono text-[10px] md:text-xs text-slate-500 font-semibold">// BaseCall 지원 안됨</span>`;
+                }
             }
 
             let marginStyle = indentLevel > 0 ? `margin-left: ${indentLevel * 1.25}rem;` : '';
@@ -480,7 +627,52 @@
             `;
         }
 
-        // --- 4. 코드 생성 (Generator) ---
+        // --- 4. 코드 생성 (Generator Helper) ---
+        function generateActionsCode(actions, initialIndent, standardEventName = null) {
+            let code = "";
+            let indentLvl = initialIndent;
+            
+            actions.forEach(act => {
+                let line = "";
+                if(act.type === 'EndIf') { indentLvl = Math.max(initialIndent, indentLvl - 1); }
+                let indentStr = "    ".repeat(indentLvl);
+
+                if(act.type === 'StatChange') {
+                    if(act.stat === 'this') line = `${act.target}.${act.op}(this, ${act.val});`;
+                    else line = `${act.target}.${act.op}("${act.stat}", ${act.val});`;
+                }
+                else if(act.type === 'F_ChaMethod') line = `${act.target}.${act.method}(${act.args});`;
+                else if(act.type === 'StackChange') line = (act.op === '++' || act.op === '--') ? `stack${act.op};` : `stack ${act.op} ${act.val};`;
+                else if(act.type === 'AddBuff') {
+                    if(act.props && act.props.trim() !== "") line = `${act.target}.AddBuff(new ${act.buffClass}(${act.target}, ${act.caster}, ${act.stack}){ ${act.props.trim()} });`;
+                    else line = `${act.target}.AddBuff(new ${act.buffClass}(${act.target}, ${act.caster}, ${act.stack}));`;
+                }
+                else if(act.type === 'RandVar') line = `int ${act.varName} = Rand(${act.min}, ${act.max});`;
+                else if(act.type === 'IfCondition') { line = `if (${act.condition})\n${indentStr}{`; }
+                else if(act.type === 'ElseIfCondition') { indentLvl = Math.max(initialIndent, indentLvl - 1); line = `} else if (${act.condition})\n${"    ".repeat(indentLvl)}{`; }
+                else if(act.type === 'ElseCondition') { indentLvl = Math.max(initialIndent, indentLvl - 1); line = `} else\n${"    ".repeat(indentLvl)}{`; }
+                else if(act.type === 'EndIf') { line = `}`; }
+                else if(act.type === 'RemoveThis') line = `owner.RemoveBuff(this);`;
+                else if(act.type === 'StackCheckCall') line = `StackCheck();`;
+                else if(act.type === 'DCModify') line = `DC.${act.field} ${act.op} ${act.val};`;
+                else if(act.type === 'BaseCall' && standardEventName) line = `base.${standardEventName}(${standardEventName === 'OnUpdate' ? 'val' : ''});`;
+                else if(act.type === 'Custom') line = act.code;
+                
+                if (line) {
+                    line.split('\n').forEach((l, idx) => { 
+                        if((act.type === 'IfCondition' || act.type === 'ElseIfCondition' || act.type === 'ElseCondition') && idx === 1) {
+                            code += `${l}\n`;
+                        } else {
+                            code += `${indentStr}${l}\n`; 
+                        }
+                    });
+                }
+
+                if(act.type === 'IfCondition' || act.type === 'ElseIfCondition' || act.type === 'ElseCondition') { indentLvl += 1; }
+            });
+            return code;
+        }
+
         function generateBuffClassString(buff) {
             let className = buff.className || "UnknownBuff";
             let code = `public class ${className} : Buff\n{\n`;
@@ -502,6 +694,14 @@
             }
             code += `\n`;
 
+            // Variables
+            buff.variables.forEach(v => {
+                let valStr = v.value ? ` = ${v.value}` : '';
+                code += `    ${v.access} ${v.type} ${v.name}${valStr};\n`;
+            });
+            if (buff.variables.length > 0) code += `\n`;
+
+            // Custom Code
             if (buff.classCustomCode && buff.classCustomCode.trim() !== "") {
                 code += buff.classCustomCode.trim().split('\n').map(l => `    ${l}`).join('\n') + `\n\n`;
             }
@@ -512,47 +712,22 @@
                 const evData = buff.events[ev.id];
                 if(evData && evData.active) {
                     code += `    ${EVENT_SIGNATURES[ev.id]}\n`;
-                    let indentLvl = 2;
-
                     if (ev.id === 'OnUpdate') code += `        base.OnUpdate(val);\n`;
+                    
+                    code += generateActionsCode(evData.actions, 2, ev.id);
 
-                    evData.actions.forEach(act => {
-                        let line = "";
-                        if(act.type === 'EndIf') { indentLvl = Math.max(2, indentLvl - 1); }
-                        let indentStr = "    ".repeat(indentLvl);
-
-                        if(act.type === 'StatChange') {
-                            if(act.stat === 'this') line = `${act.target}.${act.op}(this, ${act.val});`;
-                            else line = `${act.target}.${act.op}("${act.stat}", ${act.val});`;
-                        }
-                        else if(act.type === 'F_ChaMethod') line = `${act.target}.${act.method}(${act.args});`;
-                        else if(act.type === 'StackChange') line = (act.op === '++' || act.op === '--') ? `stack${act.op};` : `stack ${act.op} ${act.val};`;
-                        else if(act.type === 'AddBuff') {
-                            if(act.props && act.props.trim() !== "") line = `${act.target}.AddBuff(new ${act.buffClass}(${act.target}, ${act.caster}, ${act.stack}){ ${act.props.trim()} });`;
-                            else line = `${act.target}.AddBuff(new ${act.buffClass}(${act.target}, ${act.caster}, ${act.stack}));`;
-                        }
-                        else if(act.type === 'IfCondition') { line = `if (${act.condition})\n${indentStr}{`; }
-                        else if(act.type === 'ElseIfCondition') { indentLvl = Math.max(2, indentLvl - 1); line = `} else if (${act.condition})\n${"    ".repeat(indentLvl)}{`; }
-                        else if(act.type === 'ElseCondition') { indentLvl = Math.max(2, indentLvl - 1); line = `} else\n${"    ".repeat(indentLvl)}{`; }
-                        else if(act.type === 'EndIf') { line = `}`; }
-                        else if(act.type === 'RemoveThis') line = `owner.RemoveBuff(this);`;
-                        else if(act.type === 'StackCheckCall') line = `StackCheck();`;
-                        else if(act.type === 'DCModify') line = `DC.${act.field} ${act.op} ${act.val};`;
-                        else if(act.type === 'BaseCall') line = `base.${ev.id}(${ev.id === 'OnUpdate' ? 'val' : ''});`;
-                        else if(act.type === 'Custom') line = act.code;
-                        
-                        line.split('\n').forEach((l, idx) => { 
-                            if((act.type === 'IfCondition' || act.type === 'ElseIfCondition' || act.type === 'ElseCondition') && idx === 1) code += `${l}\n`;
-                            else code += `${indentStr}${l}\n`; 
-                        });
-
-                        if(act.type === 'IfCondition' || act.type === 'ElseIfCondition' || act.type === 'ElseCondition') { indentLvl += 1; }
-                    });
-
-                    if(RETURN_STATEMENTS[ev.id]) code += "    ".repeat(2) + RETURN_STATEMENTS[ev.id].trim() + "\n";
+                    if(RETURN_STATEMENTS[ev.id]) code += "        " + RETURN_STATEMENTS[ev.id].trim() + "\n";
                     code += `    }\n\n`;
                 }
             });
+
+            // Custom Methods Code Gen
+            buff.customMethods.forEach(cm => {
+                code += `    ${cm.signature}\n    {\n`;
+                code += generateActionsCode(cm.actions, 2, null);
+                code += `    }\n\n`;
+            });
+
             code += `}`;
             return code;
         }
@@ -576,7 +751,7 @@
             }
         }
 
-        // --- 5. 코드 가져오기 (Advanced Parser) ---
+        // --- 5. 코드 가져오기 (Smart Parser) ---
         function openGitHubModal() { document.getElementById('github-modal').classList.remove('hidden'); }
         function closeGitHubModal() { document.getElementById('github-modal').classList.add('hidden'); }
         function openInfoModal() { document.getElementById('info-modal').classList.remove('hidden'); }
@@ -605,6 +780,7 @@
                 if (!headerMatch) continue;
                 const className = headerMatch[1];
                 let buff = createEmptyBuff(className, "");
+                
                 const bodyStart = block.indexOf('{');
                 const bodyEnd = block.lastIndexOf('}');
                 if(bodyStart === -1 || bodyEnd === -1) continue;
@@ -626,14 +802,26 @@
 
                 const descMatch = leftover.match(/public\s+override\s+string\s+Description\s*=>\s*([^;]+);/);
                 if (descMatch) {
-                    buff.description = descMatch[1].replace(/\$?"/g, '').replace(/\+/g, '').replace(/\\n/g, '\n').split('\n').map(l => l.trim()).filter(l => l).join('\n'); 
+                    let raw = descMatch[1];
+                    buff.description = raw.replace(/\$?"/g, '').replace(/\+/g, '').replace(/\\n/g, '\n').split('\n').map(l => l.trim()).filter(l => l).join('\n'); 
                     leftover = leftover.replace(descMatch[0], '');
+                }
+
+                // Parse Variables securely
+                while (true) {
+                    let m = leftover.match(/(public|private|protected)\s+(int|float|string|bool)\s+([a-zA-Z0-9_]+)\s*(?:=\s*([^;]+))?\s*;/);
+                    if (!m) break;
+                    buff.variables.push({
+                        access: m[1], type: m[2], name: m[3], value: m[4] ? m[4].trim() : ''
+                    });
+                    leftover = leftover.replace(m[0], '');
                 }
 
                 const ctorRegex = new RegExp(`public\\s+${className}\\s*\\([^)]*\\)\\s*:\\s*base\\([^)]*\\)\\s*(?:\\{[^}]*\\}|\\{\\s*\\})`);
                 const ctorMatch = leftover.match(ctorRegex);
                 if(ctorMatch) leftover = leftover.replace(ctorMatch[0], '');
 
+                // Parse Standard Events
                 EVENT_DEF.forEach(ev => {
                     const sig = `public override void ${ev.id}`;
                     const sigDC = `public override DamContext ${ev.id}`;
@@ -643,23 +831,59 @@
                         let startIdx = leftover.indexOf('{', idx);
                         let braceCount = 1; let endIdx = startIdx + 1;
                         while(braceCount > 0 && endIdx < leftover.length) {
-                            // 방어 코드: 중괄호 오류로 다음 메서드까지 집어삼키는 것을 방지
                             let lookAhead = leftover.substring(endIdx, endIdx + 30);
-                            if (lookAhead.match(/^\s*public override/) && braceCount <= 1) {
-                                break;
-                            }
+                            if (lookAhead.match(/^\s*(public|private|protected) /) && braceCount <= 1 && leftover[endIdx-1] === '}') break; // 집어삼킴 방지 안전장치
+                            
                             if (leftover[endIdx] === '{') braceCount++;
                             else if (leftover[endIdx] === '}') braceCount--;
                             endIdx++;
                         }
-                        const methodStr = leftover.substring(idx, endIdx);
-                        let body = leftover.substring(startIdx + 1, endIdx - 1).trim();
-                        body = body.replace(/return DC;\s*$/, '').trim();
-                        buff.events[ev.id].active = true;
-                        buff.events[ev.id].actions = parseBodyToActions(body);
-                        leftover = leftover.replace(methodStr, '');
+                        if (braceCount === 0) {
+                            const methodStr = leftover.substring(idx, endIdx);
+                            let body = leftover.substring(startIdx + 1, endIdx - 1).trim();
+                            body = body.replace(/return DC;\s*$/, '').trim();
+                            buff.events[ev.id].active = true;
+                            buff.events[ev.id].actions = parseBodyToActions(body);
+                            leftover = leftover.replace(methodStr, '');
+                        }
                     }
                 });
+                
+                // Parse Custom Methods (잔여 코드에서 메서드 감지)
+                while (true) {
+                    let match = leftover.match(/(public|private|protected)\s+(?:override\s+|virtual\s+|static\s+)?([\w<>\[\]]+)\s+(\w+)\s*\(([^)]*)\)\s*\{/);
+                    if (!match) break;
+                    
+                    let startIdx = match.index + match[0].length - 1; 
+                    let braceCount = 1;
+                    let endIdx = startIdx + 1;
+                    
+                    while(braceCount > 0 && endIdx < leftover.length) {
+                        let lookAhead = leftover.substring(endIdx, endIdx + 30);
+                        if (lookAhead.match(/^\s*(public|private|protected) /) && braceCount <= 1 && leftover[endIdx-1] === '}') break; // 집어삼킴 방지
+                        
+                        if (leftover[endIdx] === '{') braceCount++;
+                        else if (leftover[endIdx] === '}') braceCount--;
+                        endIdx++;
+                    }
+                    
+                    if (braceCount === 0) {
+                        let fullMethod = leftover.substring(match.index, endIdx);
+                        let signature = leftover.substring(match.index, startIdx).trim();
+                        let body = leftover.substring(startIdx + 1, endIdx - 1).trim();
+                        
+                        buff.customMethods.push({
+                            id: 'cm_' + Date.now() + Math.random(),
+                            signature: signature,
+                            showButtons: false,
+                            actions: parseBodyToActions(body)
+                        });
+                        leftover = leftover.replace(fullMethod, '');
+                    } else {
+                        break; // 괄호 파싱 실패 시 남은 코드는 customCode로 이관
+                    }
+                }
+
                 buff.classCustomCode = leftover.trim();
                 newBuffs.push(buff);
             }
@@ -667,13 +891,20 @@
             else alert('파싱할 버프 클래스를 찾지 못했습니다.');
         }
 
+        // C# 본문 -> UI 액션 역어셈블러
         function parseBodyToActions(body) {
             if (!body) return [];
             const actions = [];
             const lines = body.split('\n');
             let customBlock = [];
             let openIfs = 0;
-            function flushCustom() { if (customBlock.length > 0) { actions.push({ type: 'Custom', code: customBlock.join('\n').trim() }); customBlock = []; } }
+            
+            function flushCustom() {
+                if (customBlock.length > 0) {
+                    actions.push({ type: 'Custom', code: customBlock.join('\n').trim() });
+                    customBlock = [];
+                }
+            }
 
             for (let i = 0; i < lines.length; i++) {
                 let line = lines[i].trim();
@@ -718,22 +949,30 @@
                     continue;
                 }
                 
-                const elseIfMatch = line.match(/^(\}?)\s*else\s+if\s*\((.*)\)\s*\{?$/);
-                if (elseIfMatch) {
+                const randMatch = line.match(/^int\s+([a-zA-Z0-9_]+)\s*=\s*Rand\(([^,]+),\s*([^)]+)\);$/);
+                if (randMatch) {
                     flushCustom();
-                    // 이중 괄호 방지 로직
-                    if (elseIfMatch[1] === '}') { if (openIfs > 0) openIfs--; }
-                    if (actions.length > 0 && actions[actions.length - 1].type === 'EndIf') actions.pop();
-                    actions.push({ type: 'ElseIfCondition', condition: elseIfMatch[2] }); openIfs++;
+                    actions.push({ type: 'RandVar', varName: randMatch[1], min: randMatch[2].trim(), max: randMatch[3].trim() });
                     continue;
                 }
                 
+                // Else If문: 이전 EndIf 블록 흡수
+                const elseIfMatch = line.match(/^(\}?)\s*else\s+if\s*\((.*)\)\s*\{?$/);
+                if (elseIfMatch) {
+                    flushCustom();
+                    if (actions.length > 0 && actions[actions.length - 1].type === 'EndIf') actions.pop();
+                    actions.push({ type: 'ElseIfCondition', condition: elseIfMatch[2] });
+                    openIfs++;
+                    continue;
+                }
+                
+                // Else문: 이전 EndIf 블록 흡수
                 const elseMatch = line.match(/^(\}?)\s*else\s*\{?$/);
                 if (elseMatch) {
                     flushCustom();
-                    if (elseMatch[1] === '}') { if (openIfs > 0) openIfs--; }
                     if (actions.length > 0 && actions[actions.length - 1].type === 'EndIf') actions.pop();
-                    actions.push({ type: 'ElseCondition' }); openIfs++;
+                    actions.push({ type: 'ElseCondition' });
+                    openIfs++;
                     continue;
                 }
 
@@ -741,7 +980,7 @@
                 if (ifMatch) { flushCustom(); actions.push({ type: 'IfCondition', condition: ifMatch[1] }); openIfs++; continue; }
                 
                 if (line === "{") { if (customBlock.length === 0 && actions.length > 0 && ['IfCondition', 'ElseIfCondition', 'ElseCondition'].includes(actions[actions.length - 1].type)) continue; }
-                if (line === "}") { if (openIfs > 0 && customBlock.length === 0) { flushCustom(); actions.push({ type: 'EndIf' }); openIfs--; continue; } }
+                if (line === "}") { if (customBlock.length === 0) { flushCustom(); actions.push({ type: 'EndIf' }); openIfs--; continue; } }
                 
                 customBlock.push(line);
             }
@@ -749,7 +988,42 @@
             return actions;
         }
 
-        // --- 7. 사용자 이벤트 라우팅 ---
+        // --- 7. 사용자 이벤트/함수 라우팅 ---
+        function getEventOrMethod(id) {
+            if (buffCollection[currentIndex].events[id]) return buffCollection[currentIndex].events[id];
+            return buffCollection[currentIndex].customMethods.find(m => m.id === id);
+        }
+
+        window.addVariable = function() {
+            buffCollection[currentIndex].variables.push({ access: 'public', type: 'int', name: 'newVar', value: '0' });
+            saveData(); renderEditor();
+        }
+        window.removeVar = function(idx) {
+            buffCollection[currentIndex].variables.splice(idx, 1);
+            saveData(); renderEditor(); renderCode();
+        }
+        window.updateVar = function(idx, prop, val) {
+            buffCollection[currentIndex].variables[idx][prop] = val;
+            saveData(); renderCode();
+        }
+
+        window.addCustomMethod = function() {
+            buffCollection[currentIndex].customMethods.push({
+                id: 'cm_' + Date.now() + '_' + Math.floor(Math.random() * 1000), signature: "private void CustomMethod()", showButtons: true, actions: []
+            });
+            saveData(); renderEditor(); renderCode();
+        }
+        window.removeCustomMethod = function(id) {
+            if(!confirm('이 커스텀 함수를 삭제하시겠습니까?')) return;
+            let cms = buffCollection[currentIndex].customMethods;
+            let idx = cms.findIndex(m => m.id === id);
+            if (idx > -1) { cms.splice(idx, 1); saveData(); renderEditor(); renderCode(); }
+        }
+        window.updateCustomMethodSig = function(id, val) {
+            let cm = buffCollection[currentIndex].customMethods.find(m => m.id === id);
+            if (cm) { cm.signature = val; saveData(); renderCode(); }
+        }
+
         document.addEventListener('input', e => {
             if(e.target.matches('[data-bind]')) {
                 buffCollection[currentIndex][e.target.getAttribute('data-bind')] = e.target.type === 'number' ? parseInt(e.target.value) || 0 : e.target.value;
@@ -774,15 +1048,23 @@
             if(!confirm('현재 편집 중인 버프를 삭제하시겠습니까?')) return;
             buffCollection.splice(currentIndex, 1); currentIndex = Math.max(0, currentIndex - 1); saveData(); renderAll();
         }
-        window.toggleEvent = function(id) { buffCollection[currentIndex].events[id].active = !buffCollection[currentIndex].events[id].active; saveData(); renderEditor(); renderCode(); lucide.createIcons(); }
-        window.toggleActionButtons = function(eventId) { buffCollection[currentIndex].events[eventId].showButtons = !buffCollection[currentIndex].events[eventId].showButtons; saveData(); renderEditor(); renderCode(); lucide.createIcons(); }
+        window.toggleEvent = function(id) {
+            buffCollection[currentIndex].events[id].active = !buffCollection[currentIndex].events[id].active;
+            saveData(); renderEditor(); renderCode(); lucide.createIcons();
+        }
+        window.toggleActionButtons = function(id) {
+            let target = getEventOrMethod(id);
+            target.showButtons = !target.showButtons;
+            saveData(); renderEditor(); renderCode(); lucide.createIcons();
+        }
         window.moveAction = function(eventId, idx, dir) {
-            const actions = buffCollection[currentIndex].events[eventId].actions;
-            if (idx + dir < 0 || idx + dir >= actions.length) return; 
-            const temp = actions[idx]; actions[idx] = actions[idx + dir]; actions[idx + dir] = temp;
+            let target = getEventOrMethod(eventId);
+            if (idx + dir < 0 || idx + dir >= target.actions.length) return; 
+            const temp = target.actions[idx]; target.actions[idx] = target.actions[idx + dir]; target.actions[idx + dir] = temp;
             saveData(); renderEditor(); renderCode(); lucide.createIcons();
         }
         window.addAction = function(id, type) {
+            let targetEvent = getEventOrMethod(id);
             let act = { type };
             if(type === 'StatChange') act = { ...act, target: 'owner', op: 'Gain', stat: 'Power', val: 'stack' };
             else if (type === 'F_ChaMethod') act = { ...act, target: 'owner', method: 'TakeDamage', args: 'stack * 4, DmgT.HP' };
@@ -794,14 +1076,31 @@
             else if (type === 'DCModify') act = { ...act, field: 'PlusDamage', op: '+=', val: '1' };
             else if (type === 'BaseCall') act = { ...act };
             else if (type === 'StackCheckCall') act = { ...act };
+            else if (type === 'RandVar') {
+                let count = 1;
+                targetEvent.actions.forEach(a => { if(a.type === 'RandVar') count++; });
+                act = { ...act, varName: 'randomV' + count, min: '0', max: '2' };
+            }
             else if (type === 'Custom') act = { ...act, code: "// 직접 입력" };
             
-            buffCollection[currentIndex].events[id].actions.push(act); saveData(); renderEditor(); renderCode(); lucide.createIcons();
+            targetEvent.actions.push(act); saveData(); renderEditor(); renderCode(); lucide.createIcons();
         }
-        window.removeAction = function(id, idx) { buffCollection[currentIndex].events[id].actions.splice(idx, 1); saveData(); renderEditor(); renderCode(); lucide.createIcons(); }
-        window.updateAction = function(eventId, idx, prop, val) { buffCollection[currentIndex].events[eventId].actions[idx][prop] = val; saveData(); renderCode(); }
+        window.removeAction = function(id, idx) {
+            getEventOrMethod(id).actions.splice(idx, 1);
+            saveData(); renderEditor(); renderCode(); lucide.createIcons();
+        }
+        window.updateAction = function(eventId, idx, prop, val) {
+            getEventOrMethod(eventId).actions[idx][prop] = val;
+            saveData(); renderCode();
+        }
+
         window.setViewMode = function(mode) { viewMode = mode; renderCode(); }
-        window.toggleMobileCode = function() { const panel = document.getElementById('code-viewer-panel'); panel.classList.toggle('hidden'); panel.classList.toggle('flex'); }
+        window.toggleMobileCode = function() {
+            const panel = document.getElementById('code-viewer-panel');
+            if(panel.classList.contains('hidden')) { panel.classList.remove('hidden'); panel.classList.add('flex'); } 
+            else { panel.classList.add('hidden'); panel.classList.remove('flex'); }
+        }
+
         window.copyAndOpenGitHub = function() {
             const code = generateFullFileString(); const editUrl = `https://github.com/namwoo321-a11y/cardGame/edit/main/Buffs/${currentTargetFile}`;
             navigator.clipboard.writeText(code).then(() => { alert(`✨ 전체 코드가 클립보드에 복사되었습니다!\n\n이제 자동으로 GitHub 수정 페이지[ ${currentTargetFile} ]가 열립니다.\n[전체 선택(Ctrl+A)] 후 [붙여넣기(Ctrl+V)] 하시고 Commit 버튼을 누르시면 됩니다.`); window.open(editUrl, '_blank'); }).catch(err => { alert('클립보드 복사에 실패했습니다. 우측 코드를 직접 복사해주세요.'); window.open(editUrl, '_blank'); });
