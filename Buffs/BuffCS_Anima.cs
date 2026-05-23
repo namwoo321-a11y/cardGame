@@ -20,10 +20,10 @@ public class GPRand : Buff
     public override void OnActivate()
     {
         // 무작위 화약 3종 중 하나를 부여하고 즉시 자신을 제거
-        int rand = UnityEngine.Random.Range(0, 3);
-        if (rand == 0) owner.AddBuff(new GPR(owner, caster, stack));
-        else if (rand == 1) owner.AddBuff(new GPY(owner, caster, stack));
-        else owner.AddBuff(new GPP(owner, caster, stack));
+        int rand = Rand(1,3);
+        if (rand == 0) {owner.AddBuff(new GPR(owner, caster, stack));}
+        else if {(rand == 1) owner.AddBuff(new GPY(owner, caster, stack));}
+        else {owner.AddBuff(new GPP(owner, caster, stack));}
 
         owner.RemoveBuff(this);
     }
