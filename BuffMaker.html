@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unity Buff Code Maker (Dark Mode Fixed)</title>
+    <title>Unity Buff Code Maker (Smart Indent & Validation)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -22,21 +22,21 @@
         <div class="flex items-center gap-2">
             <i data-lucide="swords" class="w-5 h-5 md:w-6 md:h-6 text-blue-400"></i>
             <h1 class="text-lg md:text-xl font-bold tracking-wide text-slate-100">Buff Code Maker</h1>
+            <!-- 정보 아이콘 버튼 추가 -->
+            <button onclick="openInfoModal()" class="text-slate-400 hover:text-blue-300 ml-1 transition" title="도움말 보기">
+                <i data-lucide="info" class="w-4 h-4 md:w-5 md:h-5"></i>
+            </button>
         </div>
         <div class="flex gap-2">
-            <!-- 통합 다운로드 버튼 -->
             <button onclick="mergeAndDownloadAll(this)" class="flex items-center gap-1 bg-amber-700 hover:bg-amber-600 text-white px-2 py-1.5 md:px-3 md:py-1.5 rounded text-xs md:text-sm font-bold transition shadow" title="모든 파일을 병합하여 1개의 C# 파일로 다운로드합니다.">
                 <i data-lucide="package-search" class="w-4 h-4"></i> <span class="hidden md:inline">통합 다운로드 (BuffCS.cs)</span><span class="md:hidden">통합 다운로드</span>
             </button>
-            <!-- GitHub에서 불러오기 버튼 (모달 연결) -->
             <button onclick="openGitHubModal()" class="flex items-center gap-1 bg-indigo-700 hover:bg-indigo-600 text-white px-2 py-1.5 md:px-3 md:py-1.5 rounded text-xs md:text-sm font-bold transition shadow">
                 <i data-lucide="cloud-download" class="w-4 h-4"></i> <span class="hidden md:inline">GitHub에서 불러오기</span><span class="md:hidden">불러오기</span>
             </button>
-            <!-- 모바일 전용 코드 보기 토글 -->
             <button onclick="toggleMobileCode()" class="md:hidden flex items-center gap-1 bg-slate-800 text-white px-2 py-1.5 rounded text-xs font-bold shadow">
                 <i data-lucide="code-2" class="w-4 h-4"></i> 코드 확인
             </button>
-            <!-- GitHub 덮어씌우기 버튼 -->
             <button onclick="copyAndOpenGitHub()" class="flex items-center gap-1 bg-emerald-700 hover:bg-emerald-600 text-white px-2 py-1.5 md:px-3 md:py-1.5 rounded text-xs md:text-sm font-bold transition shadow">
                 <i data-lucide="github" class="w-4 h-4"></i> <span class="hidden md:inline">코드 복사 및 GitHub 덮어씌우기</span><span class="md:hidden">GitHub 적용</span>
             </button>
@@ -123,6 +123,33 @@
         </div>
     </main>
 
+    <!-- 도움말(Info) 모달 -->
+    <div id="info-modal" class="hidden fixed inset-0 bg-slate-950/70 z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 rounded-lg shadow-xl w-full max-w-md flex flex-col border border-slate-800">
+            <div class="p-4 border-b border-slate-800 font-bold text-lg flex justify-between items-center bg-slate-850 rounded-t-lg">
+                <span class="flex items-center gap-2 text-blue-400"><i data-lucide="info" class="w-5 h-5"></i> C# 함수 도움말</span>
+                <button onclick="closeInfoModal()" class="text-slate-400 hover:text-slate-200"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-5 flex flex-col gap-4 text-slate-300 text-sm leading-relaxed">
+                <div>
+                    <p class="font-mono text-indigo-400 font-bold mb-1">F_Cha.HasCValue(string Name)</p>
+                    <p class="pl-2 border-l-2 border-slate-700">캐릭터가 해당 이름의 변수를 가지고 있는지 확인합니다.</p>
+                </div>
+                <div>
+                    <p class="font-mono text-indigo-400 font-bold mb-1">F_Cha.CValue(string Name)</p>
+                    <p class="pl-2 border-l-2 border-slate-700">해당 이름의 변수값을 반환합니다. (없으면 0)</p>
+                </div>
+                <div>
+                    <p class="font-mono text-purple-400 font-bold mb-1">DamContext.GetFinalDamage()</p>
+                    <p class="pl-2 border-l-2 border-slate-700">최종 피해량을 계산합니다. (피격 후 or 피격 전 예상 피해량)</p>
+                </div>
+            </div>
+            <div class="p-4 border-t border-slate-800 flex justify-end bg-slate-850 rounded-b-lg">
+                <button onclick="closeInfoModal()" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 font-bold text-sm">확인</button>
+            </div>
+        </div>
+    </div>
+
     <!-- GitHub 리스트 불러오기 모달 -->
     <div id="github-modal" class="hidden fixed inset-0 bg-slate-950/70 z-50 flex items-center justify-center p-4">
         <div class="bg-slate-900 rounded-lg shadow-xl w-full max-w-sm flex flex-col border border-slate-800">
@@ -156,15 +183,9 @@
     </div>
 
     <script>
-        // HTML 안전 이스케이프 함수
         const escapeHtml = (str) => {
             if (str === null || str === undefined) return '';
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
         };
 
         const MERGE_TARGET_FILES = [
@@ -173,7 +194,6 @@
             "BuffCS_Manity.cs", "BuffCS_Prote.cs", "BuffCS_UG.cs", "BuffCS_Whai.cs"
         ];
 
-        // --- 1. 상수 및 데이터 구조 ---
         const EVENT_DEF = [
             { id: 'OnActivate', name: 'OnActivate()', desc: '최초 부여 시' },
             { id: 'OnUpdate', name: 'OnUpdate(int val)', desc: '스택 갱신 시' },
@@ -210,55 +230,35 @@
         let viewMode = 'single';
         let currentTargetFile = "BuffCS.cs"; 
 
-        // --- 2. 초기화 ---
         function initApp() {
-            const saved = localStorage.getItem('buffMakerData_v21');
-            if (saved) {
-                try { buffCollection = JSON.parse(saved); } catch (e) { buffCollection = []; }
-            }
-            if (buffCollection.length === 0) {
-                buffCollection.push(createEmptyBuff("NewBuff", "새 버프"));
-            }
-            
+            const saved = localStorage.getItem('buffMakerData_v22');
+            if (saved) { try { buffCollection = JSON.parse(saved); } catch (e) { buffCollection = []; } }
+            if (buffCollection.length === 0) buffCollection.push(createEmptyBuff("NewBuff", "새 버프"));
             const savedFile = localStorage.getItem('buffMakerTargetFile');
             if (savedFile) currentTargetFile = savedFile;
-            
             currentIndex = 0;
             renderAll();
         }
 
         function saveData() {
-            localStorage.setItem('buffMakerData_v21', JSON.stringify(buffCollection));
+            localStorage.setItem('buffMakerData_v22', JSON.stringify(buffCollection));
             localStorage.setItem('buffMakerTargetFile', currentTargetFile);
         }
 
         function createEmptyBuff(cName, kName) {
-            let b = {
-                id: Date.now() + Math.floor(Math.random() * 1000),
-                className: cName,
-                bNameKR: kName,
-                description: "",
-                buffType: "Good",
-                customBuffTypeStr: "",
-                classCustomCode: "",
-                events: {}
-            };
+            let b = { id: Date.now() + Math.floor(Math.random() * 1000), className: cName, bNameKR: kName, description: "", buffType: "Good", customBuffTypeStr: "", classCustomCode: "", events: {} };
             EVENT_DEF.forEach(ev => b.events[ev.id] = { active: false, showButtons: false, actions: [] });
             return b;
         }
 
-        // --- 3. UI 렌더링 ---
         function renderAll() {
             document.getElementById('target-file-label').innerText = currentTargetFile;
             renderBuffList();
             renderEditor();
             renderCode();
             lucide.createIcons();
-            
             const globalCodeArea = document.getElementById('inp-classCustomCode');
-            if(globalCodeArea && globalCodeArea.value) {
-                globalCodeArea.rows = Math.max(2, globalCodeArea.value.split('\n').length);
-            }
+            if(globalCodeArea && globalCodeArea.value) globalCodeArea.rows = Math.max(2, globalCodeArea.value.split('\n').length);
         }
 
         function renderBuffList() {
@@ -282,12 +282,7 @@
             
             document.getElementById('inp-className').value = buff.className || "";
             document.getElementById('inp-bNameKR').value = buff.bNameKR || "";
-            if(buff.customBuffTypeStr) {
-                document.getElementById('inp-buffType').value = "Custom";
-            } else {
-                document.getElementById('inp-buffType').value = buff.buffType || "Good";
-            }
-            
+            document.getElementById('inp-buffType').value = buff.customBuffTypeStr ? "Custom" : (buff.buffType || "Good");
             document.getElementById('inp-description').value = buff.description || "";
             document.getElementById('inp-classCustomCode').value = buff.classCustomCode || "";
 
@@ -297,12 +292,25 @@
                 const isActive = evData.active;
                 const showBtns = evData.showButtons;
                 
+                // --- 괄호 개수 짝 검증 (Bracket Check) 로직 ---
+                let bracketBalance = 0;
+                evData.actions.forEach(act => {
+                    if (act.type === 'IfCondition') bracketBalance++;
+                    else if (act.type === 'EndIf') bracketBalance--;
+                    else if (act.type === 'Custom' && act.code) {
+                        bracketBalance += (act.code.match(/\{/g) || []).length;
+                        bracketBalance -= (act.code.match(/\}/g) || []).length;
+                    }
+                });
+                const isBracketMismatch = bracketBalance !== 0;
+                const warningHtml = isBracketMismatch ? `<span class="text-red-400 text-[10px] ml-2 font-bold animate-pulse inline-flex items-center gap-0.5" title="중괄호({ }) 짝이 맞지 않습니다!"><i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> 괄호 오류</span>` : '';
+                
                 html += `
                 <div class="bg-slate-900 rounded-lg shadow-sm border transition-all duration-200 ${isActive ? 'border-blue-500 ring-1 ring-blue-500/50' : 'border-slate-800'}">
                     <div class="flex items-center justify-between p-2.5 cursor-pointer hover:bg-slate-800 rounded-lg animate-fade-in" onclick="toggleEvent('${ev.id}')">
                         <div class="flex items-center gap-2">
                             <input type="checkbox" ${isActive ? 'checked' : ''} onclick="event.stopPropagation(); toggleEvent('${ev.id}')" class="w-4 h-4 text-blue-600 rounded bg-slate-800 border-slate-700">
-                            <span class="font-bold font-mono text-slate-200 text-xs md:text-sm">${ev.name}</span>
+                            <span class="font-bold font-mono text-slate-200 text-xs md:text-sm">${ev.name}${warningHtml}</span>
                         </div>
                         <span class="text-[10px] text-slate-400 hidden md:block">${ev.desc}</span>
                     </div>
@@ -311,8 +319,20 @@
                 if (isActive) {
                     html += `<div class="p-2 md:p-4 pt-0 border-t border-slate-800 bg-slate-950/40 rounded-b-lg">`;
                     html += `<div class="space-y-1 mt-2">`;
+                    
+                    let currentIndent = 0;
                     evData.actions.forEach((act, idx) => {
-                        html += renderAction(ev.id, idx, act, evData.actions.length);
+                        // 닫는 블록일 경우 렌더링 전 들여쓰기 감소
+                        if(act.type === 'EndIf' || act.type === 'ElseIfCondition' || act.type === 'ElseCondition') {
+                            currentIndent = Math.max(0, currentIndent - 1);
+                        }
+                        
+                        html += renderAction(ev.id, idx, act, evData.actions.length, currentIndent);
+                        
+                        // 여는 블록일 경우 렌더링 후 들여쓰기 증가
+                        if(act.type === 'IfCondition' || act.type === 'ElseIfCondition' || act.type === 'ElseCondition') {
+                            currentIndent++;
+                        }
                     });
                     html += `</div>`;
                     
@@ -337,7 +357,6 @@
                             </div>
                         </div>
                     `;
-                    
                     html += `</div></div>`;
                 }
                 html += `</div>`;
@@ -345,21 +364,20 @@
             document.getElementById('event-list-container').innerHTML = html;
         }
 
-        function renderAction(eventId, idx, act, totalLen = 0) {
+        function renderAction(eventId, idx, act, totalLen = 0, indentLevel = 0) {
             let inner = '';
             
             if(act.type === 'StatChange') {
                 const targets = ['owner', 'caster', 'DC.Target', 'DC.Attacker'].map(t => `<option ${act.target===t?'selected':''}>${t}</option>`).join('');
-                const stats = ['this', 'Power', 'DefPower', 'HP', 'MP', 'SD', 'Block'].map(t => `<option ${act.stat===t?'selected':''}>${t}</option>`).join('');
+                const stats = ['this', 'Power', 'DefPower', 'HP', 'MaxHP', 'MP', 'MaxMP', 'SD', 'Block', 'Will', 'MaxWill', 'PlusWill', 'Draw', 'MaxDraw', 'PlusDraw'].map(t => `<option ${act.stat===t?'selected':''}>${t}</option>`).join('');
                 const ops = ['Gain', 'Consume'].map(t => `<option ${act.op===t?'selected':''}>${t}</option>`).join('');
-                
                 const isThis = act.stat === 'this';
                 inner = `
                     <select onchange="updateAction('${eventId}', ${idx}, 'target', this.value)" class="bg-slate-800 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none">${targets}</select>
                     <span class="text-slate-400 font-bold">.</span>
                     <select onchange="updateAction('${eventId}', ${idx}, 'op', this.value)" class="bg-slate-800 p-1 text-[10px] md:text-xs rounded font-bold text-teal-400 border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none">${ops}</select>
                     <span class="text-slate-300 font-mono text-[10px] md:text-xs">${isThis ? '(' : '("'}</span>
-                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'stat', this.value)" value="${escapeHtml(act.stat)}" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded w-16 focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500" list="statOptions">
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'stat', this.value)" value="${escapeHtml(act.stat)}" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded w-20 focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500" list="statOptions">
                     <span class="text-slate-300 font-mono text-[10px] md:text-xs">${isThis ? ',' : '",'} </span>
                     <input type="text" oninput="updateAction('${eventId}', ${idx}, 'val', this.value)" value="${escapeHtml(act.val)}" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded w-12 font-mono focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500" placeholder="값">
                     <span class="text-slate-300 font-mono text-[10px] md:text-xs">);</span>
@@ -405,10 +423,8 @@
             } else if(act.type === 'AddBuff') {
                 const targets = ['owner', 'caster', 'DC.Target', 'DC.Attacker'].map(t => `<option ${act.target===t?'selected':''}>${t}</option>`).join('');
                 const casterOpts = ['caster', 'owner'].map(t => `<option ${act.caster===t?'selected':''}>${t}</option>`).join('');
-                
                 let stackLen = act.stack ? act.stack.length : 1;
                 let propsLen = act.props ? act.props.length : 0;
-                
                 inner = `
                     <select onchange="updateAction('${eventId}', ${idx}, 'target', this.value)" class="bg-slate-800 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none">${targets}</select>
                     <span class="text-slate-300 font-mono text-[10px] md:text-xs">.AddBuff(new </span>
@@ -427,7 +443,6 @@
                 const fields = ['PlusDamage', 'PercentDamage', 'Damage', 'FixDamage'].map(t => `<option ${act.field===t?'selected':''}>${t}</option>`).join('');
                 const ops = ['+=', '-=', '*=', '/=', '='].map(t => `<option ${act.op===t?'selected':''}>${t}</option>`).join('');
                 let valLen = act.val ? act.val.length : 1;
-                
                 inner = `
                     <span class="font-mono text-[10px] md:text-xs font-bold text-purple-400">DC.</span>
                     <select onchange="updateAction('${eventId}', ${idx}, 'field', this.value)" class="bg-slate-800 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none">${fields}</select>
@@ -446,8 +461,11 @@
                 inner = `<span class="font-mono text-[10px] md:text-xs text-indigo-400 font-semibold">base.${eventId}(${eventId === 'OnUpdate' ? 'val' : ''});</span>`;
             }
 
+            // 들여쓰기 마진 적용 (1단계당 1.25rem = 20px)
+            let marginStyle = indentLevel > 0 ? `margin-left: ${indentLevel * 1.25}rem;` : '';
+
             return `
-            <div class="flex flex-col md:flex-row items-start md:items-center gap-1.5 md:gap-2 bg-slate-900 border border-slate-800 p-1.5 md:p-2 rounded relative group pr-24">
+            <div class="flex flex-col md:flex-row items-start md:items-center gap-1.5 md:gap-2 bg-slate-900 border border-slate-800 p-1.5 md:p-2 rounded relative group pr-24 transition-all duration-200" style="${marginStyle}">
                 <div class="flex-1 flex flex-wrap items-center gap-1 w-full">
                     ${inner}
                 </div>
@@ -463,43 +481,29 @@
         // --- 4. 코드 생성 (Generator) ---
         function generateBuffClassString(buff) {
             let className = buff.className || "UnknownBuff";
-            
             let code = `public class ${className} : Buff\n{\n`;
             
-            if (buff.customBuffTypeStr) {
-                code += `    public override BuffType BuffType => ${buff.customBuffTypeStr};\n`;
-            } else {
-                code += `    public override BuffType BuffType => BuffType.${buff.buffType};\n`;
-            }
+            if (buff.customBuffTypeStr) code += `    public override BuffType BuffType => ${buff.customBuffTypeStr};\n`;
+            else code += `    public override BuffType BuffType => BuffType.${buff.buffType};\n`;
             
             code += `    public override string Bname => "${className}";\n`;
-            
-            // BnameKR 공백/미입력시 자동 적용
             let krName = (buff.bNameKR || "").trim();
             if (!krName) krName = className;
             code += `    public override string BnameKR => "${krName}";\n`;
             
-            // Description (최대 3줄) 다중 보간 포맷팅 로직
             let descLines = (buff.description || "").split('\n').slice(0, 3);
-            if (descLines.length === 0 || (descLines.length === 1 && descLines[0] === "")) {
-                code += `    public override string Description => "";\n`;
-            } else if (descLines.length === 1) {
-                code += `    public override string Description => $"${descLines[0]}";\n`;
-            } else {
+            if (descLines.length === 0 || (descLines.length === 1 && descLines[0] === "")) code += `    public override string Description => "";\n`;
+            else if (descLines.length === 1) code += `    public override string Description => $"${descLines[0]}";\n`;
+            else {
                 code += `    public override string Description => $"${descLines[0]}" +\n`;
-                for (let i = 1; i < descLines.length; i++) {
-                    let terminator = (i === descLines.length - 1) ? '";\n' : '" +\n';
-                    code += `        $"\\n${descLines[i]}${terminator}`;
-                }
+                for (let i = 1; i < descLines.length; i++) code += `        $"\\n${descLines[i]}${(i === descLines.length - 1) ? '";\n' : '" +\n'}`;
             }
-
             code += `\n`;
 
             if (buff.classCustomCode && buff.classCustomCode.trim() !== "") {
                 code += buff.classCustomCode.trim().split('\n').map(l => `    ${l}`).join('\n') + `\n\n`;
             }
 
-            // 생성자를 한 줄로 깔끔하게 처리
             code += `    public ${className}(F_Cha target, F_Cha user, int s) : base(target, user, s) { }\n\n`;
 
             EVENT_DEF.forEach(ev => {
@@ -508,42 +512,26 @@
                     code += `    ${EVENT_SIGNATURES[ev.id]}\n`;
                     let indentLvl = 2;
 
-                    // OnUpdate는 무조건 base 고정 추가
-                    if (ev.id === 'OnUpdate') {
-                        code += `        base.OnUpdate(val);\n`;
-                    }
+                    if (ev.id === 'OnUpdate') code += `        base.OnUpdate(val);\n`;
 
                     evData.actions.forEach(act => {
                         let line = "";
                         if(act.type === 'EndIf') { indentLvl = Math.max(2, indentLvl - 1); }
-                        
                         let indentStr = "    ".repeat(indentLvl);
 
                         if(act.type === 'StatChange') {
-                            if(act.stat === 'this') {
-                                line = `${act.target}.${act.op}(this, ${act.val});`;
-                            } else {
-                                line = `${act.target}.${act.op}("${act.stat}", ${act.val});`;
-                            }
+                            if(act.stat === 'this') line = `${act.target}.${act.op}(this, ${act.val});`;
+                            else line = `${act.target}.${act.op}("${act.stat}", ${act.val});`;
                         }
                         else if(act.type === 'F_ChaMethod') line = `${act.target}.${act.method}(${act.args});`;
                         else if(act.type === 'StackChange') line = (act.op === '++' || act.op === '--') ? `stack${act.op};` : `stack ${act.op} ${act.val};`;
                         else if(act.type === 'AddBuff') {
-                            if(act.props && act.props.trim() !== "") {
-                                line = `${act.target}.AddBuff(new ${act.buffClass}(${act.target}, ${act.caster}, ${act.stack}){ ${act.props.trim()} });`;
-                            } else {
-                                line = `${act.target}.AddBuff(new ${act.buffClass}(${act.target}, ${act.caster}, ${act.stack}));`;
-                            }
+                            if(act.props && act.props.trim() !== "") line = `${act.target}.AddBuff(new ${act.buffClass}(${act.target}, ${act.caster}, ${act.stack}){ ${act.props.trim()} });`;
+                            else line = `${act.target}.AddBuff(new ${act.buffClass}(${act.target}, ${act.caster}, ${act.stack}));`;
                         }
                         else if(act.type === 'IfCondition') { line = `if (${act.condition})\n${indentStr}{`; }
-                        else if(act.type === 'ElseIfCondition') { 
-                            indentLvl = Math.max(2, indentLvl - 1); 
-                            line = `} else if (${act.condition})\n${"    ".repeat(indentLvl)}{`; 
-                        }
-                        else if(act.type === 'ElseCondition') { 
-                            indentLvl = Math.max(2, indentLvl - 1); 
-                            line = `} else\n${"    ".repeat(indentLvl)}{`; 
-                        }
+                        else if(act.type === 'ElseIfCondition') { indentLvl = Math.max(2, indentLvl - 1); line = `} else if (${act.condition})\n${"    ".repeat(indentLvl)}{`; }
+                        else if(act.type === 'ElseCondition') { indentLvl = Math.max(2, indentLvl - 1); line = `} else\n${"    ".repeat(indentLvl)}{`; }
                         else if(act.type === 'EndIf') { line = `}`; }
                         else if(act.type === 'RemoveThis') line = `owner.RemoveBuff(this);`;
                         else if(act.type === 'StackCheckCall') line = `StackCheck();`;
@@ -552,19 +540,14 @@
                         else if(act.type === 'Custom') line = act.code;
                         
                         line.split('\n').forEach((l, idx) => { 
-                            if((act.type === 'IfCondition' || act.type === 'ElseIfCondition' || act.type === 'ElseCondition') && idx === 1) {
-                                code += `${l}\n`;
-                            } else {
-                                code += `${indentStr}${l}\n`; 
-                            }
+                            if((act.type === 'IfCondition' || act.type === 'ElseIfCondition' || act.type === 'ElseCondition') && idx === 1) code += `${l}\n`;
+                            else code += `${indentStr}${l}\n`; 
                         });
 
                         if(act.type === 'IfCondition' || act.type === 'ElseIfCondition' || act.type === 'ElseCondition') { indentLvl += 1; }
                     });
 
-                    if(RETURN_STATEMENTS[ev.id]) {
-                        code += "    ".repeat(2) + RETURN_STATEMENTS[ev.id].trim() + "\n";
-                    }
+                    if(RETURN_STATEMENTS[ev.id]) code += "    ".repeat(2) + RETURN_STATEMENTS[ev.id].trim() + "\n";
                     code += `    }\n\n`;
                 }
             });
@@ -592,81 +575,56 @@
         }
 
         // --- 5. 코드 가져오기 (Advanced Parser) ---
-        function openGitHubModal() {
-            document.getElementById('github-modal').classList.remove('hidden');
-        }
-
-        function closeGitHubModal() {
-            document.getElementById('github-modal').classList.add('hidden');
-        }
+        function openGitHubModal() { document.getElementById('github-modal').classList.remove('hidden'); }
+        function closeGitHubModal() { document.getElementById('github-modal').classList.add('hidden'); }
+        function openInfoModal() { document.getElementById('info-modal').classList.remove('hidden'); }
+        function closeInfoModal() { document.getElementById('info-modal').classList.add('hidden'); }
 
         async function confirmGitHubImport() {
             const fileName = document.getElementById('github-file-select').value;
             const baseUrl = "https://raw.githubusercontent.com/namwoo321-a11y/cardGame/main/Buffs/";
             const url = baseUrl + fileName;
-            
             closeGitHubModal();
-
             try {
                 const res = await fetch(url + (url.includes('?') ? '&' : '?') + new Date().getTime());
                 if (!res.ok) throw new Error("Network response was not ok");
                 const text = await res.text();
-                
                 currentTargetFile = fileName;
                 parseBuffCaseCS(text);
-            } catch (e) {
-                console.error(e);
-                alert("데이터를 가져오는데 실패했습니다.\nURL 연결 상태를 확인해주세요.");
-            }
+            } catch (e) { console.error(e); alert("데이터를 가져오는데 실패했습니다.\nURL 연결 상태를 확인해주세요."); }
         }
 
         function parseBuffCaseCS(csText) {
             const blocks = csText.split("public class ");
             const newBuffs = [];
-            
             for (let i = 1; i < blocks.length; i++) {
                 let block = blocks[i];
                 const headerMatch = block.match(/^(\w+)\s*:\s*Buff/);
                 if (!headerMatch) continue;
-                
                 const className = headerMatch[1];
                 let buff = createEmptyBuff(className, "");
-
                 const bodyStart = block.indexOf('{');
                 const bodyEnd = block.lastIndexOf('}');
                 if(bodyStart === -1 || bodyEnd === -1) continue;
-                
                 let leftover = block.substring(bodyStart + 1, bodyEnd);
 
                 const bNameMatch = leftover.match(/public\s+override\s+string\s+Bname\s*=>\s*([^;]+);/);
                 if (bNameMatch) leftover = leftover.replace(bNameMatch[0], '');
 
                 const bNameKRMatch = leftover.match(/public\s+override\s+string\s+BnameKR\s*=>\s*"([^"]+)";/);
-                if (bNameKRMatch) {
-                    buff.bNameKR = bNameKRMatch[1];
-                    leftover = leftover.replace(bNameKRMatch[0], '');
-                }
+                if (bNameKRMatch) { buff.bNameKR = bNameKRMatch[1]; leftover = leftover.replace(bNameKRMatch[0], ''); }
 
                 const buffTypeMatch = leftover.match(/public\s+override\s+BuffType\s+BuffType\s*=>\s*([^;]+);/);
                 if (buffTypeMatch) {
                     const btRaw = buffTypeMatch[1].trim();
-                    if(btRaw.startsWith("BuffType.")) {
-                        buff.buffType = btRaw.replace("BuffType.", "");
-                    } else {
-                        buff.buffType = "Custom";
-                        buff.customBuffTypeStr = btRaw; 
-                    }
+                    if(btRaw.startsWith("BuffType.")) buff.buffType = btRaw.replace("BuffType.", "");
+                    else { buff.buffType = "Custom"; buff.customBuffTypeStr = btRaw; }
                     leftover = leftover.replace(buffTypeMatch[0], '');
                 }
 
                 const descMatch = leftover.match(/public\s+override\s+string\s+Description\s*=>\s*([^;]+);/);
                 if (descMatch) {
-                    let raw = descMatch[1];
-                    let cleaned = raw.replace(/\$?"/g, '') 
-                                     .replace(/\+/g, '') 
-                                     .replace(/\\n/g, '\n') 
-                                     .split('\n').map(l => l.trim()).filter(l => l).join('\n'); 
-                    buff.description = cleaned;
+                    buff.description = descMatch[1].replace(/\$?"/g, '').replace(/\+/g, '').replace(/\\n/g, '\n').split('\n').map(l => l.trim()).filter(l => l).join('\n'); 
                     leftover = leftover.replace(descMatch[0], '');
                 }
 
@@ -677,192 +635,103 @@
                 EVENT_DEF.forEach(ev => {
                     const sig = `public override void ${ev.id}`;
                     const sigDC = `public override DamContext ${ev.id}`;
-                    
                     let idx = leftover.indexOf(sig);
                     if (idx === -1) idx = leftover.indexOf(sigDC);
-                    
                     if (idx !== -1) {
                         let startIdx = leftover.indexOf('{', idx);
-                        let braceCount = 1;
-                        let endIdx = startIdx + 1;
+                        let braceCount = 1; let endIdx = startIdx + 1;
                         while(braceCount > 0 && endIdx < leftover.length) {
                             if (leftover[endIdx] === '{') braceCount++;
                             else if (leftover[endIdx] === '}') braceCount--;
                             endIdx++;
                         }
-                        
                         const methodStr = leftover.substring(idx, endIdx);
                         let body = leftover.substring(startIdx + 1, endIdx - 1).trim();
                         body = body.replace(/return DC;\s*$/, '').trim();
-                        
                         buff.events[ev.id].active = true;
                         buff.events[ev.id].actions = parseBodyToActions(body);
-                        
                         leftover = leftover.replace(methodStr, '');
                     }
                 });
-                
                 buff.classCustomCode = leftover.trim();
                 newBuffs.push(buff);
             }
-            
-            if (newBuffs.length > 0) {
-                buffCollection = newBuffs;
-                saveData();
-                currentIndex = 0;
-                renderAll();
-                alert(`성공적으로 ${newBuffs.length}개의 버프를 [${currentTargetFile}] 에서 불러왔습니다!`);
-            } else {
-                alert('파싱할 버프 클래스를 찾지 못했습니다.');
-            }
+            if (newBuffs.length > 0) { buffCollection = newBuffs; saveData(); currentIndex = 0; renderAll(); alert(`성공적으로 ${newBuffs.length}개의 버프를 [${currentTargetFile}] 에서 불러왔습니다!`); } 
+            else alert('파싱할 버프 클래스를 찾지 못했습니다.');
         }
 
-        // C# 본문 -> UI 액션 역어셈블러
         function parseBodyToActions(body) {
             if (!body) return [];
             const actions = [];
             const lines = body.split('\n');
             let customBlock = [];
             let openIfs = 0;
-            
-            function flushCustom() {
-                if (customBlock.length > 0) {
-                    actions.push({ type: 'Custom', code: customBlock.join('\n').trim() });
-                    customBlock = [];
-                }
-            }
+            function flushCustom() { if (customBlock.length > 0) { actions.push({ type: 'Custom', code: customBlock.join('\n').trim() }); customBlock = []; } }
 
             for (let i = 0; i < lines.length; i++) {
                 let line = lines[i].trim();
                 if (!line) continue;
                 
-                // 주석 지능형 파싱
                 const commentIndex = line.indexOf('//');
                 if (commentIndex > 0) { 
                     const codePart = line.substring(0, commentIndex).trim();
                     const commentPart = line.substring(commentIndex + 2).trim();
-                    
                     actions.push({ type: 'Custom', code: "// " + commentPart });
                     line = codePart;
                 }
 
-                if (line === "owner.RemoveBuff(this);") {
-                    flushCustom(); actions.push({ type: 'RemoveThis' }); continue;
-                }
-                if (line === "StackCheck();" || line === "stackCheck();") {
-                    flushCustom(); actions.push({ type: 'StackCheckCall' }); continue;
-                }
-                if (line === "base.OnUpdate(val);") { 
-                    continue; 
-                }
+                if (line === "owner.RemoveBuff(this);") { flushCustom(); actions.push({ type: 'RemoveThis' }); continue; }
+                if (line === "StackCheck();" || line === "stackCheck();") { flushCustom(); actions.push({ type: 'StackCheckCall' }); continue; }
+                if (line === "base.OnUpdate(val);") continue; 
                 const baseMatch = line.match(/^base\.(\w+)\((.*)\);$/);
-                if (baseMatch) {
-                    flushCustom(); actions.push({ type: 'BaseCall' }); continue;
-                }
+                if (baseMatch) { flushCustom(); actions.push({ type: 'BaseCall' }); continue; }
                 
                 const statThisMatch = line.match(/^(owner|caster|DC\.Target|DC\.Attacker)\.(Gain|Consume)\(this,\s*([^)]+)\);$/);
-                if (statThisMatch) {
-                    flushCustom(); 
-                    actions.push({ type: 'StatChange', target: statThisMatch[1], op: statThisMatch[2], stat: 'this', val: statThisMatch[3] }); 
-                    continue;
-                }
+                if (statThisMatch) { flushCustom(); actions.push({ type: 'StatChange', target: statThisMatch[1], op: statThisMatch[2], stat: 'this', val: statThisMatch[3] }); continue; }
                 
                 const statMatch = line.match(/^(owner|caster|DC\.Target|DC\.Attacker)\.(Gain|Consume)\("([^"]+)",\s*([^)]+)\);$/);
-                if (statMatch) {
-                    flushCustom(); 
-                    actions.push({ type: 'StatChange', target: statMatch[1], op: statMatch[2], stat: statMatch[3], val: statMatch[4] }); 
-                    continue;
-                }
-                const fchaMatch = line.match(/^(owner|caster|DC\.Target|DC\.Attacker)\.(Heal|DrawCard|TakeDamage)\((.*)\);$/);
-                if (fchaMatch) {
-                    flushCustom();
-                    actions.push({ type: 'F_ChaMethod', target: fchaMatch[1], method: fchaMatch[2], args: fchaMatch[3] });
-                    continue;
-                }
-                const stackOpMatch = line.match(/^stack\s*(\+=|-=|\*=|\/=|==|=)\s*([^;]+);$/);
-                if (stackOpMatch) {
-                    flushCustom();
-                    actions.push({ type: 'StackChange', op: stackOpMatch[1], val: stackOpMatch[2] });
-                    continue;
-                }
-                const stackIncMatch = line.match(/^stack\s*(--|\+\+)\s*;$/);
-                if (stackIncMatch) {
-                    flushCustom();
-                    actions.push({ type: 'StackChange', op: stackIncMatch[1], val: "" });
-                    continue;
-                }
-                const dcMatch = line.match(/^DC\.(PlusDamage|PercentDamage|Damage|FixDamage)\s*(\+=|-=|\*=|\/=|==|=)\s*([^;]+);$/);
-                if (dcMatch) {
-                    flushCustom();
-                    actions.push({ type: 'DCModify', field: dcMatch[1], op: dcMatch[2], val: dcMatch[3] });
-                    continue;
-                }
+                if (statMatch) { flushCustom(); actions.push({ type: 'StatChange', target: statMatch[1], op: statMatch[2], stat: statMatch[3], val: statMatch[4] }); continue; }
                 
-                // AddBuff 파서 고도화 (옵션 속성 { } 지원)
+                const fchaMatch = line.match(/^(owner|caster|DC\.Target|DC\.Attacker)\.(Heal|DrawCard|TakeDamage)\((.*)\);$/);
+                if (fchaMatch) { flushCustom(); actions.push({ type: 'F_ChaMethod', target: fchaMatch[1], method: fchaMatch[2], args: fchaMatch[3] }); continue; }
+                
+                const stackOpMatch = line.match(/^stack\s*(\+=|-=|\*=|\/=|==|=)\s*([^;]+);$/);
+                if (stackOpMatch) { flushCustom(); actions.push({ type: 'StackChange', op: stackOpMatch[1], val: stackOpMatch[2] }); continue; }
+                
+                const stackIncMatch = line.match(/^stack\s*(--|\+\+)\s*;$/);
+                if (stackIncMatch) { flushCustom(); actions.push({ type: 'StackChange', op: stackIncMatch[1], val: "" }); continue; }
+                
+                const dcMatch = line.match(/^DC\.(PlusDamage|PercentDamage|Damage|FixDamage)\s*(\+=|-=|\*=|\/=|==|=)\s*([^;]+);$/);
+                if (dcMatch) { flushCustom(); actions.push({ type: 'DCModify', field: dcMatch[1], op: dcMatch[2], val: dcMatch[3] }); continue; }
+                
                 const addBuffMatch = line.match(/^(owner|caster|DC\.Target|DC\.Attacker)\.AddBuff\(new\s+(\w+)\(([^,]+),\s*([^,]+),\s*([^)]+)\)(?:\s*\{\s*(.*?)\s*\})?\s*\);$/);
                 if (addBuffMatch) {
                     flushCustom();
-                    actions.push({ 
-                        type: 'AddBuff', 
-                        target: addBuffMatch[1], 
-                        buffClass: addBuffMatch[2], 
-                        caster: addBuffMatch[4].trim(), 
-                        stack: addBuffMatch[5].trim(),
-                        props: addBuffMatch[6] ? addBuffMatch[6].trim() : ''
-                    });
+                    actions.push({ type: 'AddBuff', target: addBuffMatch[1], buffClass: addBuffMatch[2], caster: addBuffMatch[4].trim(), stack: addBuffMatch[5].trim(), props: addBuffMatch[6] ? addBuffMatch[6].trim() : '' });
                     continue;
                 }
                 
                 const elseIfMatch = line.match(/^(\}?)\s*else\s+if\s*\((.*)\)\s*\{?$/);
                 if (elseIfMatch) {
                     flushCustom();
-                    // 이전 줄에서 단독 '}' 기호로 인해 생성된 EndIf 블록이 있다면 중복 방지를 위해 제거
-                    if (actions.length > 0 && actions[actions.length - 1].type === 'EndIf') {
-                        actions.pop();
-                    } else if (elseIfMatch[1] === '}') {
-                        if (openIfs > 0) openIfs--;
-                    }
-                    actions.push({ type: 'ElseIfCondition', condition: elseIfMatch[2] });
-                    openIfs++;
+                    if (elseIfMatch[1] === '}') { if (openIfs > 0) openIfs--; actions.push({ type: 'EndIf' }); }
+                    actions.push({ type: 'ElseIfCondition', condition: elseIfMatch[2] }); openIfs++;
                     continue;
                 }
                 
                 const elseMatch = line.match(/^(\}?)\s*else\s*\{?$/);
                 if (elseMatch) {
                     flushCustom();
-                    // 이전 줄에서 단독 '}' 기호로 인해 생성된 EndIf 블록이 있다면 중복 방지를 위해 제거
-                    if (actions.length > 0 && actions[actions.length - 1].type === 'EndIf') {
-                        actions.pop();
-                    } else if (elseMatch[1] === '}') {
-                        if (openIfs > 0) openIfs--;
-                    }
-                    actions.push({ type: 'ElseCondition' });
-                    openIfs++;
+                    if (elseMatch[1] === '}') { if (openIfs > 0) openIfs--; actions.push({ type: 'EndIf' }); }
+                    actions.push({ type: 'ElseCondition' }); openIfs++;
                     continue;
                 }
 
                 const ifMatch = line.match(/^if\s*\((.*)\)\s*\{?$/);
-                if (ifMatch) {
-                    flushCustom();
-                    actions.push({ type: 'IfCondition', condition: ifMatch[1] });
-                    openIfs++;
-                    continue;
-                }
+                if (ifMatch) { flushCustom(); actions.push({ type: 'IfCondition', condition: ifMatch[1] }); openIfs++; continue; }
                 
-                if (line === "{") {
-                    if (customBlock.length === 0 && actions.length > 0 && ['IfCondition', 'ElseIfCondition', 'ElseCondition'].includes(actions[actions.length - 1].type)) {
-                        continue; 
-                    }
-                }
-                
-                if (line === "}") {
-                    if (openIfs > 0 && customBlock.length === 0) {
-                        flushCustom();
-                        actions.push({ type: 'EndIf' });
-                        openIfs--;
-                        continue;
-                    }
-                }
+                if (line === "{") { if (customBlock.length === 0 && actions.length > 0 && ['IfCondition', 'ElseIfCondition', 'ElseCondition'].includes(actions[actions.length - 1].type)) continue; }
+                if (line === "}") { if (openIfs > 0 && customBlock.length === 0) { flushCustom(); actions.push({ type: 'EndIf' }); openIfs--; continue; } }
                 
                 customBlock.push(line);
             }
@@ -887,43 +756,22 @@
         window.addNewBuff = function() {
             const num = buffCollection.length + 1;
             buffCollection.push(createEmptyBuff(`NewBuff${num}`, `새 버프 ${num}`));
-            currentIndex = buffCollection.length - 1;
-            saveData(); renderAll();
+            currentIndex = buffCollection.length - 1; saveData(); renderAll();
         }
-
-        window.selectBuff = function(idx) {
-            currentIndex = idx; renderAll();
-        }
-
+        window.selectBuff = function(idx) { currentIndex = idx; renderAll(); }
         window.deleteCurrentBuff = function() {
             if(buffCollection.length === 1) { alert('최소 1개의 버프는 있어야 합니다.'); return; }
             if(!confirm('현재 편집 중인 버프를 삭제하시겠습니까?')) return;
-            buffCollection.splice(currentIndex, 1);
-            currentIndex = Math.max(0, currentIndex - 1);
-            saveData(); renderAll();
+            buffCollection.splice(currentIndex, 1); currentIndex = Math.max(0, currentIndex - 1); saveData(); renderAll();
         }
-
-        window.toggleEvent = function(id) {
-            buffCollection[currentIndex].events[id].active = !buffCollection[currentIndex].events[id].active;
-            saveData(); renderEditor(); renderCode(); lucide.createIcons();
-        }
-
-        window.toggleActionButtons = function(eventId) {
-            buffCollection[currentIndex].events[eventId].showButtons = !buffCollection[currentIndex].events[eventId].showButtons;
-            saveData(); renderEditor(); renderCode(); lucide.createIcons();
-        }
-
+        window.toggleEvent = function(id) { buffCollection[currentIndex].events[id].active = !buffCollection[currentIndex].events[id].active; saveData(); renderEditor(); renderCode(); lucide.createIcons(); }
+        window.toggleActionButtons = function(eventId) { buffCollection[currentIndex].events[eventId].showButtons = !buffCollection[currentIndex].events[eventId].showButtons; saveData(); renderEditor(); renderCode(); lucide.createIcons(); }
         window.moveAction = function(eventId, idx, dir) {
             const actions = buffCollection[currentIndex].events[eventId].actions;
             if (idx + dir < 0 || idx + dir >= actions.length) return; 
-            
-            const temp = actions[idx];
-            actions[idx] = actions[idx + dir];
-            actions[idx + dir] = temp;
-            
+            const temp = actions[idx]; actions[idx] = actions[idx + dir]; actions[idx + dir] = temp;
             saveData(); renderEditor(); renderCode(); lucide.createIcons();
         }
-
         window.addAction = function(id, type) {
             let act = { type };
             if(type === 'StatChange') act = { ...act, target: 'owner', op: 'Gain', stat: 'Power', val: 'stack' };
@@ -938,100 +786,66 @@
             else if (type === 'StackCheckCall') act = { ...act };
             else if (type === 'Custom') act = { ...act, code: "// 직접 입력" };
             
-            buffCollection[currentIndex].events[id].actions.push(act);
-            saveData(); renderEditor(); renderCode(); lucide.createIcons();
+            buffCollection[currentIndex].events[id].actions.push(act); saveData(); renderEditor(); renderCode(); lucide.createIcons();
         }
-
-        window.removeAction = function(id, idx) {
-            buffCollection[currentIndex].events[id].actions.splice(idx, 1);
-            saveData(); renderEditor(); renderCode(); lucide.createIcons();
-        }
-
-        window.updateAction = function(eventId, idx, prop, val) {
-            buffCollection[currentIndex].events[eventId].actions[idx][prop] = val;
-            saveData(); renderCode();
-        }
-
-        window.setViewMode = function(mode) {
-            viewMode = mode; renderCode();
-        }
-
-        window.toggleMobileCode = function() {
-            const panel = document.getElementById('code-viewer-panel');
-            if(panel.classList.contains('hidden')) {
-                panel.classList.remove('hidden'); panel.classList.add('flex');
-            } else {
-                panel.classList.add('hidden'); panel.classList.remove('flex');
-            }
-        }
-
+        window.removeAction = function(id, idx) { buffCollection[currentIndex].events[id].actions.splice(idx, 1); saveData(); renderEditor(); renderCode(); lucide.createIcons(); }
+        window.updateAction = function(eventId, idx, prop, val) { buffCollection[currentIndex].events[eventId].actions[idx][prop] = val; saveData(); renderCode(); }
+        window.setViewMode = function(mode) { viewMode = mode; renderCode(); }
+        window.toggleMobileCode = function() { const panel = document.getElementById('code-viewer-panel'); panel.classList.toggle('hidden'); panel.classList.toggle('flex'); }
         window.copyAndOpenGitHub = function() {
-            const code = generateFullFileString();
-            const editUrl = `https://github.com/namwoo321-a11y/cardGame/edit/main/Buffs/${currentTargetFile}`;
-            navigator.clipboard.writeText(code).then(() => {
-                alert(`✨ 전체 코드가 클립보드에 복사되었습니다!\n\n이제 자동으로 GitHub 수정 페이지[ ${currentTargetFile} ]가 열립니다.\n[전체 선택(Ctrl+A)] 후 [붙여넣기(Ctrl+V)] 하시고 Commit 버튼을 누르시면 됩니다.`);
-                window.open(editUrl, '_blank');
-            }).catch(err => {
-                alert('클립보드 복사에 실패했습니다. 우측 코드를 직접 복사해주세요.');
-                window.open(editUrl, '_blank');
-            });
+            const code = generateFullFileString(); const editUrl = `https://github.com/namwoo321-a11y/cardGame/edit/main/Buffs/${currentTargetFile}`;
+            navigator.clipboard.writeText(code).then(() => { alert(`✨ 전체 코드가 클립보드에 복사되었습니다!\n\n이제 자동으로 GitHub 수정 페이지[ ${currentTargetFile} ]가 열립니다.\n[전체 선택(Ctrl+A)] 후 [붙여넣기(Ctrl+V)] 하시고 Commit 버튼을 누르시면 됩니다.`); window.open(editUrl, '_blank'); }).catch(err => { alert('클립보드 복사에 실패했습니다. 우측 코드를 직접 복사해주세요.'); window.open(editUrl, '_blank'); });
         }
 
         async function mergeAndDownloadAll(btnElement) {
-            const originalHtml = btnElement.innerHTML;
-            btnElement.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> 병합 중...`;
-            lucide.createIcons();
-            
+            const originalHtml = btnElement.innerHTML; btnElement.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> 병합 중...`; lucide.createIcons();
             try {
-                let combinedCode = "";
-                let usingSet = new Set();
-                
-                const responses = await Promise.all(MERGE_TARGET_FILES.map(file => 
-                    fetch("https://raw.githubusercontent.com/namwoo321-a11y/cardGame/main/Buffs/" + file + '?' + Date.now())
-                ));
-                
-                const texts = await Promise.all(responses.map(async (res) => {
-                    if (!res.ok) return ""; 
-                    let t = await res.text();
-                    return t.replace(/^\uFEFF/, ''); 
-                }));
-                
+                let combinedCode = ""; let usingSet = new Set();
+                const responses = await Promise.all(MERGE_TARGET_FILES.map(file => fetch("https://raw.githubusercontent.com/namwoo321-a11y/cardGame/main/Buffs/" + file + '?' + Date.now())));
+                const texts = await Promise.all(responses.map(async (res) => { if (!res.ok) return ""; let t = await res.text(); return t.replace(/^\uFEFF/, ''); }));
                 texts.forEach(text => {
-                    if(!text) return;
-                    const lines = text.split('\n');
+                    if(!text) return; const lines = text.split('\n');
                     lines.forEach(line => {
                         let cleanLine = line.trim();
-                        if (cleanLine.startsWith('using ') && cleanLine.endsWith(';')) {
-                            usingSet.add(cleanLine);
-                        } else {
-                            combinedCode += line + '\n';
-                        }
+                        if (cleanLine.startsWith('using ') && cleanLine.endsWith(';')) usingSet.add(cleanLine);
+                        else combinedCode += line + '\n';
                     });
                 });
-                
                 const finalCode = Array.from(usingSet).join('\n') + "\n\n" + combinedCode;
-                
-                const blob = new Blob([finalCode], { type: "text/plain;charset=utf-8" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = "BuffCS.cs";
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
+                const blob = new Blob([finalCode], { type: "text/plain;charset=utf-8" }); const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = "BuffCS.cs"; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
                 alert("성공적으로 모든 파일을 병합하여 BuffCS.cs로 다운로드했습니다!");
-            } catch (e) {
-                console.error(e);
-                alert("파일 병합 중 오류가 발생했습니다.");
-            } finally {
-                btnElement.innerHTML = originalHtml;
-                lucide.createIcons();
-            }
+            } catch (e) { console.error(e); alert("파일 병합 중 오류가 발생했습니다."); } finally { btnElement.innerHTML = originalHtml; lucide.createIcons(); }
         }
 
         initApp();
     </script>
+
+    <!-- 도움말(Info) 모달 -->
+    <div id="info-modal" class="hidden fixed inset-0 bg-slate-950/70 z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 rounded-lg shadow-xl w-full max-w-md flex flex-col border border-slate-800">
+            <div class="p-4 border-b border-slate-800 font-bold text-lg flex justify-between items-center bg-slate-850 rounded-t-lg">
+                <span class="flex items-center gap-2 text-blue-400"><i data-lucide="info" class="w-5 h-5"></i> C# 함수 도움말</span>
+                <button onclick="closeInfoModal()" class="text-slate-400 hover:text-slate-200"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-5 flex flex-col gap-4 text-slate-300 text-sm leading-relaxed">
+                <div>
+                    <p class="font-mono text-indigo-400 font-bold mb-1">F_Cha.HasCValue(string Name)</p>
+                    <p class="pl-2 border-l-2 border-slate-700">캐릭터가 해당 이름의 변수를 가지고 있는지 확인합니다.</p>
+                </div>
+                <div>
+                    <p class="font-mono text-indigo-400 font-bold mb-1">F_Cha.CValue(string Name)</p>
+                    <p class="pl-2 border-l-2 border-slate-700">해당 이름의 변수값을 반환합니다. (없으면 0)</p>
+                </div>
+                <div>
+                    <p class="font-mono text-purple-400 font-bold mb-1">DamContext.GetFinalDamage()</p>
+                    <p class="pl-2 border-l-2 border-slate-700">최종 피해량을 계산합니다. (피격 후 or 피격 전 피해량)</p>
+                </div>
+            </div>
+            <div class="p-4 border-t border-slate-800 flex justify-end bg-slate-850 rounded-b-lg">
+                <button onclick="closeInfoModal()" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 font-bold text-sm">확인</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
