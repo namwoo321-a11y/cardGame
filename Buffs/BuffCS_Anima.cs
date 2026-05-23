@@ -153,7 +153,7 @@ public class GP : Buff
     public override BuffType BuffType => BuffType.Bad;
     public override string Bname => "GP";
     public override string BnameKR => "화약";
-    public override string Description => $"화약 {stack} |적 {Red} | 자 {Purple} | 황 {Yellow}" +
+    public override string Description => $"화약 {stack} : 적 {R} | 자 {P} | 황 {Y}" +
         $"\n예상 피해 {R*6  P*5  Y*4}";
 
     public int R = 0;
@@ -174,15 +174,18 @@ public class GP : Buff
             {
                 owner.TakeDamage(3 * 7);
                 owner.AddBuff(new Burn(owner, caster, 3));
-                } else if (P > 0)
-            {
-                owner.TakeDamage(3 * 6);
-                caster.AddBuff(new Power_1T(caster, caster, 3));
-                } else if (Y > 0)
-            {
-                owner.TakeDamage(3 * 5);
-                owner.AddBuff(new DefPower(owner, caster, 3));
             }
+            } else if (P > 0)
+        {
+            owner.TakeDamage(3 * 6);
+            caster.AddBuff(new Power_1T(caster, caster, 3));
+        }
+        } else if (Y > 0)
+        {
+            owner.TakeDamage(3 * 5);
+            owner.AddBuff(new DefPower(owner, caster, 3));
+        }
+        }
     }
 
     public override void OnUpdate(int val)
@@ -196,15 +199,18 @@ public class GP : Buff
             {
                 owner.TakeDamage(3 * 7);
                 owner.AddBuff(new Burn(owner, caster, 3));
-                } else if (P > 0)
-            {
-                owner.TakeDamage(3 * 6);
-                caster.AddBuff(new Power_1T(caster, caster, 3));
-                } else if (Y > 0)
-            {
-                owner.TakeDamage(3 * 5);
-                owner.AddBuff(new DefPower(owner, caster, 3));
             }
+            } else if (P > 0)
+        {
+            owner.TakeDamage(3 * 6);
+            caster.AddBuff(new Power_1T(caster, caster, 3));
+        }
+        } else if (Y > 0)
+        {
+            owner.TakeDamage(3 * 5);
+            owner.AddBuff(new DefPower(owner, caster, 3));
+        }
+        }
     }
 
 }
