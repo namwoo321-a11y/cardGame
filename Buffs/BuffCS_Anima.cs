@@ -160,23 +160,6 @@ public class GP : Buff
                     public int P = 0;
                     public int Y = 0;
                     // public string[] GPC = new string[3]{null,null,null}
-                    // 최대 크기 3인 string이거 만듬
-    
-        
-    
-         else if (Y > 0)
-            {
-                owner.TakeDamage(3 * 5);
-                owner.AddBuff(new DefPower(owner, caster, 3));
-            }
-        }
-    
-         else if (Y > 0)
-            {
-                owner.TakeDamage(3 * 5);
-                owner.AddBuff(new DefPower(owner, caster, 3));
-            }
-        }
 
     public GP(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
@@ -191,6 +174,10 @@ public class GP : Buff
                 owner.TakeDamage(3 * 7);
                 owner.AddBuff(new Burn(owner, caster, 3));
             }
+            else if (Y > 0)
+                    {
+                        owner.TakeDamage(3 * 5);
+                        owner.AddBuff(new DefPower(owner, caster, 3));
             } else if (P > 0)
         {
             owner.TakeDamage(3 * 6);
@@ -209,12 +196,15 @@ public class GP : Buff
             {
                 owner.TakeDamage(3 * 7);
                 owner.AddBuff(new Burn(owner, caster, 3));
+                } else if (Y > 0)
+            {
+                owner.TakeDamage(3 * 5);
+                owner.AddBuff(new DefPower(owner, caster, 3));
+                } else if (P > 0)
+            {
+                owner.TakeDamage(3 * 6);
+                caster.AddBuff(new Power_1T(caster, caster, 3));
             }
-            } else if (P > 0)
-        {
-            owner.TakeDamage(3 * 6);
-            caster.AddBuff(new Power_1T(caster, caster, 3));
-        }
     }
 
 }
