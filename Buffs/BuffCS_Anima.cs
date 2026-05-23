@@ -154,13 +154,29 @@ public class GP : Buff
     public override string Bname => "GP";
     public override string BnameKR => "화약";
     public override string Description => $"화약 {stack} : 적 {R} | 자 {P} | 황 {Y}" +
-        $"\n예상 피해 {R*6  P*5  Y*4}";
+        $"\n예상 피해 {R*6 + P*5 + Y*4}";
 
     public int R = 0;
-                public int P = 0;
-                public int Y = 0;
-                // public string[] GPC = new string[3]{null,null,null}
-                // 최대 크기 3인 string이거 만듬
+                    public int P = 0;
+                    public int Y = 0;
+                    // public string[] GPC = new string[3]{null,null,null}
+                    // 최대 크기 3인 string이거 만듬
+    
+        
+    
+         else if (Y > 0)
+            {
+                owner.TakeDamage(3 * 5);
+                owner.AddBuff(new DefPower(owner, caster, 3));
+            }
+        }
+    
+         else if (Y > 0)
+            {
+                owner.TakeDamage(3 * 5);
+                owner.AddBuff(new DefPower(owner, caster, 3));
+            }
+        }
 
     public GP(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
@@ -180,12 +196,6 @@ public class GP : Buff
             owner.TakeDamage(3 * 6);
             caster.AddBuff(new Power_1T(caster, caster, 3));
         }
-        } else if (Y > 0)
-        {
-            owner.TakeDamage(3 * 5);
-            owner.AddBuff(new DefPower(owner, caster, 3));
-        }
-        }
     }
 
     public override void OnUpdate(int val)
@@ -204,12 +214,6 @@ public class GP : Buff
         {
             owner.TakeDamage(3 * 6);
             caster.AddBuff(new Power_1T(caster, caster, 3));
-        }
-        } else if (Y > 0)
-        {
-            owner.TakeDamage(3 * 5);
-            owner.AddBuff(new DefPower(owner, caster, 3));
-        }
         }
     }
 
