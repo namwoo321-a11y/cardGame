@@ -24,13 +24,10 @@ public class GPRand : Buff
         if (rand == 1)
         {
             owner.AddBuff(new GPR(owner, caster, stack));
-        }
-        else if 
-        (rand == 2) 
-         {
-        owner.AddBuff(new GPY(owner, caster, stack));
-        
-        } else
+            }else if (rand == 2)
+            {
+            owner.AddBuff(new GPY(owner, caster, stack));
+            } else
         {
             owner.AddBuff(new GPP(owner, caster, stack));
         }
@@ -189,7 +186,7 @@ public class GP : Buff
     public override string Bname => "GP";
     public override string BnameKR => "화약";
     public override string Description => $"화약 {stack} : 적 {R} | 자 {P} | 황 {Y}" +
-        $"\n예상 피해 {R*6  P*5  Y*4}";
+        $"\n예상 피해 {R*6 + P*5 + Y*4}";
 
     public int R = 0;
     public int P = 0;
@@ -222,21 +219,19 @@ public class GP : Buff
                 owner.TakeDamage(3 * 7);
                 owner.AddBuff(new Burn(owner, caster, 3));
                 R = Mathf.Max(0, R - 3);
-                
                 } else if (Y > 0)
             {
                 owner.TakeDamage(3 * 5);
                 owner.AddBuff(new DefPower(owner, caster, 3));
                 Y = Mathf.Max(0, Y - 3);
                 }
-                else if (P > 0)
-                            {
-                                owner.TakeDamage(3 * 6);
-                                caster.AddBuff(new Power_1T(caster, caster, 3));
-                                P = Mathf.Max(0, P - 3);
-                                }
-                                
-                    }
+                } else if (P > 0)
+            {
+                owner.TakeDamage(3 * 6);
+                caster.AddBuff(new Power_1T(caster, caster, 3));
+                P = Mathf.Max(0, P - 3);
+                }
+                }
     }
 
 }
