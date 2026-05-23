@@ -21,15 +21,18 @@ public class GPRand : Buff
     {
         // 무작위 화약 3종 중 하나를 부여하고 즉시 자신을 제거
         int rand = Rand(1, 3);
-        if (rand == 0) 
+        if (rand == 1)
         {
-        owner.AddBuff(new GPR(owner, caster, stack));
+            owner.AddBuff(new GPR(owner, caster, stack));
         }
-        else if {
-        (rand == 1) owner.AddBuff(new GPY(owner, caster, stack));
-        }
-        else {
-        owner.AddBuff(new GPP(owner, caster, stack));
+        else if 
+        (rand == 2) 
+         {
+        owner.AddBuff(new GPY(owner, caster, stack));
+        
+        } else
+        {
+            owner.AddBuff(new GPP(owner, caster, stack));
         }
         owner.RemoveBuff(this);
     }
@@ -219,20 +222,22 @@ public class GP : Buff
                 owner.TakeDamage(3 * 7);
                 owner.AddBuff(new Burn(owner, caster, 3));
                 R = Mathf.Max(0, R - 3);
-                }
+                
                 } else if (Y > 0)
             {
                 owner.TakeDamage(3 * 5);
                 owner.AddBuff(new DefPower(owner, caster, 3));
                 Y = Mathf.Max(0, Y - 3);
                 }
-                } else if (P > 0)
-            {
-                owner.TakeDamage(3 * 6);
-                caster.AddBuff(new Power_1T(caster, caster, 3));
-                P = Mathf.Max(0, P - 3);
-                }
-                }
+                else if (P > 0)
+                            {
+                                owner.TakeDamage(3 * 6);
+                                caster.AddBuff(new Power_1T(caster, caster, 3));
+                                P = Mathf.Max(0, P - 3);
+                                }
+                                
+                    }
     }
 
 }
+
