@@ -816,9 +816,11 @@
                 const elseIfMatch = line.match(/^(\}?)\s*else\s+if\s*\((.*)\)\s*\{?$/);
                 if (elseIfMatch) {
                     flushCustom();
-                    if (elseIfMatch[1] === '}') {
+                    // 이전 줄에서 단독 '}' 기호로 인해 생성된 EndIf 블록이 있다면 중복 방지를 위해 제거
+                    if (actions.length > 0 && actions[actions.length - 1].type === 'EndIf') {
+                        actions.pop();
+                    } else if (elseIfMatch[1] === '}') {
                         if (openIfs > 0) openIfs--;
-                        actions.push({ type: 'EndIf' });
                     }
                     actions.push({ type: 'ElseIfCondition', condition: elseIfMatch[2] });
                     openIfs++;
@@ -828,9 +830,11 @@
                 const elseMatch = line.match(/^(\}?)\s*else\s*\{?$/);
                 if (elseMatch) {
                     flushCustom();
-                    if (elseMatch[1] === '}') {
+                    // 이전 줄에서 단독 '}' 기호로 인해 생성된 EndIf 블록이 있다면 중복 방지를 위해 제거
+                    if (actions.length > 0 && actions[actions.length - 1].type === 'EndIf') {
+                        actions.pop();
+                    } else if (elseMatch[1] === '}') {
                         if (openIfs > 0) openIfs--;
-                        actions.push({ type: 'EndIf' });
                     }
                     actions.push({ type: 'ElseCondition' });
                     openIfs++;
