@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unity Buff Code Maker (Loops & Targets Update)</title>
+    <title>Unity Buff Code Maker (Stable)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -228,16 +228,13 @@
     </div>
 
     <script>
-        // HTML 안전 이스케이프
         const escapeHtml = (str) => {
             if (str === null || str === undefined) return '';
             return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
         };
 
         const generateId = () => {
-            if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-                return crypto.randomUUID();
-            }
+            if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
             return 'id_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
         };
 
@@ -247,7 +244,6 @@
             "BuffCS_Manity.cs", "BuffCS_Prote.cs", "BuffCS_UG.cs", "BuffCS_Whai.cs"
         ];
 
-        // --- 1. 기본 제공 이벤트 목록 ---
         const EVENT_DEF = [
             { id: 'OnActivate', name: 'OnActivate()', desc: '최초 부여 시' },
             { id: 'OnUpdate', name: 'OnUpdate(int val)', desc: '스택 갱신 시' },
@@ -282,15 +278,13 @@
         let currentTargetFile = "BuffCS.cs"; 
 
         function initApp() {
-            const saved = localStorage.getItem('buffMakerData_v30'); 
+            const saved = localStorage.getItem('buffMakerData_v33'); 
             if (saved) { 
                 try { 
                     buffCollection = JSON.parse(saved); 
                     buffCollection.forEach(b => {
                         if(!b.variables) b.variables = [];
-                        b.variables.forEach(v => {
-                            if(!v.op) v.op = "="; 
-                        });
+                        b.variables.forEach(v => { if(!v.op) v.op = "="; });
                         if(!b.customMethods) b.customMethods = [];
                         if(b.stackL === undefined) b.stackL = "";
                         if(b.stackH === undefined) b.stackH = "";
@@ -306,7 +300,7 @@
         }
 
         function saveData() {
-            localStorage.setItem('buffMakerData_v30', JSON.stringify(buffCollection));
+            localStorage.setItem('buffMakerData_v33', JSON.stringify(buffCollection));
             localStorage.setItem('buffMakerTargetFile', currentTargetFile);
         }
 
@@ -321,9 +315,7 @@
             };
             EVENT_DEF.forEach(ev => {
                 let initialActions = [];
-                if (ev.id === 'OnUpdate') {
-                    initialActions.push({ type: 'BaseCall' });
-                }
+                if (ev.id === 'OnUpdate') initialActions.push({ type: 'BaseCall' });
                 b.events[ev.id] = { active: false, showButtons: false, actions: initialActions };
             });
             return b;
@@ -411,7 +403,7 @@
                 
                 let bracketBalance = 0;
                 evData.actions.forEach(act => {
-                    if (act.type === 'IfCondition' || act.type === 'ForLoop' || act.type === 'ForEachLoop') bracketBalance++;
+                    if (['IfCondition', 'ForLoop', 'ForEachLoop', 'SwitchBlock'].includes(act.type)) bracketBalance++;
                     else if (act.type === 'EndIf') bracketBalance--;
                     else if (act.type === 'Custom' && act.code) {
                         const cleanCode = getCleanCodeForParsing(act.code);
@@ -445,7 +437,7 @@
                         
                         html += renderAction(ev.id, idx, act, evData.actions.length, currentIndent);
                         
-                        if(['IfCondition', 'ElseIfCondition', 'ElseCondition', 'ForLoop', 'ForEachLoop'].includes(act.type)) {
+                        if(['IfCondition', 'ElseIfCondition', 'ElseCondition', 'ForLoop', 'ForEachLoop', 'SwitchBlock'].includes(act.type)) {
                             currentIndent++;
                         }
                     });
@@ -469,11 +461,15 @@
                                 <button onclick="addAction('${ev.id}', 'ElseCondition')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">else</button>
                                 <button onclick="addAction('${ev.id}', 'ForLoop')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">for</button>
                                 <button onclick="addAction('${ev.id}', 'ForEachLoop')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">foreach</button>
+                                <button onclick="addAction('${ev.id}', 'SwitchBlock')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">switch</button>
+                                <button onclick="addAction('${ev.id}', 'CaseBlock')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">case</button>
+                                <button onclick="addAction('${ev.id}', 'BreakStmt')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">break</button>
                                 <button onclick="addAction('${ev.id}', 'EndIf')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">}</button>
                                 <button onclick="addAction('${ev.id}', 'ReturnStmt')" class="bg-rose-900/40 border border-rose-700 text-rose-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-rose-800/40 transition">return</button>
                                 <button onclick="addAction('${ev.id}', 'RemoveThis')" class="bg-red-900/40 border border-red-700 text-red-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-red-800/40 transition">자신 제거</button>
                                 <button onclick="addAction('${ev.id}', 'StackCheckCall')" class="bg-fuchsia-900/40 border border-fuchsia-700 text-fuchsia-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-fuchsia-800/40 transition">StackCheck()</button>
                                 <button onclick="addAction('${ev.id}', 'Custom')" class="bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm transition">C# 커스텀</button>
+                                <button onclick="addAction('${ev.id}', 'BaseCall')" class="bg-indigo-900/40 border border-indigo-700 text-indigo-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-indigo-800/40 transition">base.()</button>
                                 ${(ev.id === 'BeforeAttack' || ev.id === 'BeforeDamaged') ? `<button onclick="addAction('${ev.id}', 'DCModify')" class="bg-purple-900/40 border border-purple-700 text-purple-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-purple-800/40 transition">DC 수정</button>` : ''}
                             </div>
                         </div>
@@ -484,14 +480,13 @@
             });
             document.getElementById('event-list-container').innerHTML = html;
 
-            // 2. 커스텀 함수 (Custom Methods) 렌더링
             let cHtml = '';
             buff.customMethods.forEach(cm => {
                 const showBtns = cm.showButtons;
                 const isFolded = cm.isFolded || false;
                 let bracketBalance = 0;
                 cm.actions.forEach(act => {
-                    if (act.type === 'IfCondition' || act.type === 'ForLoop' || act.type === 'ForEachLoop') bracketBalance++;
+                    if (['IfCondition', 'ForLoop', 'ForEachLoop', 'SwitchBlock'].includes(act.type)) bracketBalance++;
                     else if (act.type === 'EndIf') bracketBalance--;
                     else if (act.type === 'Custom' && act.code) {
                         const cleanCode = getCleanCodeForParsing(act.code);
@@ -521,13 +516,9 @@
                 
                 let currentIndent = 0;
                 cm.actions.forEach((act, idx) => {
-                    if(['EndIf', 'ElseIfCondition', 'ElseCondition'].includes(act.type)) {
-                        currentIndent = Math.max(0, currentIndent - 1);
-                    }
+                    if(['EndIf', 'ElseIfCondition', 'ElseCondition'].includes(act.type)) currentIndent = Math.max(0, currentIndent - 1);
                     cHtml += renderAction(cm.id, idx, act, cm.actions.length, currentIndent);
-                    if(['IfCondition', 'ElseIfCondition', 'ElseCondition', 'ForLoop', 'ForEachLoop'].includes(act.type)) {
-                        currentIndent++;
-                    }
+                    if(['IfCondition', 'ElseIfCondition', 'ElseCondition', 'ForLoop', 'ForEachLoop', 'SwitchBlock'].includes(act.type)) currentIndent++;
                 });
 
                 cHtml += `</div>
@@ -548,11 +539,15 @@
                                     <button onclick="addAction('${cm.id}', 'ElseCondition')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">else</button>
                                     <button onclick="addAction('${cm.id}', 'ForLoop')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">for</button>
                                     <button onclick="addAction('${cm.id}', 'ForEachLoop')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">foreach</button>
+                                    <button onclick="addAction('${cm.id}', 'SwitchBlock')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">switch</button>
+                                    <button onclick="addAction('${cm.id}', 'CaseBlock')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">case</button>
+                                    <button onclick="addAction('${cm.id}', 'BreakStmt')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">break</button>
                                     <button onclick="addAction('${cm.id}', 'EndIf')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">}</button>
                                     <button onclick="addAction('${cm.id}', 'ReturnStmt')" class="bg-rose-900/40 border border-rose-700 text-rose-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-rose-800/40 transition">return</button>
                                     <button onclick="addAction('${cm.id}', 'RemoveThis')" class="bg-red-900/40 border border-red-700 text-red-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-red-800/40 transition">자신 제거</button>
                                     <button onclick="addAction('${cm.id}', 'StackCheckCall')" class="bg-fuchsia-900/40 border border-fuchsia-700 text-fuchsia-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-fuchsia-800/40 transition">StackCheck()</button>
                                     <button onclick="addAction('${cm.id}', 'Custom')" class="bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm transition">C# 커스텀</button>
+                                    <button onclick="addAction('${cm.id}', 'DCModify')" class="bg-purple-900/40 border border-purple-700 text-purple-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-purple-800/40 transition">DC 수정</button>
                                 </div>
                             </div>
                         </div>
@@ -562,7 +557,6 @@
             document.getElementById('custom-method-list-container').innerHTML = cHtml;
         }
 
-        // 공용 Datalist HTML 생성 (한 번만 렌더링되게)
         function getCommonDatalists(idSuffix) {
             const defaultTargets = ['owner', 'caster', 'DC.Target', 'DC.Attacker'].map(t => `<option value="${t}"></option>`).join('');
             const defaultStats = ['this', 'Power', 'DefPower', 'HP', 'MaxHP', 'MP', 'MaxMP', 'SD', 'Block', 'Will', 'MaxWill', 'PlusWill', 'Draw', 'MaxDraw', 'PlusDraw'].map(t => `<option value="${t}"></option>`).join('');
@@ -580,11 +574,10 @@
             if(act.type === 'StatChange') {
                 const ops = ['Gain', 'Consume'].map(t => `<option ${act.op===t?'selected':''}>${t}</option>`).join('');
                 const isThis = act.stat === 'this';
-                
                 let targetLen = act.target ? act.target.length : 1;
                 
                 inner = `
-                    <input type="text" oninput="this.style.width = Math.max(5, this.value.length + 1) + 'ch'; updateAction('${eventId}', ${idx}, 'target', this.value)" value="${escapeHtml(act.target)}" style="width: ${Math.max(5, targetLen + 1)}ch;" list="targetList_${uniqueId}" class="bg-slate-800 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500">
+                    <input type="text" oninput="this.style.width = Math.max(10, this.value.length + 5) + 'ch'; updateAction('${eventId}', ${idx}, 'target', this.value)" value="${escapeHtml(act.target)}" style="width: ${Math.max(10, targetLen + 5)}ch;" list="targetList_${uniqueId}" class="bg-slate-800 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500">
                     <span class="text-slate-400 font-bold">.</span>
                     <select onchange="updateAction('${eventId}', ${idx}, 'op', this.value)" class="bg-slate-800 p-1 text-[10px] md:text-xs rounded font-bold text-teal-400 border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none">${ops}</select>
                     <span class="text-slate-300 font-mono text-[10px] md:text-xs">${isThis ? '(' : '("'}</span>
@@ -599,7 +592,7 @@
                 let argsLen = act.args ? act.args.length : 1;
                 let targetLen = act.target ? act.target.length : 1;
                 inner = `
-                    <input type="text" oninput="this.style.width = Math.max(5, this.value.length + 1) + 'ch'; updateAction('${eventId}', ${idx}, 'target', this.value)" value="${escapeHtml(act.target)}" style="width: ${Math.max(5, targetLen + 1)}ch;" list="targetList_${uniqueId}" class="bg-slate-800 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500">
+                    <input type="text" oninput="this.style.width = Math.max(10, this.value.length + 5) + 'ch'; updateAction('${eventId}', ${idx}, 'target', this.value)" value="${escapeHtml(act.target)}" style="width: ${Math.max(10, targetLen + 5)}ch;" list="targetList_${uniqueId}" class="bg-slate-800 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500">
                     <span class="text-slate-400 font-bold">.</span>
                     <select onchange="updateAction('${eventId}', ${idx}, 'method', this.value)" class="bg-slate-800 p-1 text-[10px] md:text-xs rounded font-bold text-indigo-400 border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none">${methods}</select>
                     <span class="text-slate-300 font-mono text-[10px] md:text-xs">(</span>
@@ -638,6 +631,22 @@
                     <input type="text" oninput="updateAction('${eventId}', ${idx}, 'collection', this.value)" value="${escapeHtml(act.collection)}" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded flex-1 min-w-[80px] font-mono outline-none focus:ring-1 focus:ring-amber-500 placeholder-slate-500" placeholder="targets">
                     <span class="text-amber-400 font-mono text-[10px] md:text-xs font-bold">) {</span>
                 `;
+            } else if(act.type === 'SwitchBlock') {
+                let exprLen = act.expr ? act.expr.length : 1;
+                inner = `
+                    <span class="text-amber-400 font-mono text-[10px] md:text-xs font-bold">switch (</span>
+                    <input type="text" oninput="this.style.width = Math.max(4, this.value.length + 2) + 'ch'; updateAction('${eventId}', ${idx}, 'expr', this.value)" value="${escapeHtml(act.expr)}" style="width: ${Math.max(4, exprLen + 2)}ch;" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded font-mono outline-none focus:ring-1 focus:ring-amber-500 placeholder-slate-500">
+                    <span class="text-amber-400 font-mono text-[10px] md:text-xs font-bold">) {</span>
+                `;
+            } else if(act.type === 'CaseBlock') {
+                let valLen = act.val ? act.val.length : 1;
+                inner = `
+                    <span class="text-amber-400 font-mono text-[10px] md:text-xs font-bold">case</span>
+                    <input type="text" oninput="this.style.width = Math.max(4, this.value.length + 2) + 'ch'; updateAction('${eventId}', ${idx}, 'val', this.value)" value="${escapeHtml(act.val)}" style="width: ${Math.max(4, valLen + 2)}ch;" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded font-mono outline-none focus:ring-1 focus:ring-amber-500 placeholder-slate-500">
+                    <span class="text-amber-400 font-mono text-[10px] md:text-xs font-bold">:</span>
+                `;
+            } else if(act.type === 'BreakStmt') {
+                inner = `<span class="text-amber-400 font-mono text-[10px] md:text-xs font-bold">break;</span>`;
             } else if(act.type === 'ReturnStmt') {
                 let valLen = act.val ? act.val.length : 1;
                 inner = `
@@ -704,13 +713,13 @@
                 let stackLen = act.stack ? act.stack.length : 1;
                 let propsLen = act.props ? act.props.length : 0;
                 inner = `
-                    <input type="text" oninput="this.style.width = Math.max(5, this.value.length + 1) + 'ch'; updateAction('${eventId}', ${idx}, 'target', this.value)" value="${escapeHtml(act.target)}" style="width: ${Math.max(5, targetLen + 1)}ch;" list="targetList_${uniqueId}" class="bg-slate-800 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500">
+                    <input type="text" oninput="this.style.width = Math.max(10, this.value.length + 5) + 'ch'; updateAction('${eventId}', ${idx}, 'target', this.value)" value="${escapeHtml(act.target)}" style="width: ${Math.max(10, targetLen + 5)}ch;" list="targetList_${uniqueId}" class="bg-slate-800 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500">
                     <span class="text-slate-300 font-mono text-[10px] md:text-xs">.AddBuff(new </span>
                     <input type="text" oninput="updateAction('${eventId}', ${idx}, 'buffClass', this.value)" value="${escapeHtml(act.buffClass)}" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded w-20 text-blue-400 font-bold focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500" placeholder="Class">
                     <span class="text-slate-300 font-mono text-[10px] md:text-xs">(${act.target}, </span>
                     <select onchange="updateAction('${eventId}', ${idx}, 'caster', this.value)" class="bg-slate-800 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none">${casterOpts}</select>
                     <span class="text-slate-300 font-mono text-[10px] md:text-xs">, </span>
-                    <input type="text" oninput="this.style.width = Math.max(4, this.value.length + 3) + 'ch'; updateAction('${eventId}', ${idx}, 'stack', this.value)" value="${escapeHtml(act.stack)}" style="width: ${Math.max(4, stackLen + 3)}ch;" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded font-mono focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500" placeholder="값">
+                    <input type="text" oninput="this.style.width = Math.max(6, this.value.length + 3) + 'ch'; updateAction('${eventId}', ${idx}, 'stack', this.value)" value="${escapeHtml(act.stack)}" style="width: ${Math.max(6, stackLen + 3)}ch;" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded font-mono focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500" placeholder="Stack, &quot;P&quot;">
                     <span class="text-slate-300 font-mono text-[10px] md:text-xs">)</span>
                     <span class="text-slate-300 font-mono text-[10px] md:text-xs"> { </span>
                     <input type="text" oninput="this.style.width = Math.max(6, this.value.length + 2) + 'ch'; updateAction('${eventId}', ${idx}, 'props', this.value)" value="${escapeHtml(act.props || '')}" style="width: ${Math.max(6, propsLen + 2)}ch;" class="bg-slate-800 text-amber-300 border border-slate-600 p-1 text-[10px] md:text-xs rounded font-mono focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500" placeholder="옵션(비움가능)">
@@ -770,7 +779,6 @@
             `;
         }
 
-        // --- 4. 코드 생성 (Generator Helper) ---
         function generateActionsCode(actions, initialIndent, standardEventName = null) {
             let code = "";
             let indentLvl = initialIndent;
@@ -804,6 +812,9 @@
                 else if(act.type === 'ElseCondition') { line = `} else\n${indentStr}{`; }
                 else if(act.type === 'ForLoop') { line = `for (${act.init}; ${act.cond}; ${act.inc})\n${indentStr}{`; }
                 else if(act.type === 'ForEachLoop') { line = `foreach (${act.item} in ${act.collection})\n${indentStr}{`; }
+                else if(act.type === 'SwitchBlock') { line = `switch (${act.expr})\n${indentStr}{`; }
+                else if(act.type === 'CaseBlock') { line = act.val === 'default' ? `default:` : `case ${act.val}:`; }
+                else if(act.type === 'BreakStmt') { line = `break;`; }
                 else if(act.type === 'EndIf') { line = `}`; }
                 else if(act.type === 'ReturnStmt') { line = `${act.val};`; }
                 else if(act.type === 'RemoveThis') line = `owner.RemoveBuff(this);`;
@@ -814,7 +825,7 @@
                 
                 if (line) {
                     line.split('\n').forEach((l, idx) => { 
-                        if(['IfCondition', 'ElseIfCondition', 'ElseCondition', 'ForLoop', 'ForEachLoop'].includes(act.type) && idx === 1) {
+                        if(['IfCondition', 'ElseIfCondition', 'ElseCondition', 'ForLoop', 'ForEachLoop', 'SwitchBlock'].includes(act.type) && idx === 1) {
                             code += `${l}\n`;
                         } else {
                             code += `${indentStr}${l}\n`; 
@@ -822,7 +833,7 @@
                     });
                 }
 
-                if(['IfCondition', 'ElseIfCondition', 'ElseCondition', 'ForLoop', 'ForEachLoop'].includes(act.type)) { indentLvl += 1; }
+                if(['IfCondition', 'ElseIfCondition', 'ElseCondition', 'ForLoop', 'ForEachLoop', 'SwitchBlock'].includes(act.type)) { indentLvl += 1; }
             });
             return code;
         }
@@ -848,18 +859,10 @@
             }
             code += `\n`;
 
-            // Stack Limits
-            if (buff.stackL !== undefined && buff.stackL !== "") {
-                code += `    public override int StackL => ${buff.stackL};\n`;
-            }
-            if (buff.stackH !== undefined && buff.stackH !== "") {
-                code += `    public override int StackH => ${buff.stackH};\n`;
-            }
-            if ((buff.stackL !== undefined && buff.stackL !== "") || (buff.stackH !== undefined && buff.stackH !== "")) {
-                code += `\n`;
-            }
+            if (buff.stackL !== undefined && buff.stackL !== "") code += `    public override int StackL => ${buff.stackL};\n`;
+            if (buff.stackH !== undefined && buff.stackH !== "") code += `    public override int StackH => ${buff.stackH};\n`;
+            if ((buff.stackL !== undefined && buff.stackL !== "") || (buff.stackH !== undefined && buff.stackH !== "")) code += `\n`;
 
-            // Variables
             buff.variables.forEach(v => {
                 let opStr = v.op || '=';
                 let valStr = v.value ? ` ${opStr} ${v.value}` : '';
@@ -867,12 +870,10 @@
             });
             if (buff.variables.length > 0) code += `\n`;
 
-            // Constructors
             if (buff.constructors && buff.constructors.trim() !== "") {
                 code += buff.constructors.trim().split('\n').map(l => `    ${l}`).join('\n') + `\n\n`;
             }
 
-            // Custom Code
             if (buff.classCustomCode && buff.classCustomCode.trim() !== "") {
                 code += buff.classCustomCode.trim().split('\n').map(l => `    ${l}`).join('\n') + `\n\n`;
             }
@@ -884,7 +885,6 @@
                     code += generateActionsCode(evData.actions, 2, ev.id);
 
                     if(RETURN_STATEMENTS[ev.id]) {
-                        // ReturnStmt 액션이 없는 경우에만 기본 반환문을 추가
                         const hasReturn = evData.actions.some(a => a.type === 'ReturnStmt');
                         if (!hasReturn) code += "        " + RETURN_STATEMENTS[ev.id].trim() + "\n";
                     }
@@ -892,7 +892,6 @@
                 }
             });
 
-            // Custom Methods Code Gen
             buff.customMethods.forEach(cm => {
                 code += `    ${cm.signature}\n    {\n`;
                 code += generateActionsCode(cm.actions, 2, null);
@@ -922,7 +921,6 @@
             }
         }
 
-        // --- 5. 코드 가져오기 (Smart Parser) ---
         function openGitHubModal() { document.getElementById('github-modal').classList.remove('hidden'); }
         function closeGitHubModal() { document.getElementById('github-modal').classList.add('hidden'); }
         function openInfoModal() { document.getElementById('info-modal').classList.remove('hidden'); }
@@ -1075,12 +1073,9 @@
                         let endIdx = findClosingBracket(leftover, startIdx);
                         if (endIdx > startIdx) {
                             let body = leftover.substring(startIdx + 1, endIdx).trim();
-                            // return DC; 는 파서가 ReturnStmt로 인식하므로 하드코딩 제거 단계는 약하게 유지하거나 없앱니다.
-                            // 단, 이전 파일 호환성을 위해 아래 코드는 살짝 변형.
                             if(body.endsWith('return DC;')) {
                                 body = body.substring(0, body.length - 10).trim();
                             }
-                            
                             buff.events[ev.id].active = true;
                             buff.events[ev.id].actions = parseBodyToActions(body);
                             
@@ -1120,7 +1115,6 @@
             else alert('파싱할 버프 클래스를 찾지 못했습니다.');
         }
 
-        // C# 본문 -> UI 액션 역어셈블러
         function parseBodyToActions(body) {
             if (!body) return [];
             const actions = [];
@@ -1149,8 +1143,6 @@
                     continue;
                 }
 
-                // 1줄짜리 if구문 처리 (중괄호 문제 해결)
-                // 예: if (target == null) { return; } 혹은 if (target == null) return;
                 if (/^if\s*\(.*?\)\s*\{?\s*(return|break|continue)[^;]*;\s*\}?$/.test(line)) {
                     flushCustom();
                     actions.push({ type: 'Custom', code: originalLine.trim() });
@@ -1174,7 +1166,6 @@
                 const baseMatch = line.match(/^base\.(\w+)\((.*)\);$/);
                 if (baseMatch) { flushCustom(); actions.push({ type: 'BaseCall' }); continue; }
                 
-                // GetTargets
                 const getTargetsMatch = line.match(/^List<F_Cha>\s+([a-zA-Z0-9_]+)\s*=\s*FM\.GetTargets\(owner,\s*([^,]+),\s*Target\.([^)]+)\);$/);
                 if (getTargetsMatch) {
                     flushCustom();
@@ -1232,6 +1223,34 @@
                     openIfs++;
                     continue;
                 }
+
+                const switchMatch = line.match(/^switch\s*\((.*)\)\s*\{?$/);
+                if (switchMatch) {
+                    flushCustom();
+                    actions.push({ type: 'SwitchBlock', expr: switchMatch[1].trim() });
+                    openIfs++;
+                    continue;
+                }
+
+                const caseMatch = line.match(/^case\s+(.+):$/);
+                if (caseMatch) {
+                    flushCustom();
+                    actions.push({ type: 'CaseBlock', val: caseMatch[1].trim() });
+                    continue;
+                }
+
+                const defaultMatch = line.match(/^default\s*:$/);
+                if (defaultMatch) {
+                    flushCustom();
+                    actions.push({ type: 'CaseBlock', val: 'default' });
+                    continue;
+                }
+
+                if (line === "break;") {
+                    flushCustom();
+                    actions.push({ type: 'BreakStmt' });
+                    continue;
+                }
                 
                 const returnMatch = line.match(/^(return\s*[^;]*);$/);
                 if (returnMatch) {
@@ -1264,7 +1283,7 @@
                 if (ifMatch) { flushCustom(); actions.push({ type: 'IfCondition', condition: ifMatch[1] }); openIfs++; continue; }
                 
                 if (line === "{") { 
-                    if (customBlock.length === 0 && actions.length > 0 && ['IfCondition', 'ElseIfCondition', 'ElseCondition', 'ForLoop', 'ForEachLoop'].includes(actions[actions.length - 1].type)) {
+                    if (customBlock.length === 0 && actions.length > 0 && ['IfCondition', 'ElseIfCondition', 'ElseCondition', 'ForLoop', 'ForEachLoop', 'SwitchBlock'].includes(actions[actions.length - 1].type)) {
                         continue; 
                     }
                     customBracketDepth++;
@@ -1293,7 +1312,6 @@
             return actions;
         }
 
-        // --- 7. 사용자 이벤트/함수 라우팅 ---
         function getEventOrMethod(id) {
             if (buffCollection[currentIndex].events[id]) return buffCollection[currentIndex].events[id];
             return buffCollection[currentIndex].customMethods.find(m => m.id === id);
@@ -1388,6 +1406,9 @@
             else if (type === 'ElseCondition') act = { ...act };
             else if (type === 'ForLoop') act = { ...act, init: 'int i = 0', cond: 'i < targets.Count', inc: 'i++' };
             else if (type === 'ForEachLoop') act = { ...act, item: 'F_Cha TG', collection: 'targets' };
+            else if (type === 'SwitchBlock') act = { ...act, expr: 'element' };
+            else if (type === 'CaseBlock') act = { ...act, val: '"R"' };
+            else if (type === 'BreakStmt') act = { ...act };
             else if (type === 'EndIf') act = { ...act };
             else if (type === 'ReturnStmt') {
                 if (id === 'BeforeDamaged' || id === 'BeforeAttack') act = { ...act, val: 'return DC' };
