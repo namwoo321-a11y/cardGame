@@ -12,7 +12,7 @@ public class Durability : Buff
     public override BuffType BuffType => BuffType.Good;
     public override string Bname => "Durability";
     public override string BnameKR => "내구도";
-    public override string Description => $"장비 내구도: {stack}" +
+    public override string Description => $"장비 내구도: {Stack}" +
         $"\n강화 효과 발동 후 감소 (0 되면 모든 강화 제거)";
 
     /// <summary>
@@ -20,10 +20,10 @@ public class Durability : Buff
             /// </summary>
             public void DecreaseOnceDurability()
             {
-                if (stack > 0)
+                if (Stack > 0)
                 {
-                    stack--;
-                    if (stack <= 0)
+                    Stack--;
+                    if (Stack <= 0)
                     {
                         // 내구도 0 = 모든 강화 효과 제거
                         RemoveAllEnhancementBuffs();
@@ -80,7 +80,7 @@ public class CounterUp : Buff
     public override BuffType BuffType => BuffType.Good;
     public override string Bname => "CounterUp";
     public override string BnameKR => "반격 강화";
-    public override string Description => $"다음 반격 피해 {stack}";
+    public override string Description => $"다음 반격 피해 {Stack}";
 
     private void TryDecreaseEquipmentDurability()
             {
@@ -108,7 +108,7 @@ public class CounterUp : Buff
 
     public override void AfterDamaged(DamContext DC)
     {
-        DC.Attacker.TakeDamage(stack);
+        DC.Attacker.TakeDamage(Stack);
         // 효과 발동 후: 내구도 감소 시도
         TryDecreaseEquipmentDurability();
     }
@@ -120,7 +120,7 @@ public class DamageUp : Buff
     public override BuffType BuffType => BuffType.Good;
     public override string Bname => "DamageUp";
     public override string BnameKR => "공격 강화";
-    public override string Description => $"다음 공격 피해 {stack}";
+    public override string Description => $"다음 공격 피해 {Stack}";
 
     private void TryDecreaseEquipmentDurability()
             {
@@ -148,7 +148,7 @@ public class DamageUp : Buff
 
     public override DamContext BeforeAttack(DamContext DC)
     {
-        DC.PlusDamage += stack;
+        DC.PlusDamage += Stack;
         if (!DC.IsPreview)
         {
             // [실행] 실제 카드 사용: 내구도 감소 시도
@@ -164,7 +164,7 @@ public class BlockUp : Buff
     public override BuffType BuffType => BuffType.Good;
     public override string Bname => "BlockUp";
     public override string BnameKR => "방어 강화";
-    public override string Description => $"다음 방어 부여 {stack}";
+    public override string Description => $"다음 방어 부여 {Stack}";
 
     private void TryDecreaseEquipmentDurability()
             {
@@ -218,8 +218,8 @@ public class GravUp : Buff
     public override void OnTurnStart()
     {
         // 스택 1 감소
-        stack--;
-        if (stack <= 0)
+        Stack--;
+        if (Stack <= 0)
         {
             owner.RemoveBuff(this);
         }
@@ -262,8 +262,8 @@ public class GravDown : Buff
     public override void OnTurnStart()
     {
         // 스택 1 감소
-        stack--;
-        if (stack <= 0) { owner.RemoveBuff(this); }
+        Stack--;
+        if (Stack <= 0) { owner.RemoveBuff(this); }
     }
 
 }
@@ -273,7 +273,7 @@ public class CounterReflect : Buff
     public override BuffType BuffType => BuffType.Good;
     public override string Bname => "CounterReflect";
     public override string BnameKR => "CounterReflect";
-    public override string Description => $"피격 후 {stack} 반사 피해" +
+    public override string Description => $"피격 후 {Stack} 반사 피해" +
         $"\n1턴 지속";
 
     public CounterReflect(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
@@ -285,7 +285,7 @@ public class CounterReflect : Buff
 
     public override void AfterDamaged(DamContext DC)
     {
-        int reflectedDamage = Mathf.Min(stack, DC.Damage);
+        int reflectedDamage = Mathf.Min(Stack, DC.Damage);
         DC.Attacker.TakeDamage(reflectedDamage);
     }
 
