@@ -23,13 +23,13 @@ public class GPRand : Buff
         int rand = Rand(1, 3);
         if (rand == 1)
         {
-            owner.AddBuff(new GPR(owner, caster, stack));
+            owner.AddBuff(new GPR(owner, caster, Stack));
             } else if (rand == 2)
         {
-            owner.AddBuff(new GPY(owner, caster, stack));
+            owner.AddBuff(new GPY(owner, caster, Stack));
             } else
         {
-            owner.AddBuff(new GPP(owner, caster, stack));
+            owner.AddBuff(new GPP(owner, caster, Stack));
         }
         owner.RemoveBuff(this);
     }
@@ -69,7 +69,7 @@ public class GPY : Buff
 
     public override void OnActivate()
     {
-        owner.AddBuff(new GP(owner, caster, stack, "Y"));
+        owner.AddBuff(new GP(owner, caster, Stack, "Y"));
         owner.RemoveBuff(this);
     }
 
@@ -86,7 +86,7 @@ public class GPP : Buff
 
     public override void OnActivate()
     {
-        owner.AddBuff(new GP(owner, caster, stack, "P"));
+        owner.AddBuff(new GP(owner, caster, Stack, "P"));
         owner.RemoveBuff(this);
     }
 
@@ -103,7 +103,7 @@ public class GPR : Buff
 
     public override void OnActivate()
     {
-        owner.AddBuff(new GP(owner, caster, stack, "R"));
+        owner.AddBuff(new GP(owner, caster, Stack, "R"));
         owner.RemoveBuff(this);
     }
 
@@ -146,7 +146,7 @@ public class LimitBreak : Buff
     public override void OnTurnStart()
     {
         Stack += 1;
-        if (stack == 4)
+        if (Stack == 4)
         {
             owner.RemoveBuff(this);
         }
@@ -171,7 +171,7 @@ public class GP : Buff
     public override BuffType BuffType => BuffType.Bad;
     public override string Bname => "GP";
     public override string BnameKR => "화약";
-    public override string Description => $"화약 {stack} : 적 {R} | 자 {P} | 황 {Y}" +
+    public override string Description => $"화약 {Stack} : 적 {R} | 자 {P} | 황 {Y}" +
         $"\n예상 피해 {(R * 7) + (P * 6) + (Y * 5)}";
 
     public override int StackL => 0;
@@ -205,7 +205,7 @@ public class GP : Buff
 
     public override void OnActivate()
     {
-        if (stack > 3)
+        if (Stack > 3)
         {
             CheckAutoExplosion();
         }
@@ -214,7 +214,7 @@ public class GP : Buff
     public override void OnUpdate(int val)
     {
         base.OnUpdate(val);
-        if (stack > 3)
+        if (Stack > 3)
         {
             CheckAutoExplosion();
         }
@@ -222,7 +222,7 @@ public class GP : Buff
 
     private void CheckAutoExplosion()
     {
-        if (stack >= 4)
+        if (Stack >= 4)
         {
             Explosion();
         }
