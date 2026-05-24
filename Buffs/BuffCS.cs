@@ -108,7 +108,7 @@ public class PowerNT : Buff
 
     public override void OnTurnStart()
     {
-        owner.AddBuff(new Power_1T(owner, caster, stack));
+        owner.AddBuff(new Power_1T(owner, caster, Stack));
         owner.RemoveBuff(this);
     }
 
@@ -147,7 +147,7 @@ public class Poison : Buff
         // 스택 1 감소
         Stack--;
         // 스택이 0이 되면 버프 제거
-                        if (stack == 0) { owner.RemoveBuff(this); }
+                        if (Stack == 0) { owner.RemoveBuff(this); }
     }
 
 }
@@ -214,7 +214,7 @@ public class Hurt : Buff
 
     public override void AfterDamaged(DamContext DC)
     {
-        if (stack > 0)
+        if (Stack > 0)
         {
             // 마지막 부여자가 사용자.
             owner.AddBuff(new Hurt(owner, caster, 1));
