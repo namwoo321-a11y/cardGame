@@ -229,7 +229,7 @@ public class GP : Buff
         }
     }
 
-    private void Explosion()
+    public void Explosion()
     {
         if (elements.Count == 0) return;
                                         // 4. 부여된 순서대로 순차적 효과 발동
