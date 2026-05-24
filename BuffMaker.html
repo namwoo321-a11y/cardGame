@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unity Buff Code Maker (Constructor & Parser Fix)</title>
+    <title>Unity Buff Code Maker (Stable)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -26,6 +26,9 @@
             </button>
         </div>
         <div class="flex gap-2">
+            <button onclick="restoreBackup()" class="flex items-center gap-1 bg-slate-700 hover:bg-slate-600 text-white px-2 py-1.5 md:px-3 md:py-1.5 rounded text-xs md:text-sm font-bold transition shadow" title="가장 최근 불러오기 전 상태로 복구합니다.">
+                <i data-lucide="rotate-ccw" class="w-4 h-4"></i> <span class="hidden lg:inline">백업 복구</span>
+            </button>
             <button onclick="mergeAndDownloadAll(this)" class="flex items-center gap-1 bg-amber-700 hover:bg-amber-600 text-white px-2 py-1.5 md:px-3 md:py-1.5 rounded text-xs md:text-sm font-bold transition shadow" title="모든 파일을 병합하여 1개의 C# 파일로 다운로드합니다.">
                 <i data-lucide="package-search" class="w-4 h-4"></i> <span class="hidden md:inline">통합 다운로드 (BuffCS.cs)</span><span class="md:hidden">통합 다운로드</span>
             </button>
@@ -208,7 +211,7 @@
                     <option value="BuffCS_UG.cs">BuffCS_UG.cs</option>
                     <option value="BuffCS_Whai.cs">BuffCS_Whai.cs</option>
                 </select>
-                <p class="text-xs text-red-400 font-semibold mt-2">※ 주의: 불러올 경우 현재 작성 중인 목록이 모두 덮어씌워집니다.</p>
+                <p class="text-xs text-red-400 font-semibold mt-2">※ 주의: 불러올 경우 현재 작성 중인 목록이 모두 덮어씌워집니다.<br>(불러오기 전 상태는 자동으로 백업됩니다.)</p>
             </div>
             <div class="p-4 border-t border-slate-800 flex justify-end gap-2 bg-slate-800 rounded-b-lg">
                 <button onclick="closeGitHubModal()" class="px-4 py-2 bg-slate-800 border border-slate-600 text-slate-300 rounded hover:bg-slate-700 font-bold text-sm">취소</button>
@@ -222,6 +225,13 @@
         const escapeHtml = (str) => {
             if (str === null || str === undefined) return '';
             return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        };
+
+        const generateId = () => {
+            if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+                return crypto.randomUUID();
+            }
+            return 'id_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
         };
 
         const MERGE_TARGET_FILES = [
@@ -264,14 +274,16 @@
         let viewMode = 'single';
         let currentTargetFile = "BuffCS.cs"; 
 
-        // --- 2. 초기화 및 마이그레이션 ---
         function initApp() {
-            const saved = localStorage.getItem('buffMakerData_v27'); 
+            const saved = localStorage.getItem('buffMakerData_v29'); 
             if (saved) { 
                 try { 
                     buffCollection = JSON.parse(saved); 
                     buffCollection.forEach(b => {
                         if(!b.variables) b.variables = [];
+                        b.variables.forEach(v => {
+                            if(!v.op) v.op = "="; 
+                        });
                         if(!b.customMethods) b.customMethods = [];
                         if(b.stackL === undefined) b.stackL = "";
                         if(b.stackH === undefined) b.stackH = "";
@@ -287,20 +299,26 @@
         }
 
         function saveData() {
-            localStorage.setItem('buffMakerData_v27', JSON.stringify(buffCollection));
+            localStorage.setItem('buffMakerData_v29', JSON.stringify(buffCollection));
             localStorage.setItem('buffMakerTargetFile', currentTargetFile);
         }
 
         function createEmptyBuff(cName, kName) {
             let b = {
-                id: Date.now() + Math.floor(Math.random() * 1000),
+                id: generateId(),
                 className: cName, bNameKR: kName, description: "",
                 buffType: "Good", customBuffTypeStr: "", classCustomCode: "",
                 stackL: "", stackH: "",
                 constructors: `public ${cName}(F_Cha target, F_Cha user, int s) : base(target, user, s) { }`,
                 variables: [], customMethods: [], events: {}
             };
-            EVENT_DEF.forEach(ev => b.events[ev.id] = { active: false, showButtons: false, actions: [] });
+            EVENT_DEF.forEach(ev => {
+                let initialActions = [];
+                if (ev.id === 'OnUpdate') {
+                    initialActions.push({ type: 'BaseCall' });
+                }
+                b.events[ev.id] = { active: false, showButtons: false, actions: initialActions };
+            });
             return b;
         }
 
@@ -350,7 +368,10 @@
                             <option value="bool" ${v.type==='bool'?'selected':''}>bool</option>
                         </select>
                         <input type="text" oninput="updateVar(${idx}, 'name', this.value)" value="${escapeHtml(v.name)}" class="bg-slate-800 text-slate-100 p-1 text-xs rounded border border-slate-700 w-24 outline-none font-mono focus:ring-1 focus:ring-blue-500 placeholder-slate-500" placeholder="이름">
-                        <span class="text-slate-400 font-bold">=</span>
+                        <select onchange="updateVar(${idx}, 'op', this.value)" class="bg-slate-800 text-slate-300 p-1 text-xs rounded border border-slate-700 outline-none font-bold">
+                            <option value="=" ${v.op === '=' || !v.op ? 'selected' : ''}>=</option>
+                            <option value="=>" ${v.op === '=>' ? 'selected' : ''}>=&gt;</option>
+                        </select>
                         <input type="text" oninput="updateVar(${idx}, 'value', this.value)" value="${escapeHtml(v.value)}" class="bg-slate-800 text-amber-300 p-1 text-xs rounded border border-slate-700 flex-1 min-w-[80px] outline-none font-mono focus:ring-1 focus:ring-blue-500 placeholder-slate-500" placeholder="값(옵션)">
                         <button onclick="removeVar(${idx})" class="text-slate-500 hover:text-red-400 p-1"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
                     </div>
@@ -386,8 +407,9 @@
                     if (act.type === 'IfCondition') bracketBalance++;
                     else if (act.type === 'EndIf') bracketBalance--;
                     else if (act.type === 'Custom' && act.code) {
-                        bracketBalance += (act.code.match(/\{/g) || []).length;
-                        bracketBalance -= (act.code.match(/\}/g) || []).length;
+                        const cleanCode = getCleanCodeForParsing(act.code);
+                        bracketBalance += (cleanCode.match(/\{/g) || []).length;
+                        bracketBalance -= (cleanCode.match(/\}/g) || []).length;
                     }
                 });
                 const isBracketMismatch = bracketBalance !== 0;
@@ -441,6 +463,7 @@
                                 <button onclick="addAction('${ev.id}', 'RemoveThis')" class="bg-red-900/40 border border-red-700 text-red-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-red-800/40 transition">자신 제거</button>
                                 <button onclick="addAction('${ev.id}', 'StackCheckCall')" class="bg-fuchsia-900/40 border border-fuchsia-700 text-fuchsia-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-fuchsia-800/40 transition">StackCheck()</button>
                                 <button onclick="addAction('${ev.id}', 'Custom')" class="bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm transition">C# 커스텀</button>
+                                <button onclick="addAction('${ev.id}', 'BaseCall')" class="bg-indigo-900/40 border border-indigo-700 text-indigo-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-indigo-800/40 transition">base.()</button>
                                 ${(ev.id === 'BeforeAttack' || ev.id === 'BeforeDamaged') ? `<button onclick="addAction('${ev.id}', 'DCModify')" class="bg-purple-900/40 border border-purple-700 text-purple-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-purple-800/40 transition">DC 수정</button>` : ''}
                             </div>
                         </div>
@@ -461,8 +484,9 @@
                     if (act.type === 'IfCondition') bracketBalance++;
                     else if (act.type === 'EndIf') bracketBalance--;
                     else if (act.type === 'Custom' && act.code) {
-                        bracketBalance += (act.code.match(/\{/g) || []).length;
-                        bracketBalance -= (act.code.match(/\}/g) || []).length;
+                        const cleanCode = getCleanCodeForParsing(act.code);
+                        bracketBalance += (cleanCode.match(/\{/g) || []).length;
+                        bracketBalance -= (cleanCode.match(/\}/g) || []).length;
                     }
                 });
                 const isBracketMismatch = bracketBalance !== 0;
@@ -511,6 +535,7 @@
                                     <button onclick="addAction('${cm.id}', 'RemoveThis')" class="bg-red-900/40 border border-red-700 text-red-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-red-800/40 transition">자신 제거</button>
                                     <button onclick="addAction('${cm.id}', 'StackCheckCall')" class="bg-fuchsia-900/40 border border-fuchsia-700 text-fuchsia-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-fuchsia-800/40 transition">StackCheck()</button>
                                     <button onclick="addAction('${cm.id}', 'Custom')" class="bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm transition">C# 커스텀</button>
+                                    <button onclick="addAction('${cm.id}', 'BaseCall')" class="bg-indigo-900/40 border border-indigo-700 text-indigo-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-indigo-800/40 transition">base.()</button>
                                     <button onclick="addAction('${cm.id}', 'DCModify')" class="bg-purple-900/40 border border-purple-700 text-purple-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-purple-800/40 transition">DC 수정</button>
                                 </div>
                             </div>
@@ -655,14 +680,23 @@
             let marginStyle = indentLevel > 0 ? `margin-left: ${indentLevel * 1.25}rem;` : '';
 
             return `
-            <div class="flex flex-col md:flex-row items-start md:items-center gap-1.5 md:gap-2 bg-slate-900 border border-slate-800 p-1.5 md:p-2 rounded relative group pr-24 transition-all duration-200" style="${marginStyle}">
+            <div class="flex flex-col md:flex-row items-start md:items-center gap-1.5 md:gap-2 bg-slate-900 border border-slate-800 p-2 md:p-3 rounded relative group pr-24 md:pr-32 transition-all duration-200" style="${marginStyle}">
                 <div class="flex-1 flex flex-wrap items-center gap-1 w-full">
                     ${inner}
                 </div>
-                <div class="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 border border-slate-800 pl-2 py-1 rounded shadow-sm">
-                    ${idx > 0 ? `<button onclick="moveAction('${eventId}', ${idx}, -1)" class="text-slate-400 hover:text-blue-400 p-1" title="위로 이동"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>` : `<div class="w-6"></div>`}
-                    ${idx < totalLen - 1 ? `<button onclick="moveAction('${eventId}', ${idx}, 1)" class="text-slate-400 hover:text-blue-400 p-1" title="아래로 이동"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>` : `<div class="w-6"></div>`}
-                    <button onclick="removeAction('${eventId}', ${idx})" class="text-slate-400 hover:text-red-400 p-1" title="삭제"><i data-lucide="x" class="w-4 h-4"></i></button>
+                <div class="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity bg-slate-900 border border-slate-800 p-1 rounded shadow-sm">
+                    
+                    ${idx > 0 
+                        ? `<button onclick="moveAction('${eventId}', ${idx}, -1)" class="text-slate-400 hover:text-blue-400 p-2" title="위로 이동"><i data-lucide="chevron-up" class="w-5 h-5"></i></button>` 
+                        : `<div class="w-9"></div>`}
+                        
+                    ${idx < totalLen - 1 
+                        ? `<button onclick="moveAction('${eventId}', ${idx}, 1)" class="text-slate-400 hover:text-blue-400 p-2" title="아래로 이동"><i data-lucide="chevron-down" class="w-5 h-5"></i></button>` 
+                        : `<div class="w-9"></div>`}
+                        
+                    <button onclick="removeAction('${eventId}', ${idx})" class="text-slate-400 hover:text-red-400 p-2" title="삭제">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
                 </div>
             </div>
             `;
@@ -753,7 +787,8 @@
 
             // Variables
             buff.variables.forEach(v => {
-                let valStr = v.value ? ` = ${v.value}` : '';
+                let opStr = v.op || '=';
+                let valStr = v.value ? ` ${opStr} ${v.value}` : '';
                 code += `    ${v.access} ${v.type} ${v.name}${valStr};\n`;
             });
             if (buff.variables.length > 0) code += `\n`;
@@ -772,8 +807,6 @@
                 const evData = buff.events[ev.id];
                 if(evData && evData.active) {
                     code += `    ${EVENT_SIGNATURES[ev.id]}\n`;
-                    if (ev.id === 'OnUpdate') code += `        base.OnUpdate(val);\n`;
-                    
                     code += generateActionsCode(evData.actions, 2, ev.id);
 
                     if(RETURN_STATEMENTS[ev.id]) code += "        " + RETURN_STATEMENTS[ev.id].trim() + "\n";
@@ -817,10 +850,33 @@
         function openInfoModal() { document.getElementById('info-modal').classList.remove('hidden'); }
         function closeInfoModal() { document.getElementById('info-modal').classList.add('hidden'); }
 
+        function restoreBackup() {
+            const backup = localStorage.getItem('buffMakerData_backup');
+            if (backup) {
+                if (confirm("가장 최근에 GitHub에서 코드를 덮어씌우기 전 상태로 복구하시겠습니까?")) {
+                    try {
+                        buffCollection = JSON.parse(backup);
+                        saveData();
+                        currentIndex = 0;
+                        renderAll();
+                        alert("복구되었습니다.");
+                    } catch (e) {
+                        alert("백업 데이터를 읽는 중 오류가 발생했습니다.");
+                    }
+                }
+            } else {
+                alert("복구할 수 있는 백업 데이터가 없습니다.");
+            }
+        }
+
         async function confirmGitHubImport() {
             const fileName = document.getElementById('github-file-select').value;
             const baseUrl = "https://raw.githubusercontent.com/namwoo321-a11y/cardGame/main/Buffs/";
             const url = baseUrl + fileName;
+            
+            // 현재 작업 중인 내용을 불러오기 전 백업합니다.
+            localStorage.setItem('buffMakerData_backup', JSON.stringify(buffCollection));
+            
             closeGitHubModal();
             try {
                 const res = await fetch(url + (url.includes('?') ? '&' : '?') + new Date().getTime());
@@ -843,6 +899,12 @@
             return i - 1;
         }
 
+        // 주석과 문자열을 제거하여 파서가 안전하게 중괄호와 세미콜론을 셀 수 있게 돕는 유틸리티
+        function getCleanCodeForParsing(text) {
+            return text.replace(/"(?:[^"\\]|\\.)*"/g, '""') 
+                       .replace(/\/\/.*$/gm, '');          
+        }
+
         function parseBuffCaseCS(csText) {
             const blocks = csText.split("public class ");
             const newBuffs = [];
@@ -852,6 +914,7 @@
                 if (!headerMatch) continue;
                 const className = headerMatch[1];
                 let buff = createEmptyBuff(className, "");
+                buff.events['OnUpdate'].actions = []; 
                 
                 const bodyStart = block.indexOf('{');
                 const bodyEnd = block.lastIndexOf('}');
@@ -897,10 +960,10 @@
                 }
 
                 while (true) {
-                    let m = leftover.match(/(public|private|protected)\s+(int|float|string|bool)\s+([a-zA-Z0-9_]+)\s*(?:=\s*([^;]+))?\s*;/);
+                    let m = leftover.match(/(public|private|protected)\s+(int|float|string|bool)\s+([a-zA-Z0-9_]+)\s*(?:(=|=>)\s*([^;]+))?\s*;/);
                     if (!m) break;
                     buff.variables.push({
-                        access: m[1], type: m[2], name: m[3], value: m[4] ? m[4].trim() : ''
+                        access: m[1], type: m[2], name: m[3], op: m[4] ? m[4].trim() : '=', value: m[5] ? m[5].trim() : ''
                     });
                     leftover = leftover.replace(m[0], '');
                 }
@@ -918,9 +981,9 @@
                     if (endIdx > startIdx) {
                         let ctorCode = leftover.substring(match.index, endIdx + 1);
                         constructors.push(ctorCode.trim());
-                        leftover = leftover.replace(ctorCode, '');
+                        leftover = leftover.substring(0, match.index) + leftover.substring(endIdx + 1);
                     } else {
-                        break; // fail safe
+                        break; 
                     }
                 }
                 if (constructors.length > 0) {
@@ -938,12 +1001,12 @@
                         let startIdx = leftover.indexOf('{', idx);
                         let endIdx = findClosingBracket(leftover, startIdx);
                         if (endIdx > startIdx) {
-                            const methodStr = leftover.substring(idx, endIdx + 1);
                             let body = leftover.substring(startIdx + 1, endIdx).trim();
                             body = body.replace(/return DC;\s*$/, '').trim();
                             buff.events[ev.id].active = true;
                             buff.events[ev.id].actions = parseBodyToActions(body);
-                            leftover = leftover.replace(methodStr, '');
+                            
+                            leftover = leftover.substring(0, idx) + leftover.substring(endIdx + 1);
                         }
                     }
                 });
@@ -956,18 +1019,17 @@
                     let endIdx = findClosingBracket(leftover, startIdx);
                     
                     if (endIdx > startIdx) {
-                        let fullMethod = leftover.substring(match.index, endIdx + 1);
                         let signature = leftover.substring(match.index, startIdx).trim();
                         let body = leftover.substring(startIdx + 1, endIdx).trim();
                         
                         buff.customMethods.push({
-                            id: 'cm_' + Date.now() + Math.random(),
+                            id: generateId(),
                             signature: signature,
                             showButtons: false,
                             isFolded: false,
                             actions: parseBodyToActions(body)
                         });
-                        leftover = leftover.replace(fullMethod, '');
+                        leftover = leftover.substring(0, match.index) + leftover.substring(endIdx + 1);
                     } else {
                         break; 
                     }
@@ -1001,26 +1063,28 @@
                 let line = originalLine.trim();
                 if (!line) continue;
                 
-                // C# 커스텀 블록 (switch, foreach 등) 안쪽에 있을 경우, 
-                // 강제 파싱을 무시하고 괄호 깊이만 추적하며 무조건 Custom 블록으로 통합.
                 if (customBracketDepth > 0) {
-                    if (line.includes("{")) customBracketDepth += (line.match(/\{/g) || []).length;
-                    if (line.includes("}")) customBracketDepth -= (line.match(/\}/g) || []).length;
+                    const cleanLine = getCleanCodeForParsing(originalLine);
+                    if (cleanLine.includes("{")) customBracketDepth += (cleanLine.match(/\{/g) || []).length;
+                    if (cleanLine.includes("}")) customBracketDepth -= (cleanLine.match(/\}/g) || []).length;
                     customBlock.push(originalLine);
                     continue;
                 }
 
                 const commentIndex = line.indexOf('//');
-                if (commentIndex > 0) { 
+                if (commentIndex > 0 && !line.startsWith('//')) { 
                     const codePart = line.substring(0, commentIndex).trim();
                     const commentPart = line.substring(commentIndex + 2).trim();
-                    actions.push({ type: 'Custom', code: "// " + commentPart });
-                    line = codePart;
+                    
+                    if(codePart !== "") {
+                    } else {
+                        actions.push({ type: 'Custom', code: "// " + commentPart });
+                        line = codePart;
+                    }
                 }
 
                 if (line === "owner.RemoveBuff(this);") { flushCustom(); actions.push({ type: 'RemoveThis' }); continue; }
                 if (line === "StackCheck();" || line === "stackCheck();") { flushCustom(); actions.push({ type: 'StackCheckCall' }); continue; }
-                if (line === "base.OnUpdate(val);") continue; 
                 const baseMatch = line.match(/^base\.(\w+)\((.*)\);$/);
                 if (baseMatch) { flushCustom(); actions.push({ type: 'BaseCall' }); continue; }
                 
@@ -1082,7 +1146,6 @@
                 const ifMatch = line.match(/^if\s*\((.*)\)\s*\{?$/);
                 if (ifMatch) { flushCustom(); actions.push({ type: 'IfCondition', condition: ifMatch[1] }); openIfs++; continue; }
                 
-                // 열린 중괄호를 만났을 때, 우리가 만든 UI 조건문용이면 패스, 아니면 커스텀 블록 시작으로 간주!
                 if (line === "{") { 
                     if (customBlock.length === 0 && actions.length > 0 && ['IfCondition', 'ElseIfCondition', 'ElseCondition'].includes(actions[actions.length - 1].type)) {
                         continue; 
@@ -1092,7 +1155,6 @@
                     continue;
                 }
                 
-                // 닫힌 중괄호를 만났을 때, 열린 UI 조건문이 있으면 EndIf 출력, 아니면 커스텀 블록 처리
                 if (line === "}") { 
                     if (openIfs > 0) { 
                         flushCustom(); actions.push({ type: 'EndIf' }); openIfs--; continue; 
@@ -1102,13 +1164,13 @@
                     }
                 }
                 
-                // 한 줄 안에 중괄호가 포함된 C# 문장 추적 (예: foreach (...) { )
-                if (line.includes("{")) {
-                    customBracketDepth += (line.match(/\{/g) || []).length;
-                    if (line.includes("}")) customBracketDepth -= (line.match(/\}/g) || []).length;
+                const cleanLine = getCleanCodeForParsing(originalLine);
+                if (cleanLine.includes("{")) {
+                    customBracketDepth += (cleanLine.match(/\{/g) || []).length;
+                    if (cleanLine.includes("}")) customBracketDepth -= (cleanLine.match(/\}/g) || []).length;
                 }
                 
-                customBlock.push(originalLine); // 원래 들여쓰기를 유지하여 보관
+                customBlock.push(originalLine); 
             }
             flushCustom();
             return actions;
@@ -1121,7 +1183,7 @@
         }
 
         window.addVariable = function() {
-            buffCollection[currentIndex].variables.push({ access: 'public', type: 'int', name: 'newVar', value: '0' });
+            buffCollection[currentIndex].variables.push({ access: 'public', type: 'int', name: 'newVar', op: '=', value: '0' });
             saveData(); renderEditor(); renderCode(); lucide.createIcons();
         }
         window.removeVar = function(idx) {
@@ -1135,7 +1197,7 @@
 
         window.addCustomMethod = function() {
             buffCollection[currentIndex].customMethods.push({
-                id: 'cm_' + Date.now() + '_' + Math.floor(Math.random() * 1000), signature: "private void CustomMethod()", showButtons: true, isFolded: false, actions: []
+                id: generateId(), signature: "private void CustomMethod()", showButtons: true, isFolded: false, actions: []
             });
             saveData(); renderEditor(); renderCode(); lucide.createIcons();
         }
@@ -1186,7 +1248,6 @@
             let target = getEventOrMethod(id);
             target.showButtons = !target.showButtons;
             saveData();
-            // 포커스 상실 방지를 위해 전체 렌더링 대신 에디터와 코드창만 갱신
             renderEditor(); 
             renderCode();
             lucide.createIcons();
@@ -1255,7 +1316,7 @@
                     if(!text) return; const lines = text.split('\n');
                     lines.forEach(line => {
                         let cleanLine = line.trim();
-                        if (cleanLine.startsWith('using ') && cleanLine.endsWith(';')) usingSet.add(cleanLine);
+                        if (cleanLine.startsWith('using ') && cleanLine.endsWith(';')) usingSet.add(cleanLine.replace(/\s+/g, ' '));
                         else combinedCode += line + '\n';
                     });
                 });
