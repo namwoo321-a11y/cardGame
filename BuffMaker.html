@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unity Buff Code Maker (Stable)</title>
+    <title>Unity Buff Code Maker (Loops & Targets Update)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -182,6 +182,13 @@
                     <p class="font-mono text-purple-400 font-bold mb-1">DamContext.GetFinalDamage()</p>
                     <p class="pl-2 border-l-2 border-slate-700">가해지는 <span class="text-amber-300 font-bold">최종 피해량</span>을 정수로 계산해 가져옵니다.</p>
                 </div>
+                <div>
+                    <p class="font-mono text-emerald-400 font-bold mb-1">FM.GetTargets(...)</p>
+                    <p class="pl-2 border-l-2 border-slate-700">
+                        <span class="text-amber-300 font-bold">List&lt;F_Cha&gt;</span> 형태로 타겟 목록을 반환합니다.<br>
+                        사용 예: <code class="bg-slate-800 px-1 rounded text-xs text-slate-200">FM.GetTargets(owner, caster, Target.All_E)</code>
+                    </p>
+                </div>
             </div>
             <div class="p-4 border-t border-slate-800 flex justify-end bg-slate-800 rounded-b-lg">
                 <button onclick="closeInfoModal()" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 font-bold text-sm">확인</button>
@@ -275,7 +282,7 @@
         let currentTargetFile = "BuffCS.cs"; 
 
         function initApp() {
-            const saved = localStorage.getItem('buffMakerData_v29'); 
+            const saved = localStorage.getItem('buffMakerData_v30'); 
             if (saved) { 
                 try { 
                     buffCollection = JSON.parse(saved); 
@@ -299,7 +306,7 @@
         }
 
         function saveData() {
-            localStorage.setItem('buffMakerData_v29', JSON.stringify(buffCollection));
+            localStorage.setItem('buffMakerData_v30', JSON.stringify(buffCollection));
             localStorage.setItem('buffMakerTargetFile', currentTargetFile);
         }
 
@@ -404,7 +411,7 @@
                 
                 let bracketBalance = 0;
                 evData.actions.forEach(act => {
-                    if (act.type === 'IfCondition') bracketBalance++;
+                    if (act.type === 'IfCondition' || act.type === 'ForLoop' || act.type === 'ForEachLoop') bracketBalance++;
                     else if (act.type === 'EndIf') bracketBalance--;
                     else if (act.type === 'Custom' && act.code) {
                         const cleanCode = getCleanCodeForParsing(act.code);
@@ -432,13 +439,13 @@
                     
                     let currentIndent = 0;
                     evData.actions.forEach((act, idx) => {
-                        if(act.type === 'EndIf' || act.type === 'ElseIfCondition' || act.type === 'ElseCondition') {
+                        if(['EndIf', 'ElseIfCondition', 'ElseCondition'].includes(act.type)) {
                             currentIndent = Math.max(0, currentIndent - 1);
                         }
                         
                         html += renderAction(ev.id, idx, act, evData.actions.length, currentIndent);
                         
-                        if(act.type === 'IfCondition' || act.type === 'ElseIfCondition' || act.type === 'ElseCondition') {
+                        if(['IfCondition', 'ElseIfCondition', 'ElseCondition', 'ForLoop', 'ForEachLoop'].includes(act.type)) {
                             currentIndent++;
                         }
                     });
@@ -452,18 +459,21 @@
                             <div class="${showBtns ? 'flex' : 'hidden'} flex-wrap gap-1.5 flex-1 transition-all">
                                 <button onclick="addAction('${ev.id}', 'StatChange')" class="bg-teal-900/40 border border-teal-700 text-teal-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-teal-800/40 transition">스탯 증감</button>
                                 <button onclick="addAction('${ev.id}', 'F_ChaMethod')" class="bg-indigo-900/40 border border-indigo-700 text-indigo-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-indigo-800/40 transition">F_Cha 행동</button>
+                                <button onclick="addAction('${ev.id}', 'GetTargets')" class="bg-indigo-900/40 border border-indigo-700 text-indigo-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-indigo-800/40 transition">GetCha</button>
+                                <button onclick="addAction('${ev.id}', 'AddBuff')" class="bg-blue-900/40 border border-blue-700 text-blue-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-blue-800/40 transition">버프 부여</button>
                                 <button onclick="addAction('${ev.id}', 'StackChange')" class="bg-fuchsia-900/40 border border-fuchsia-700 text-fuchsia-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-fuchsia-800/40 transition">Stack 조작 (+/-)</button>
                                 <button onclick="addAction('${ev.id}', 'VarClamp')" class="bg-fuchsia-900/40 border border-fuchsia-700 text-fuchsia-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-fuchsia-800/40 transition">변수 조작</button>
-                                <button onclick="addAction('${ev.id}', 'AddBuff')" class="bg-blue-900/40 border border-blue-700 text-blue-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-blue-800/40 transition">버프 부여</button>
                                 <button onclick="addAction('${ev.id}', 'RandVar')" class="bg-indigo-900/40 border border-indigo-700 text-indigo-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-indigo-800/40 transition">Rand 변수</button>
                                 <button onclick="addAction('${ev.id}', 'IfCondition')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">If</button>
                                 <button onclick="addAction('${ev.id}', 'ElseIfCondition')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">else if</button>
                                 <button onclick="addAction('${ev.id}', 'ElseCondition')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">else</button>
+                                <button onclick="addAction('${ev.id}', 'ForLoop')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">for</button>
+                                <button onclick="addAction('${ev.id}', 'ForEachLoop')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">foreach</button>
                                 <button onclick="addAction('${ev.id}', 'EndIf')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">}</button>
+                                <button onclick="addAction('${ev.id}', 'ReturnStmt')" class="bg-rose-900/40 border border-rose-700 text-rose-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-rose-800/40 transition">return</button>
                                 <button onclick="addAction('${ev.id}', 'RemoveThis')" class="bg-red-900/40 border border-red-700 text-red-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-red-800/40 transition">자신 제거</button>
                                 <button onclick="addAction('${ev.id}', 'StackCheckCall')" class="bg-fuchsia-900/40 border border-fuchsia-700 text-fuchsia-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-fuchsia-800/40 transition">StackCheck()</button>
                                 <button onclick="addAction('${ev.id}', 'Custom')" class="bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm transition">C# 커스텀</button>
-                                <button onclick="addAction('${ev.id}', 'BaseCall')" class="bg-indigo-900/40 border border-indigo-700 text-indigo-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-indigo-800/40 transition">base.()</button>
                                 ${(ev.id === 'BeforeAttack' || ev.id === 'BeforeDamaged') ? `<button onclick="addAction('${ev.id}', 'DCModify')" class="bg-purple-900/40 border border-purple-700 text-purple-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-purple-800/40 transition">DC 수정</button>` : ''}
                             </div>
                         </div>
@@ -481,7 +491,7 @@
                 const isFolded = cm.isFolded || false;
                 let bracketBalance = 0;
                 cm.actions.forEach(act => {
-                    if (act.type === 'IfCondition') bracketBalance++;
+                    if (act.type === 'IfCondition' || act.type === 'ForLoop' || act.type === 'ForEachLoop') bracketBalance++;
                     else if (act.type === 'EndIf') bracketBalance--;
                     else if (act.type === 'Custom' && act.code) {
                         const cleanCode = getCleanCodeForParsing(act.code);
@@ -511,9 +521,13 @@
                 
                 let currentIndent = 0;
                 cm.actions.forEach((act, idx) => {
-                    if(act.type === 'EndIf' || act.type === 'ElseIfCondition' || act.type === 'ElseCondition') currentIndent = Math.max(0, currentIndent - 1);
+                    if(['EndIf', 'ElseIfCondition', 'ElseCondition'].includes(act.type)) {
+                        currentIndent = Math.max(0, currentIndent - 1);
+                    }
                     cHtml += renderAction(cm.id, idx, act, cm.actions.length, currentIndent);
-                    if(act.type === 'IfCondition' || act.type === 'ElseIfCondition' || act.type === 'ElseCondition') currentIndent++;
+                    if(['IfCondition', 'ElseIfCondition', 'ElseCondition', 'ForLoop', 'ForEachLoop'].includes(act.type)) {
+                        currentIndent++;
+                    }
                 });
 
                 cHtml += `</div>
@@ -524,19 +538,21 @@
                                 <div class="${showBtns ? 'flex' : 'hidden'} flex-wrap gap-1.5 flex-1 transition-all">
                                     <button onclick="addAction('${cm.id}', 'StatChange')" class="bg-teal-900/40 border border-teal-700 text-teal-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-teal-800/40 transition">스탯 증감</button>
                                     <button onclick="addAction('${cm.id}', 'F_ChaMethod')" class="bg-indigo-900/40 border border-indigo-700 text-indigo-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-indigo-800/40 transition">F_Cha 행동</button>
+                                    <button onclick="addAction('${cm.id}', 'GetTargets')" class="bg-indigo-900/40 border border-indigo-700 text-indigo-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-indigo-800/40 transition">GetCha</button>
+                                    <button onclick="addAction('${cm.id}', 'AddBuff')" class="bg-blue-900/40 border border-blue-700 text-blue-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-blue-800/40 transition">버프 부여</button>
                                     <button onclick="addAction('${cm.id}', 'StackChange')" class="bg-fuchsia-900/40 border border-fuchsia-700 text-fuchsia-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-fuchsia-800/40 transition">Stack 조작 (+/-)</button>
                                     <button onclick="addAction('${cm.id}', 'VarClamp')" class="bg-fuchsia-900/40 border border-fuchsia-700 text-fuchsia-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-fuchsia-800/40 transition">변수 조작</button>
-                                    <button onclick="addAction('${cm.id}', 'AddBuff')" class="bg-blue-900/40 border border-blue-700 text-blue-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-blue-800/40 transition">버프 부여</button>
                                     <button onclick="addAction('${cm.id}', 'RandVar')" class="bg-indigo-900/40 border border-indigo-700 text-indigo-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-indigo-800/40 transition">Rand 변수</button>
                                     <button onclick="addAction('${cm.id}', 'IfCondition')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">If</button>
                                     <button onclick="addAction('${cm.id}', 'ElseIfCondition')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">else if</button>
                                     <button onclick="addAction('${cm.id}', 'ElseCondition')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">else</button>
+                                    <button onclick="addAction('${cm.id}', 'ForLoop')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">for</button>
+                                    <button onclick="addAction('${cm.id}', 'ForEachLoop')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">foreach</button>
                                     <button onclick="addAction('${cm.id}', 'EndIf')" class="bg-amber-900/40 border border-amber-700 text-amber-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-amber-800/40 transition">}</button>
+                                    <button onclick="addAction('${cm.id}', 'ReturnStmt')" class="bg-rose-900/40 border border-rose-700 text-rose-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-rose-800/40 transition">return</button>
                                     <button onclick="addAction('${cm.id}', 'RemoveThis')" class="bg-red-900/40 border border-red-700 text-red-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-red-800/40 transition">자신 제거</button>
                                     <button onclick="addAction('${cm.id}', 'StackCheckCall')" class="bg-fuchsia-900/40 border border-fuchsia-700 text-fuchsia-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-fuchsia-800/40 transition">StackCheck()</button>
                                     <button onclick="addAction('${cm.id}', 'Custom')" class="bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm transition">C# 커스텀</button>
-                                    <button onclick="addAction('${cm.id}', 'BaseCall')" class="bg-indigo-900/40 border border-indigo-700 text-indigo-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-indigo-800/40 transition">base.()</button>
-                                    <button onclick="addAction('${cm.id}', 'DCModify')" class="bg-purple-900/40 border border-purple-700 text-purple-300 px-2 py-1 text-[10px] md:text-xs rounded shadow-sm hover:bg-purple-800/40 transition">DC 수정</button>
                                 </div>
                             </div>
                         </div>
@@ -546,36 +562,87 @@
             document.getElementById('custom-method-list-container').innerHTML = cHtml;
         }
 
+        // 공용 Datalist HTML 생성 (한 번만 렌더링되게)
+        function getCommonDatalists(idSuffix) {
+            const defaultTargets = ['owner', 'caster', 'DC.Target', 'DC.Attacker'].map(t => `<option value="${t}"></option>`).join('');
+            const defaultStats = ['this', 'Power', 'DefPower', 'HP', 'MaxHP', 'MP', 'MaxMP', 'SD', 'Block', 'Will', 'MaxWill', 'PlusWill', 'Draw', 'MaxDraw', 'PlusDraw'].map(t => `<option value="${t}"></option>`).join('');
+            return `
+                <datalist id="targetList_${idSuffix}">${defaultTargets}</datalist>
+                <datalist id="statList_${idSuffix}">${defaultStats}</datalist>
+            `;
+        }
+
         function renderAction(eventId, idx, act, totalLen = 0, indentLevel = 0) {
             let inner = '';
+            let uniqueId = `${eventId}_${idx}`;
+            let datalists = getCommonDatalists(uniqueId);
             
             if(act.type === 'StatChange') {
-                const targets = ['owner', 'caster', 'DC.Target', 'DC.Attacker'].map(t => `<option ${act.target===t?'selected':''}>${t}</option>`).join('');
-                const stats = ['this', 'Power', 'DefPower', 'HP', 'MaxHP', 'MP', 'MaxMP', 'SD', 'Block', 'Will', 'MaxWill', 'PlusWill', 'Draw', 'MaxDraw', 'PlusDraw'].map(t => `<option ${act.stat===t?'selected':''}>${t}</option>`).join('');
                 const ops = ['Gain', 'Consume'].map(t => `<option ${act.op===t?'selected':''}>${t}</option>`).join('');
                 const isThis = act.stat === 'this';
+                
+                let targetLen = act.target ? act.target.length : 1;
+                
                 inner = `
-                    <select onchange="updateAction('${eventId}', ${idx}, 'target', this.value)" class="bg-slate-800 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none">${targets}</select>
+                    <input type="text" oninput="this.style.width = Math.max(5, this.value.length + 1) + 'ch'; updateAction('${eventId}', ${idx}, 'target', this.value)" value="${escapeHtml(act.target)}" style="width: ${Math.max(5, targetLen + 1)}ch;" list="targetList_${uniqueId}" class="bg-slate-800 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500">
                     <span class="text-slate-400 font-bold">.</span>
                     <select onchange="updateAction('${eventId}', ${idx}, 'op', this.value)" class="bg-slate-800 p-1 text-[10px] md:text-xs rounded font-bold text-teal-400 border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none">${ops}</select>
                     <span class="text-slate-300 font-mono text-[10px] md:text-xs">${isThis ? '(' : '("'}</span>
-                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'stat', this.value)" value="${escapeHtml(act.stat)}" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded w-20 focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500" list="statOptions">
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'stat', this.value)" value="${escapeHtml(act.stat)}" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded w-20 focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500" list="statList_${uniqueId}">
                     <span class="text-slate-300 font-mono text-[10px] md:text-xs">${isThis ? ',' : '",'} </span>
                     <input type="text" oninput="updateAction('${eventId}', ${idx}, 'val', this.value)" value="${escapeHtml(act.val)}" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded w-12 font-mono focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500" placeholder="값">
                     <span class="text-slate-300 font-mono text-[10px] md:text-xs">);</span>
-                    <datalist id="statOptions">${stats}</datalist>
+                    ${datalists}
                 `;
             } else if(act.type === 'F_ChaMethod') {
-                const targets = ['owner', 'caster', 'DC.Target', 'DC.Attacker'].map(t => `<option ${act.target===t?'selected':''}>${t}</option>`).join('');
                 const methods = ['TakeDamage', 'Heal', 'DrawCard'].map(t => `<option ${act.method===t?'selected':''}>${t}</option>`).join('');
                 let argsLen = act.args ? act.args.length : 1;
+                let targetLen = act.target ? act.target.length : 1;
                 inner = `
-                    <select onchange="updateAction('${eventId}', ${idx}, 'target', this.value)" class="bg-slate-800 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none">${targets}</select>
+                    <input type="text" oninput="this.style.width = Math.max(5, this.value.length + 1) + 'ch'; updateAction('${eventId}', ${idx}, 'target', this.value)" value="${escapeHtml(act.target)}" style="width: ${Math.max(5, targetLen + 1)}ch;" list="targetList_${uniqueId}" class="bg-slate-800 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500">
                     <span class="text-slate-400 font-bold">.</span>
                     <select onchange="updateAction('${eventId}', ${idx}, 'method', this.value)" class="bg-slate-800 p-1 text-[10px] md:text-xs rounded font-bold text-indigo-400 border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none">${methods}</select>
                     <span class="text-slate-300 font-mono text-[10px] md:text-xs">(</span>
                     <input type="text" oninput="this.style.width = Math.max(4, this.value.length + 3) + 'ch'; updateAction('${eventId}', ${idx}, 'args', this.value)" value="${escapeHtml(act.args)}" style="width: ${Math.max(4, argsLen + 3)}ch;" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded font-mono focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500" placeholder="매개변수 입력">
                     <span class="text-slate-300 font-mono text-[10px] md:text-xs">);</span>
+                    ${datalists}
+                `;
+            } else if(act.type === 'GetTargets') {
+                const selTargets = ['owner', 'caster', 'DC.Attacker', 'DC.Target'].map(t => `<option ${act.selectedTarget===t?'selected':''}>${t}</option>`).join('');
+                const tTypes = ['User', 'Target', 'Both', 'All_E', 'All_A', 'All', 'Rand_E', 'Rand_A', 'Rand', 'Other_E', 'Other_A', 'Other_ES', 'Other_AS'].map(t => `<option ${act.targetType===t?'selected':''}>${t}</option>`).join('');
+                let listLen = act.listName ? act.listName.length : 1;
+                inner = `
+                    <span class="text-indigo-400 font-mono text-[10px] md:text-xs font-bold">List&lt;F_Cha&gt;</span>
+                    <input type="text" oninput="this.style.width = Math.max(6, this.value.length + 2) + 'ch'; updateAction('${eventId}', ${idx}, 'listName', this.value)" value="${escapeHtml(act.listName)}" style="width: ${Math.max(6, listLen + 2)}ch;" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded font-mono outline-none focus:ring-1 focus:ring-blue-500 placeholder-slate-500">
+                    <span class="text-slate-400 font-bold">= FM.GetTargets(owner,</span>
+                    <select onchange="updateAction('${eventId}', ${idx}, 'selectedTarget', this.value)" class="bg-slate-800 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none">${selTargets}</select>
+                    <span class="text-slate-400 font-bold">, Target.</span>
+                    <select onchange="updateAction('${eventId}', ${idx}, 'targetType', this.value)" class="bg-slate-800 text-amber-300 font-bold p-1 text-[10px] md:text-xs rounded border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none">${tTypes}</select>
+                    <span class="text-slate-400 font-bold">);</span>
+                `;
+            } else if(act.type === 'ForLoop') {
+                inner = `
+                    <span class="text-amber-400 font-mono text-[10px] md:text-xs font-bold">for (</span>
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'init', this.value)" value="${escapeHtml(act.init)}" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded flex-1 min-w-[80px] font-mono outline-none focus:ring-1 focus:ring-amber-500 placeholder-slate-500" placeholder="int i = 0">
+                    <span class="text-slate-300 font-mono text-[10px] md:text-xs">;</span>
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'cond', this.value)" value="${escapeHtml(act.cond)}" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded flex-1 min-w-[100px] font-mono outline-none focus:ring-1 focus:ring-amber-500 placeholder-slate-500" placeholder="i < count">
+                    <span class="text-slate-300 font-mono text-[10px] md:text-xs">;</span>
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'inc', this.value)" value="${escapeHtml(act.inc)}" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded w-16 font-mono outline-none focus:ring-1 focus:ring-amber-500 placeholder-slate-500" placeholder="i++">
+                    <span class="text-amber-400 font-mono text-[10px] md:text-xs font-bold">) {</span>
+                `;
+            } else if(act.type === 'ForEachLoop') {
+                inner = `
+                    <span class="text-amber-400 font-mono text-[10px] md:text-xs font-bold">foreach (</span>
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'item', this.value)" value="${escapeHtml(act.item)}" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded flex-1 min-w-[80px] font-mono outline-none focus:ring-1 focus:ring-amber-500 placeholder-slate-500" placeholder="F_Cha TG">
+                    <span class="text-amber-400 font-mono text-[10px] md:text-xs font-bold">in</span>
+                    <input type="text" oninput="updateAction('${eventId}', ${idx}, 'collection', this.value)" value="${escapeHtml(act.collection)}" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded flex-1 min-w-[80px] font-mono outline-none focus:ring-1 focus:ring-amber-500 placeholder-slate-500" placeholder="targets">
+                    <span class="text-amber-400 font-mono text-[10px] md:text-xs font-bold">) {</span>
+                `;
+            } else if(act.type === 'ReturnStmt') {
+                let valLen = act.val ? act.val.length : 1;
+                inner = `
+                    <input type="text" oninput="this.style.width = Math.max(6, this.value.length + 2) + 'ch'; updateAction('${eventId}', ${idx}, 'val', this.value)" value="${escapeHtml(act.val)}" style="width: ${Math.max(6, valLen + 2)}ch;" class="bg-slate-800 text-rose-300 font-bold border border-slate-600 p-1 text-[10px] md:text-xs rounded font-mono outline-none focus:ring-1 focus:ring-rose-500 placeholder-slate-500" placeholder="return">
+                    <span class="text-slate-400 font-bold">;</span>
                 `;
             } else if(act.type === 'VarClamp') {
                 let valLen = act.val ? act.val.length : 1;
@@ -632,12 +699,12 @@
             } else if(act.type === 'EndIf') {
                 inner = `<span class="text-amber-400 font-mono text-[10px] md:text-xs font-bold">}</span>`;
             } else if(act.type === 'AddBuff') {
-                const targets = ['owner', 'caster', 'DC.Target', 'DC.Attacker'].map(t => `<option ${act.target===t?'selected':''}>${t}</option>`).join('');
+                let targetLen = act.target ? act.target.length : 1;
                 const casterOpts = ['caster', 'owner'].map(t => `<option ${act.caster===t?'selected':''}>${t}</option>`).join('');
                 let stackLen = act.stack ? act.stack.length : 1;
                 let propsLen = act.props ? act.props.length : 0;
                 inner = `
-                    <select onchange="updateAction('${eventId}', ${idx}, 'target', this.value)" class="bg-slate-800 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none">${targets}</select>
+                    <input type="text" oninput="this.style.width = Math.max(5, this.value.length + 1) + 'ch'; updateAction('${eventId}', ${idx}, 'target', this.value)" value="${escapeHtml(act.target)}" style="width: ${Math.max(5, targetLen + 1)}ch;" list="targetList_${uniqueId}" class="bg-slate-800 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500">
                     <span class="text-slate-300 font-mono text-[10px] md:text-xs">.AddBuff(new </span>
                     <input type="text" oninput="updateAction('${eventId}', ${idx}, 'buffClass', this.value)" value="${escapeHtml(act.buffClass)}" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded w-20 text-blue-400 font-bold focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500" placeholder="Class">
                     <span class="text-slate-300 font-mono text-[10px] md:text-xs">(${act.target}, </span>
@@ -649,6 +716,7 @@
                     <input type="text" oninput="this.style.width = Math.max(6, this.value.length + 2) + 'ch'; updateAction('${eventId}', ${idx}, 'props', this.value)" value="${escapeHtml(act.props || '')}" style="width: ${Math.max(6, propsLen + 2)}ch;" class="bg-slate-800 text-amber-300 border border-slate-600 p-1 text-[10px] md:text-xs rounded font-mono focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500" placeholder="옵션(비움가능)">
                     <span class="text-slate-300 font-mono text-[10px] md:text-xs"> }</span>
                     <span class="text-slate-300 font-mono text-[10px] md:text-xs">);</span>
+                    ${datalists}
                 `;
             } else if(act.type === 'DCModify') {
                 const fields = ['PlusDamage', 'PercentDamage', 'Damage', 'FixDamage'].map(t => `<option ${act.field===t?'selected':''}>${t}</option>`).join('');
@@ -709,7 +777,9 @@
             
             actions.forEach(act => {
                 let line = "";
-                if(act.type === 'EndIf') { indentLvl = Math.max(initialIndent, indentLvl - 1); }
+                if(['EndIf', 'ElseIfCondition', 'ElseCondition'].includes(act.type)) { 
+                    indentLvl = Math.max(initialIndent, indentLvl - 1); 
+                }
                 let indentStr = "    ".repeat(indentLvl);
 
                 if(act.type === 'StatChange') {
@@ -717,6 +787,7 @@
                     else line = `${act.target}.${act.op}("${act.stat}", ${act.val});`;
                 }
                 else if(act.type === 'F_ChaMethod') line = `${act.target}.${act.method}(${act.args});`;
+                else if(act.type === 'GetTargets') line = `List<F_Cha> ${act.listName} = FM.GetTargets(owner, ${act.selectedTarget}, Target.${act.targetType});`;
                 else if(act.type === 'VarClamp') {
                     let minVal = act.min && act.min.trim() !== "" ? act.min.trim() : "0";
                     let maxVal = act.max && act.max.trim() !== "" ? act.max.trim() : "99";
@@ -729,9 +800,12 @@
                 }
                 else if(act.type === 'RandVar') line = `int ${act.varName} = Rand(${act.min}, ${act.max});`;
                 else if(act.type === 'IfCondition') { line = `if (${act.condition})\n${indentStr}{`; }
-                else if(act.type === 'ElseIfCondition') { indentLvl = Math.max(initialIndent, indentLvl - 1); line = `} else if (${act.condition})\n${"    ".repeat(indentLvl)}{`; }
-                else if(act.type === 'ElseCondition') { indentLvl = Math.max(initialIndent, indentLvl - 1); line = `} else\n${"    ".repeat(indentLvl)}{`; }
+                else if(act.type === 'ElseIfCondition') { line = `} else if (${act.condition})\n${indentStr}{`; }
+                else if(act.type === 'ElseCondition') { line = `} else\n${indentStr}{`; }
+                else if(act.type === 'ForLoop') { line = `for (${act.init}; ${act.cond}; ${act.inc})\n${indentStr}{`; }
+                else if(act.type === 'ForEachLoop') { line = `foreach (${act.item} in ${act.collection})\n${indentStr}{`; }
                 else if(act.type === 'EndIf') { line = `}`; }
+                else if(act.type === 'ReturnStmt') { line = `${act.val};`; }
                 else if(act.type === 'RemoveThis') line = `owner.RemoveBuff(this);`;
                 else if(act.type === 'StackCheckCall') line = `StackCheck();`;
                 else if(act.type === 'DCModify') line = `DC.${act.field} ${act.op} ${act.val};`;
@@ -740,7 +814,7 @@
                 
                 if (line) {
                     line.split('\n').forEach((l, idx) => { 
-                        if((act.type === 'IfCondition' || act.type === 'ElseIfCondition' || act.type === 'ElseCondition') && idx === 1) {
+                        if(['IfCondition', 'ElseIfCondition', 'ElseCondition', 'ForLoop', 'ForEachLoop'].includes(act.type) && idx === 1) {
                             code += `${l}\n`;
                         } else {
                             code += `${indentStr}${l}\n`; 
@@ -748,7 +822,7 @@
                     });
                 }
 
-                if(act.type === 'IfCondition' || act.type === 'ElseIfCondition' || act.type === 'ElseCondition') { indentLvl += 1; }
+                if(['IfCondition', 'ElseIfCondition', 'ElseCondition', 'ForLoop', 'ForEachLoop'].includes(act.type)) { indentLvl += 1; }
             });
             return code;
         }
@@ -809,7 +883,11 @@
                     code += `    ${EVENT_SIGNATURES[ev.id]}\n`;
                     code += generateActionsCode(evData.actions, 2, ev.id);
 
-                    if(RETURN_STATEMENTS[ev.id]) code += "        " + RETURN_STATEMENTS[ev.id].trim() + "\n";
+                    if(RETURN_STATEMENTS[ev.id]) {
+                        // ReturnStmt 액션이 없는 경우에만 기본 반환문을 추가
+                        const hasReturn = evData.actions.some(a => a.type === 'ReturnStmt');
+                        if (!hasReturn) code += "        " + RETURN_STATEMENTS[ev.id].trim() + "\n";
+                    }
                     code += `    }\n\n`;
                 }
             });
@@ -874,7 +952,6 @@
             const baseUrl = "https://raw.githubusercontent.com/namwoo321-a11y/cardGame/main/Buffs/";
             const url = baseUrl + fileName;
             
-            // 현재 작업 중인 내용을 불러오기 전 백업합니다.
             localStorage.setItem('buffMakerData_backup', JSON.stringify(buffCollection));
             
             closeGitHubModal();
@@ -887,7 +964,6 @@
             } catch (e) { console.error(e); alert("데이터를 가져오는데 실패했습니다.\nURL 연결 상태를 확인해주세요."); }
         }
 
-        // 괄호 매칭 도우미 함수 (안전한 파싱용)
         function findClosingBracket(text, startIdx) {
             let count = 1;
             let i = startIdx + 1;
@@ -899,7 +975,6 @@
             return i - 1;
         }
 
-        // 주석과 문자열을 제거하여 파서가 안전하게 중괄호와 세미콜론을 셀 수 있게 돕는 유틸리티
         function getCleanCodeForParsing(text) {
             return text.replace(/"(?:[^"\\]|\\.)*"/g, '""') 
                        .replace(/\/\/.*$/gm, '');          
@@ -935,7 +1010,6 @@
                     leftover = leftover.replace(buffTypeMatch[0], '');
                 }
 
-                // Parse StackL and StackH
                 const stackLMatch = leftover.match(/public\s+override\s+int\s+StackL\s*=>\s*([^;]+);/);
                 if (stackLMatch) { buff.stackL = stackLMatch[1].trim(); leftover = leftover.replace(stackLMatch[0], ''); }
                 const stackHMatch = leftover.match(/public\s+override\s+int\s+StackH\s*=>\s*([^;]+);/);
@@ -968,7 +1042,6 @@
                     leftover = leftover.replace(m[0], '');
                 }
 
-                // Parse Constructors safely using bracket matching
                 let constructors = [];
                 let ctorRegex = new RegExp(`public\\s+${className}\\s*\\([^)]*\\)(?:\\s*:\\s*base\\([^)]*\\))?\\s*\\{`);
                 while(true) {
@@ -1002,7 +1075,12 @@
                         let endIdx = findClosingBracket(leftover, startIdx);
                         if (endIdx > startIdx) {
                             let body = leftover.substring(startIdx + 1, endIdx).trim();
-                            body = body.replace(/return DC;\s*$/, '').trim();
+                            // return DC; 는 파서가 ReturnStmt로 인식하므로 하드코딩 제거 단계는 약하게 유지하거나 없앱니다.
+                            // 단, 이전 파일 호환성을 위해 아래 코드는 살짝 변형.
+                            if(body.endsWith('return DC;')) {
+                                body = body.substring(0, body.length - 10).trim();
+                            }
+                            
                             buff.events[ev.id].active = true;
                             buff.events[ev.id].actions = parseBodyToActions(body);
                             
@@ -1049,7 +1127,7 @@
             const lines = body.split('\n');
             let customBlock = [];
             let openIfs = 0;
-            let customBracketDepth = 0; // C# 커스텀 블록 괄호 깊이 추적
+            let customBracketDepth = 0; 
             
             function flushCustom() {
                 if (customBlock.length > 0) {
@@ -1071,6 +1149,14 @@
                     continue;
                 }
 
+                // 1줄짜리 if구문 처리 (중괄호 문제 해결)
+                // 예: if (target == null) { return; } 혹은 if (target == null) return;
+                if (/^if\s*\(.*?\)\s*\{?\s*(return|break|continue)[^;]*;\s*\}?$/.test(line)) {
+                    flushCustom();
+                    actions.push({ type: 'Custom', code: originalLine.trim() });
+                    continue;
+                }
+
                 const commentIndex = line.indexOf('//');
                 if (commentIndex > 0 && !line.startsWith('//')) { 
                     const codePart = line.substring(0, commentIndex).trim();
@@ -1088,13 +1174,21 @@
                 const baseMatch = line.match(/^base\.(\w+)\((.*)\);$/);
                 if (baseMatch) { flushCustom(); actions.push({ type: 'BaseCall' }); continue; }
                 
-                const statThisMatch = line.match(/^(owner|caster|DC\.Target|DC\.Attacker)\.(Gain|Consume)\(this,\s*([^)]+)\);$/);
+                // GetTargets
+                const getTargetsMatch = line.match(/^List<F_Cha>\s+([a-zA-Z0-9_]+)\s*=\s*FM\.GetTargets\(owner,\s*([^,]+),\s*Target\.([^)]+)\);$/);
+                if (getTargetsMatch) {
+                    flushCustom();
+                    actions.push({ type: 'GetTargets', listName: getTargetsMatch[1].trim(), selectedTarget: getTargetsMatch[2].trim(), targetType: getTargetsMatch[3].trim() });
+                    continue;
+                }
+
+                const statThisMatch = line.match(/^([a-zA-Z0-9_]+(?:\[[^\]]+\])?)\.(Gain|Consume)\(this,\s*([^)]+)\);$/);
                 if (statThisMatch) { flushCustom(); actions.push({ type: 'StatChange', target: statThisMatch[1], op: statThisMatch[2], stat: 'this', val: statThisMatch[3] }); continue; }
                 
-                const statMatch = line.match(/^(owner|caster|DC\.Target|DC\.Attacker)\.(Gain|Consume)\("([^"]+)",\s*([^)]+)\);$/);
+                const statMatch = line.match(/^([a-zA-Z0-9_]+(?:\[[^\]]+\])?)\.(Gain|Consume)\("([^"]+)",\s*([^)]+)\);$/);
                 if (statMatch) { flushCustom(); actions.push({ type: 'StatChange', target: statMatch[1], op: statMatch[2], stat: statMatch[3], val: statMatch[4] }); continue; }
                 
-                const fchaMatch = line.match(/^(owner|caster|DC\.Target|DC\.Attacker)\.(Heal|DrawCard|TakeDamage)\((.*)\);$/);
+                const fchaMatch = line.match(/^([a-zA-Z0-9_]+(?:\[[^\]]+\])?)\.(Heal|DrawCard|TakeDamage)\((.*)\);$/);
                 if (fchaMatch) { flushCustom(); actions.push({ type: 'F_ChaMethod', target: fchaMatch[1], method: fchaMatch[2], args: fchaMatch[3] }); continue; }
                 
                 const clampMatch = line.match(/^([a-zA-Z0-9_]+)\s*=\s*Math\.Clamp\(([^,]+),\s*([^,]+),\s*([^)]+)\);$/);
@@ -1109,7 +1203,7 @@
                 const dcMatch = line.match(/^DC\.(PlusDamage|PercentDamage|Damage|FixDamage)\s*(\+=|-=|\*=|\/=|==|=)\s*([^;]+);$/);
                 if (dcMatch) { flushCustom(); actions.push({ type: 'DCModify', field: dcMatch[1], op: dcMatch[2], val: dcMatch[3] }); continue; }
                 
-                const addBuffMatch = line.match(/^(owner|caster|DC\.Target|DC\.Attacker)\.AddBuff\(new\s+(\w+)\(([^,]+),\s*([^,]+),\s*(.+?)\)(?:\s*\{\s*(.*?)\s*\})?\s*\);$/);
+                const addBuffMatch = line.match(/^([a-zA-Z0-9_]+(?:\[[^\]]+\])?)\.AddBuff\(new\s+(\w+)\(([^,]+),\s*([^,]+),\s*(.+?)\)(?:\s*\{\s*(.*?)\s*\})?\s*\);$/);
                 if (addBuffMatch) {
                     flushCustom();
                     actions.push({ type: 'AddBuff', target: addBuffMatch[1], buffClass: addBuffMatch[2], caster: addBuffMatch[4].trim(), stack: addBuffMatch[5].trim(), props: addBuffMatch[6] ? addBuffMatch[6].trim() : '' });
@@ -1123,6 +1217,29 @@
                     continue;
                 }
                 
+                const forMatch = line.match(/^for\s*\(([^;]+);\s*([^;]+);\s*([^)]+)\)\s*\{?$/);
+                if (forMatch) {
+                    flushCustom();
+                    actions.push({ type: 'ForLoop', init: forMatch[1].trim(), cond: forMatch[2].trim(), inc: forMatch[3].trim() });
+                    openIfs++;
+                    continue;
+                }
+                
+                const foreachMatch = line.match(/^foreach\s*\((.+)\s+in\s+(.+)\)\s*\{?$/);
+                if (foreachMatch) {
+                    flushCustom();
+                    actions.push({ type: 'ForEachLoop', item: foreachMatch[1].trim(), collection: foreachMatch[2].trim() });
+                    openIfs++;
+                    continue;
+                }
+                
+                const returnMatch = line.match(/^(return\s*[^;]*);$/);
+                if (returnMatch) {
+                    flushCustom();
+                    actions.push({ type: 'ReturnStmt', val: returnMatch[1] });
+                    continue;
+                }
+
                 const elseIfMatch = line.match(/^(\}?)\s*else\s+if\s*\((.*)\)\s*\{?$/);
                 if (elseIfMatch) {
                     flushCustom();
@@ -1147,7 +1264,7 @@
                 if (ifMatch) { flushCustom(); actions.push({ type: 'IfCondition', condition: ifMatch[1] }); openIfs++; continue; }
                 
                 if (line === "{") { 
-                    if (customBlock.length === 0 && actions.length > 0 && ['IfCondition', 'ElseIfCondition', 'ElseCondition'].includes(actions[actions.length - 1].type)) {
+                    if (customBlock.length === 0 && actions.length > 0 && ['IfCondition', 'ElseIfCondition', 'ElseCondition', 'ForLoop', 'ForEachLoop'].includes(actions[actions.length - 1].type)) {
                         continue; 
                     }
                     customBracketDepth++;
@@ -1263,11 +1380,19 @@
             let act = { type };
             if(type === 'StatChange') act = { ...act, target: 'owner', op: 'Gain', stat: 'Power', val: 'Stack' };
             else if (type === 'F_ChaMethod') act = { ...act, target: 'owner', method: 'TakeDamage', args: 'Stack' };
+            else if (type === 'GetTargets') act = { ...act, listName: 'targets', selectedTarget: 'caster', targetType: 'Rand_A' };
             else if (type === 'VarClamp') act = { ...act, varName: 'R', val: 'Stack', min: '0', max: '99' };
             else if (type === 'StackChange') act = { ...act, op: '-=', val: '1' };
             else if (type === 'IfCondition') act = { ...act, condition: 'Stack > 0' };
             else if (type === 'ElseIfCondition') act = { ...act, condition: 'Stack == 0' };
             else if (type === 'ElseCondition') act = { ...act };
+            else if (type === 'ForLoop') act = { ...act, init: 'int i = 0', cond: 'i < targets.Count', inc: 'i++' };
+            else if (type === 'ForEachLoop') act = { ...act, item: 'F_Cha TG', collection: 'targets' };
+            else if (type === 'EndIf') act = { ...act };
+            else if (type === 'ReturnStmt') {
+                if (id === 'BeforeDamaged' || id === 'BeforeAttack') act = { ...act, val: 'return DC' };
+                else act = { ...act, val: 'return' };
+            }
             else if (type === 'AddBuff') act = { ...act, target: 'owner', buffClass: 'Power_1T', caster: 'caster', stack: '1', props: '' };
             else if (type === 'DCModify') act = { ...act, field: 'PlusDamage', op: '+=', val: '1' };
             else if (type === 'BaseCall') act = { ...act };
