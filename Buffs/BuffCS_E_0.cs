@@ -12,13 +12,13 @@ public class Evolution : Buff
     public override BuffType BuffType => BuffType.Good;
     public override string Bname => "Evolution";
     public override string BnameKR => "진화";
-    public override string Description => $"임시 - 수치만큼 힘 +{stack}";
+    public override string Description => $"임시 - 수치만큼 힘 +{Stack}";
 
     public Evolution(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
     public override void OnActivate()
     {
-        owner.AddBuff(new Power(owner, caster, stack));
+        owner.AddBuff(new Power(owner, caster, Stack));
     }
 
     public override void OnUpdate(int val)
@@ -29,7 +29,7 @@ public class Evolution : Buff
 
     public override void OnDeactivate()
     {
-        owner.AddBuff(new Power(owner, caster, -stack));
+        owner.AddBuff(new Power(owner, caster, -Stack));
     }
 
 }
@@ -39,7 +39,7 @@ public class Thorns : Buff
     public override BuffType BuffType => BuffType.Good;
     public override string Bname => "Thorns";
     public override string BnameKR => "가시";
-    public override string Description => $"피격: 받은 피해 반사 | {stack}회 남음" +
+    public override string Description => $"피격: 받은 피해 반사 | {Stack}회 남음" +
         $"\n턴 종료: 제거";
 
     public Thorns(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
@@ -52,7 +52,7 @@ public class Thorns : Buff
     public override void AfterDamaged(DamContext DC)
     {
         DC.Attacker.TakeDamage(DC.GetFinalDamage());
-        stack -= 1;
+        Stack -= 1;
         StackCheck();
     }
 
@@ -63,14 +63,14 @@ public class MotherboardEnhance : Buff
     public override BuffType BuffType => BuffType.Good;
     public override string Bname => "MotherboardEnhance";
     public override string BnameKR => "마더보드 강화";
-    public override string Description => $"임시 - 수치만큼 힘 +{stack}," +
+    public override string Description => $"임시 - 수치만큼 힘 +{Stack}," +
         $"\n수치만큼 마더보드 영구 강화";
 
     public MotherboardEnhance(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
     public override void OnActivate()
     {
-        owner.AddBuff(new Power(owner, caster, stack));
+        owner.AddBuff(new Power(owner, caster, Stack));
     }
 
     public override void OnUpdate(int val)
@@ -81,7 +81,7 @@ public class MotherboardEnhance : Buff
 
     public override void OnDeactivate()
     {
-        owner.AddBuff(new Power_1T(owner, caster, -stack));
+        owner.AddBuff(new Power_1T(owner, caster, -Stack));
     }
 
 }
@@ -91,7 +91,7 @@ public class Retreat : Buff
     public override BuffType BuffType => BuffType.Good;
     public override string Bname => "Retreat";
     public override string BnameKR => "후퇴";
-    public override string Description => $"{stack}턴 뒤 안전하게 후퇴," +
+    public override string Description => $"{Stack}턴 뒤 안전하게 후퇴," +
         $"\n전투 시작시 부여 (옵저버)";
 
     public Retreat(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
@@ -107,29 +107,29 @@ public class Vulnerable : Buff
     public override BuffType BuffType => BuffType.Good;
     public override string Bname => "Vulnerable";
     public override string BnameKR => "취약";
-    public override string Description => $"받는 피해 {stack*10}% 상승 (최대 10)";
+    public override string Description => $"받는 피해 {Stack*10}% 상승 (최대 10)";
 
-    private int Max_stack = 10;
+    private int Max_Stack = 10;
 
     public Vulnerable(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
     public override void OnActivate()
     {
-        if (stack > Max_stack)
+        if (Stack > Max_Stack)
         {
-            owner.AddBuff(new DefPower(owner, caster, -Max_stack));
+            owner.AddBuff(new DefPower(owner, caster, -Max_Stack));
             } else
         {
-            owner.AddBuff(new DefPower(owner, caster, -stack));
+            owner.AddBuff(new DefPower(owner, caster, -Stack));
         }
     }
 
     public override void OnUpdate(int val)
     {
         base.OnUpdate(val);
-        if (stack > Max_stack)
+        if (Stack > Max_Stack)
         {
-            owner.AddBuff(new DefPower(owner, caster, -(val + Max_stack - stack)));
+            owner.AddBuff(new DefPower(owner, caster, -(val + Max_Stack - Stack)));
             } else
         {
             owner.AddBuff(new DefPower(owner, caster, -val));
@@ -138,7 +138,7 @@ public class Vulnerable : Buff
 
     public override void OnDeactivate()
     {
-        owner.AddBuff(new DefPower(owner, caster, stack));
+        owner.AddBuff(new DefPower(owner, caster, Stack));
     }
 
 }
@@ -148,7 +148,7 @@ public class Weak : Buff
     public override BuffType BuffType => BuffType.Good;
     public override string Bname => "Weak";
     public override string BnameKR => "약화";
-    public override string Description => $"주는 피해 {stack*10}% 감소 (최대 10)";
+    public override string Description => $"주는 피해 {Stack*10}% 감소 (최대 10)";
 
     public Weak(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
@@ -165,7 +165,7 @@ public class Paralysis : Buff
     public override BuffType BuffType => BuffType.Good;
     public override string Bname => "Paralysis";
     public override string BnameKR => "마비";
-    public override string Description => $"다음 공격 / 방어 효과 50% 감소 ({stack}회)";
+    public override string Description => $"다음 공격 / 방어 효과 50% 감소 ({Stack}회)";
 
     public Paralysis(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
@@ -177,7 +177,7 @@ public class Paralysis : Buff
 
     public override void AfterAttack(DamContext DC)
     {
-        stack -= 1;
+        Stack -= 1;
         StackCheck();
     }
 
