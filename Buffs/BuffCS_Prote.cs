@@ -23,7 +23,7 @@ public class Featherdraw : Buff
         if (owner is Ally al)
         {
             // '깃'이 포함된 카드를 드로우 (구현 필요: 카드 필터링 로직)
-            al.DrawCard(stack); // 수치만큼 '깃' 카드 드로우
+            al.DrawCard(Stack); // 수치만큼 '깃' 카드 드로우
         }
     }
 }
@@ -41,7 +41,7 @@ public class TSEnerge : Buff
 
     public override void OnTurnStart()
     {
-        owner.AddBuff(new Energe(owner, caster, stack));
+        owner.AddBuff(new Energe(owner, caster, Stack));
     }
 }
 
@@ -52,7 +52,7 @@ public class TSEnerge : Buff
 public class Reflect : Buff
 {
     public override string Bname => "반사";
-    public override string Description => $"피격 | 최대 {stack}만큼 반사 피해 \n턴 종료시 제거";
+    public override string Description => $"피격 | 최대 {Stack}만큼 반사 피해 \n턴 종료시 제거";
     public override BuffType BuffType => BuffType.Good;
 
     public Reflect(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
@@ -61,7 +61,7 @@ public class Reflect : Buff
     {
         if (DC.Attacker != null)
         {
-            int reflectedDamage = Mathf.Min(stack, DC.GetFinalDamage());
+            int reflectedDamage = Mathf.Min(Stack, DC.GetFinalDamage());
             DC.Attacker.TakeDamage(reflectedDamage);
         }
     }
@@ -85,7 +85,7 @@ public class Counter : Buff
     {
         if (DC.Attacker != null)
         {
-            int reflectedDamage = Mathf.Min(stack, DC.DamResult.finalDamage);
+            int reflectedDamage = Mathf.Min(Stack, DC.DamResult.finalDamage);
             DC.Attacker.TakeDamage(reflectedDamage);
         }
     }
@@ -111,8 +111,8 @@ public class Next2TSD : Buff
 
     public override void OnTurnStart()
     {
-        owner.SD += stack; // 수치만큼 SD 얻음
-        owner.AddBuff(new NextTSD(owner, caster, stack)); // 다음 턴에도 같은 효과 부여
+        owner.SD += Stack; // 수치만큼 SD 얻음
+        owner.AddBuff(new NextTSD(owner, caster, Stack)); // 다음 턴에도 같은 효과 부여
         owner.RemoveBuff(this); // 효과 종료 시 버프 제거
     }
 }
@@ -131,7 +131,7 @@ public class NextTSD : Buff
 
     public override void OnTurnStart()
     {
-        owner.SD += stack; // 수치만큼 SD 얻음
+        owner.SD += Stack; // 수치만큼 SD 얻음
         owner.RemoveBuff(this); // 효과 종료 시 버프 제거
     }
 }
@@ -149,7 +149,7 @@ public class Prote_A : Buff
     public override BuffType BuffType => BuffType.Good;
     public override string Bname => "Prote_A"; // BnameKR
     public override string BnameKR => "자세 - 공세"; // BnameKR
-    public override string Description => $"힘 +{stack}" +
+    public override string Description => $"힘 +{Stack}" +
         $"\n공격 전: 방어 1 소모 → 힘 +1 (1턴)" +
         $"\n턴 종료시 제거";
 
@@ -157,7 +157,7 @@ public class Prote_A : Buff
 
     public override void OnActivate()
     {
-        owner.AddBuff(new Power(owner, caster, stack));
+        owner.AddBuff(new Power(owner, caster, Stack));
     }
 
     public override void OnUpdate(int val)
@@ -168,7 +168,7 @@ public class Prote_A : Buff
 
     public override void OnDeactivate()
     {
-        owner.AddBuff(new Power(owner, caster, -stack));
+        owner.AddBuff(new Power(owner, caster, -Stack));
     }
     public override DamContext BeforeAttack(DamContext DC)
     {
@@ -205,7 +205,7 @@ public class Prote_A : Buff
 public class Prote_B : Buff
 {
     public override string Bname => "자세 - 수비";
-    public override string Description => $"방어력 +{stack + 1}" +
+    public override string Description => $"방어력 +{Stack + 1}" +
         $"\n최초 +2, 이후 +1씩" +
         $"\n턴 종료시 제거";
     public override BuffType BuffType => BuffType.Good;
@@ -214,18 +214,18 @@ public class Prote_B : Buff
 
     public override void OnActivate()
     {
-        owner.AddBuff(new DefPower(owner, caster, stack + 1));
+        owner.AddBuff(new DefPower(owner, caster, Stack + 1));
     }
 
     public override void OnUpdate(int val)
     {
         owner.AddBuff(new DefPower(owner, caster, 1));
-        stack += 1;
+        Stack += 1;
     }
 
     public override void OnDeactivate()
     {
-        owner.AddBuff(new DefPower(owner, caster, -(1 + stack)));
+        owner.AddBuff(new DefPower(owner, caster, -(1 + Stack)));
     }
 
     public override void OnTurnStart()
@@ -268,10 +268,10 @@ public class FeatherDamUp : Buff
 
     public override DamContext BeforeAttack(DamContext DC)
     {
-        // '깃'이 들어간 카드의 피해량 +stack
+        // '깃'이 들어간 카드의 피해량 +Stack
         // 실제 구현: 현재 사용 중인 카드 이름에 '깃' 포함 여부 확인 (구현 필요)
         // 임시로 모든 공격에 적용
-        DC.PlusDamage += stack;
+        DC.PlusDamage += Stack;
         return DC;
     }
 }
@@ -303,6 +303,6 @@ public class TSSD : Buff
 
     public override void OnTurnStart()
     {
-        owner.SD += stack;
+        owner.SD += Stack;
     }
 }
