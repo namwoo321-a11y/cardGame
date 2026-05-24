@@ -684,16 +684,25 @@
             let marginStyle = indentLevel > 0 ? `margin-left: ${indentLevel * 1.25}rem;` : '';
 
             return `
-            <div class="flex flex-col md:flex-row items-start md:items-center gap-1.5 md:gap-2 bg-slate-900 border border-slate-800 p-1.5 md:p-2 rounded relative group pr-24 transition-all duration-200" style="${marginStyle}">
-                <div class="flex-1 flex flex-wrap items-center gap-1 w-full">
-                    ${inner}
-                </div>
-                <div class="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 border border-slate-800 pl-2 py-1 rounded shadow-sm">
-                    ${idx > 0 ? `<button onclick="moveAction('${eventId}', ${idx}, -1)" class="text-slate-400 hover:text-blue-400 p-1" title="위로 이동"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>` : `<div class="w-6"></div>`}
-                    ${idx < totalLen - 1 ? `<button onclick="moveAction('${eventId}', ${idx}, 1)" class="text-slate-400 hover:text-blue-400 p-1" title="아래로 이동"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>` : `<div class="w-6"></div>`}
-                    <button onclick="removeAction('${eventId}', ${idx})" class="text-slate-400 hover:text-red-400 p-1" title="삭제"><i data-lucide="x" class="w-4 h-4"></i></button>
-                </div>
-            </div>
+            <div class="flex flex-col md:flex-row items-start md:items-center gap-1.5 md:gap-2 bg-slate-900 border border-slate-800 p-2 md:p-3 rounded relative group pr-24 md:pr-32 transition-all duration-200" style="${marginStyle}">
+    <div class="flex-1 flex flex-wrap items-center gap-1 w-full">
+        ${inner}
+    </div>
+    <div class="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity bg-slate-900 border border-slate-800 p-1 rounded shadow-sm">
+        
+        ${idx > 0 
+            ? `<button onclick="moveAction('${eventId}', ${idx}, -1)" class="text-slate-400 hover:text-blue-400 p-2" title="위로 이동"><i data-lucide="chevron-up" class="w-5 h-5"></i></button>` 
+            : `<div class="w-9"></div>` /* p-2(16px) + w-5(20px) = 36px (w-9) */}
+            
+        ${idx < totalLen - 1 
+            ? `<button onclick="moveAction('${eventId}', ${idx}, 1)" class="text-slate-400 hover:text-blue-400 p-2" title="아래로 이동"><i data-lucide="chevron-down" class="w-5 h-5"></i></button>` 
+            : `<div class="w-9"></div>`}
+            
+        <button onclick="removeAction('${eventId}', ${idx})" class="text-slate-400 hover:text-red-400 p-2" title="삭제">
+            <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+    </div>
+</div>
             `;
         }
 
