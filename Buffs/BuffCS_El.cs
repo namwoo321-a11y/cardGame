@@ -86,13 +86,13 @@ public class NextChillAura : Buff
     public override string Bname => "NextChillAura";
     public override string BnameKR => "차가운 바람";
     public override string Description => $"한기를 가진 적 적중했을 때," +
-        $"\n다음 턴 한기 {Stack} 부여 (캐릭터 당 1회)";
+        $"\n다음 턴 한기 {Stack} 부여 (캐릭터 당 {MAX_COUNT}회)";
 
     public NextChillAura(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
     // 캐릭터별로 누적 횟수를 저장 (Key: 캐릭터, Value: 발동 횟수)
-                private Dictionary<F_Cha, int> _appliedCounts = new Dictionary<F_Cha, int>();
-                private const int MAX_COUNT = 2; // 제한 횟수
+    private Dictionary<F_Cha, int> _appliedCounts = new Dictionary<F_Cha, int>();
+    private const int MAX_COUNT = 2; // 제한 횟수
 
     public override void OnTurnStart()
     {
@@ -102,21 +102,20 @@ public class NextChillAura : Buff
     public override void AfterAttack(DamContext DC)
     {
         F_Cha target = DC.Target;
-                if (target == null) return;
-                // 1. 현재까지의 발동 횟수 확인
+        if (target == null) {return;}
+        // 1. 현재까지의 발동 횟수 확인
         if (!_appliedCounts.ContainsKey(target))
         {
             _appliedCounts[target] = 0;
         }
-        // 2. 제한 횟수 도달 여부 체크
         if (_appliedCounts[target] >= MAX_COUNT)
         {
-            return;}
-                            // 3. 효과 발동 로직 (여기에 한기 부여 로직 작성)
-            DC.Target.AddBuff(new Chill(DC.Target, caster, Stack));
-            // 4. 횟수 증가
-                            _appliedCounts[target]++;
+            // 2. 제한 횟수 도달
+            return;
         }
+        DC.Target.AddBuff(new Chill(DC.Target, caster, Stack));
+        // 4. 횟수 증가
+        _appliedCounts[target]++;
     }
 
 }
@@ -134,7 +133,7 @@ public class HeatAnomaly : Buff
     public override void OnTurnEnd()
     {
         // 캐릭터에게 한기 버프가 있을 때,
-                // 모든 적에 Stack만큼 피해
+                        // 모든 적에 Stack만큼 피해
     }
 
 }
