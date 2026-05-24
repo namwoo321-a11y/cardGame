@@ -20,7 +20,6 @@ public class Power : Buff
 
     public override void OnActivate()
     {
-        // 힘 + stack
         owner.Gain("Power", Stack);
     }
 
@@ -28,13 +27,11 @@ public class Power : Buff
     {
         base.OnUpdate(val);
         owner.Gain("Power", val);
-        owner.Power += val;
     }
 
     public override void OnDeactivate()
     {
-        // 힘 -1
-                owner.Power -= Stack;
+        owner.Consume("Power", Stack);
     }
 
 }
@@ -81,22 +78,18 @@ public class Power_1T : Buff
 
     public override void OnActivate()
     {
-        // 마지막 부여자가 사용자.
-        owner.AddBuff(new Power(owner, caster, Stack));
+        owner.Gain("Power", Stack);
     }
 
     public override void OnUpdate(int val)
     {
         base.OnUpdate(val);
-        // 마지막 부여자가 사용자.
-        owner.AddBuff(new Power(owner, caster, val));
+        owner.Gain("Power", val);
     }
 
     public override void OnTurnStart()
     {
-        // 마지막 부여자가 사용자.
-        owner.AddBuff(new Power(owner, caster, -Stack));
-        // 효과 종료 시 버프 제거
+        owner.Consume("Power", Stack);
         owner.RemoveBuff(this);
     }
 
@@ -115,9 +108,7 @@ public class PowerNT : Buff
 
     public override void OnTurnStart()
     {
-        // 마지막 부여자가 사용자.
-        owner.AddBuff(new Power(owner, caster, stack));
-        // 효과 종료 시 버프 제거
+        owner.AddBuff(new Power_1T(owner, caster, stack));
         owner.RemoveBuff(this);
     }
 
@@ -144,10 +135,10 @@ public class Poison : Buff
     public Poison(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
     // information
-            
-            
-            
-             // Poison 디버프.
+                
+                
+                
+                 // Poison 디버프.
 
     public override void OnTurnEnd()
     {
@@ -156,7 +147,7 @@ public class Poison : Buff
         // 스택 1 감소
         Stack--;
         // 스택이 0이 되면 버프 제거
-                if (stack == 0) { owner.RemoveBuff(this); }
+                        if (stack == 0) { owner.RemoveBuff(this); }
     }
 
 }
