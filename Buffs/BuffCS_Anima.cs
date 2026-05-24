@@ -48,7 +48,7 @@ public class Explosion : Buff
     public override void OnActivate()
     {
         // 대상이 가지고 있는 통합 화약(GP) 버프를 찾습니다.
-                        GP gpBuff = owner.GetBuff("GP") as GP;
+                                GP gpBuff = owner.GetBuff("GP") as GP;
         if (gpBuff != null)
         {
             gpBuff.Explosion();
@@ -177,32 +177,31 @@ public class GP : Buff
     public override int StackL => 0;
 
     public int R => elements.Count(e => e == "R");
-     public int P => elements.Count(e => e == "P");
-     public int Y => elements.Count(e => e == "Y");
-    
-    
+    public int P => elements.Count(e => e == "P");
+    public int Y => elements.Count(e => e == "Y");
+
     public GP(F_Cha target, F_Cha user, int s, string initialElement = "") : base(target, user, s) 
-                {
-                    // 부여된 스택(s)만큼 리스트에 초기 속성을 채워줍니다.
-                    if (!string.IsNullOrEmpty(initialElement))
                     {
-                        for (int i = 0; i < s; i++)
+                        // 부여된 스택(s)만큼 리스트에 초기 속성을 채워줍니다.
+                        if (!string.IsNullOrEmpty(initialElement))
                         {
-                            elements.Add(initialElement.ToUpper());
+                            for (int i = 0; i < s; i++)
+                            {
+                                elements.Add(initialElement.ToUpper());
+                            }
                         }
                     }
-                }
     
     public GP(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
     // 1. 화약이 부여된 순서를 저장하는 리스트
-                    private List<string> elements = new List<string>();
-                
-                    // 2. 외부에서 순서를 확인할 수 있는 string 배열 프로퍼티 (예: {"Y", "R", "R"})
-                    public string[] K => elements.ToArray();
-                
-                
-                // 추가
+                        private List<string> elements = new List<string>();
+                    
+                        // 2. 외부에서 순서를 확인할 수 있는 string 배열 프로퍼티 (예: {"Y", "R", "R"})
+                        public string[] K => elements.ToArray();
+                    
+                    
+                    // 추가
 
     public override void OnActivate()
     {
@@ -232,30 +231,29 @@ public class GP : Buff
     public void Explosion()
     {
         if (elements.Count == 0) return;
-                                        // 4. 부여된 순서대로 순차적 효과 발동
-                                        foreach (string element in elements)
-                                        {
-                                            switch (element)
-                                            {
-                                                case "R":
-                                                    owner.TakeDamage(7); // 1개당 7 데미지
-                                                    owner.AddBuff(new Burn(owner, caster, 1));
-                                                    break;
-                                                case "P":
-                                                    owner.TakeDamage(6); // 1개당 6 데미지
-                                                    caster.AddBuff(new Power_1T(caster, caster, 1));
-                                                    break;
-                                                case "Y":
-                                                    owner.TakeDamage(5); // 1개당 5 데미지
-                                                    owner.AddBuff(new DefPower(owner, caster, 1));
-                                                    break;
-                                            }
-                                        }
-                                        // 5. 폭발 후 화약 제거 (초기화)
-                                        elements.Clear();
+                                                // 4. 부여된 순서대로 순차적 효과 발동
+                                                foreach (string element in elements)
+                                                {
+                                                    switch (element)
+                                                    {
+                                                        case "R":
+                                                            owner.TakeDamage(7); // 1개당 7 데미지
+                                                            owner.AddBuff(new Burn(owner, caster, 1));
+                                                            break;
+                                                        case "P":
+                                                            owner.TakeDamage(6); // 1개당 6 데미지
+                                                            caster.AddBuff(new Power_1T(caster, caster, 1));
+                                                            break;
+                                                        case "Y":
+                                                            owner.TakeDamage(5); // 1개당 5 데미지
+                                                            owner.AddBuff(new DefPower(owner, caster, 1));
+                                                            break;
+                                                    }
+                                                }
+                                                // 5. 폭발 후 화약 제거 (초기화)
+                                                elements.Clear();
         Stack = 0;
         owner.RemoveBuff(this);
     }
 
 }
-
