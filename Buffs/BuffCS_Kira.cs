@@ -20,7 +20,7 @@ public class BuffCS_Kira
 public class Stigma : Buff
 {
     public override string Bname => "낙인";
-    public override string Description => $"방어력 -{stack}\n턴 종료시 제거";
+    public override string Description => $"방어력 -{Stack}\n턴 종료시 제거";
 
 
 
@@ -28,14 +28,14 @@ public class Stigma : Buff
 
     public override void OnActivate()
     {
-        // 방어력 -stack 적용
-        owner.AddBuff(new DefPower(owner, caster, -stack));
+        // 방어력 -Stack 적용
+        owner.AddBuff(new DefPower(owner, caster, -Stack));
     }
 
     public override void OnDeactivate()
     {
-        // 방어력 +stack 복구
-        owner.AddBuff(new DefPower(owner, caster, stack));
+        // 방어력 +Stack 복구
+        owner.AddBuff(new DefPower(owner, caster, Stack));
     }
 
     public override void OnTurnEnd()
@@ -56,7 +56,7 @@ public class Stigma : Buff
 public class Sharpness : Buff
 {
     public override string Bname => "날카로움";
-    public override string Description => $"참격 공격 | 상처 {stack} 부여\n턴 종료시 제거";
+    public override string Description => $"참격 공격 | 상처 {Stack} 부여\n턴 종료시 제거";
    
 
 
@@ -69,7 +69,7 @@ public class Sharpness : Buff
         if (DC.IsPreview && DC.Target != null)
         {
 			// 날카로움 상태에서 공격했으므로 상처 부여
-			DC.Target.AddBuff(new Wound(DC.Target, owner, stack));
+			DC.Target.AddBuff(new Wound(DC.Target, owner, Stack));
         }
 
         return DC;
@@ -93,7 +93,7 @@ public class Sharpness : Buff
 public class Wound : Buff
 {
     public override string Bname => "상처";
-    public override string Description => $"피격 시 추가 피해 +{stack}\n턴 종료시 1 감소";
+    public override string Description => $"피격 시 추가 피해 +{Stack}\n턴 종료시 1 감소";
 
 
 
@@ -102,15 +102,15 @@ public class Wound : Buff
     public override DamContext BeforeDamaged(DamContext DC)
     {
         // 피격 시 상처 수치만큼 추가 피해
-        DC.PlusDamage += stack;
+        DC.PlusDamage += Stack;
         return DC;
     }
 
     public override void OnTurnEnd()
     {
         // 턴 종료 시 1 감소
-        stack--;
-        if (stack <= 0)
+        Stack--;
+        if (Stack <= 0)
         {
             owner.RemoveBuff(this);
         }
@@ -129,7 +129,7 @@ public class Wound : Buff
 public class DamageLimit : Buff
 {
     public override string Bname => "피해 제한";
-    public override string Description => $"이번 턴 최대 피해 제한: {stack}\n턴 종료시 제거";
+    public override string Description => $"이번 턴 최대 피해 제한: {Stack}\n턴 종료시 제거";
    
 
 
@@ -142,8 +142,8 @@ public class DamageLimit : Buff
         // 
         if (DC.IsPreview) return DC;
 
-        // 이번 턴에 받을 수 있는 최대 피해 = stack - 이미 받은 피해
-        int remainingCapacity = stack - damageThisTurn;
+        // 이번 턴에 받을 수 있는 최대 피해 = Stack - 이미 받은 피해
+        int remainingCapacity = Stack - damageThisTurn;
 
         if (remainingCapacity <= 0)
         {
