@@ -48,7 +48,7 @@ public class Explosion : Buff
     public override void OnActivate()
     {
         // 대상이 가지고 있는 통합 화약(GP) 버프를 찾습니다.
-                                        GP gpBuff = owner.GetBuff("GP") as GP;
+        GP gpBuff = owner.GetBuff("GP") as GP;
         if (gpBuff != null)
         {
             gpBuff.Explosion();
@@ -97,7 +97,7 @@ public class GPR : Buff
     public override BuffType BuffType => BuffType.Good;
     public override string Bname => "GPR";
     public override string BnameKR => "적색 [화약]";
-    public override string Description => $"화약 - 적색 추가 후 제거";
+    public override string Description => $"화약 - 적색";
 
     public GPR(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
@@ -237,15 +237,15 @@ public class GP : Buff
             switch (element)
             {
                 case "R":
-                owner.TakeDamage(7); // 1개당 7 데미지
+                owner.TakeDamage(7);
                 owner.AddBuff(new Burn(owner, caster, 1));
                 break;
                 case "P":
-                owner.TakeDamage(6); // 1개당 6 데미지
+                owner.TakeDamage(6);
                 caster.AddBuff(new Power_1T(caster, caster, 1));
                 break;
                 case "Y":
-                owner.TakeDamage(5); // 1개당 5 데미지
+                owner.TakeDamage(5);
                 owner.AddBuff(new DefPower(owner, caster, 1));
                 break;
             }
