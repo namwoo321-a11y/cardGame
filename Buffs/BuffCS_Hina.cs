@@ -109,7 +109,8 @@ public class Enkephalin : Buff
 {
     public override string Bname => "Enkephalin";
     public override string BnameKR => "엔케팔린";
-    public override string Description => $"턴 시작시 카드 {Stack}장 뽑음, 의지 +1, 수치 -1, 기쁨 +1" +
+    public override string Description => $"턴 시작시 카드 {Stack}장 뽑음,
+       $"\n의지 +1, 수치 -1, 기쁨 +1" +
         $"\n1/2 감소";
 
     public Enkephalin(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
