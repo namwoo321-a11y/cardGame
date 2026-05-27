@@ -118,7 +118,7 @@ public class Vulnerable : Buff
         if (Stack > Max_Stack)
         {
             owner.AddBuff(new DefPower(owner, caster, -Max_Stack));
-            } else
+        } else
         {
             owner.AddBuff(new DefPower(owner, caster, -Stack));
         }
@@ -130,7 +130,7 @@ public class Vulnerable : Buff
         if (Stack > Max_Stack)
         {
             owner.AddBuff(new DefPower(owner, caster, -(val + Max_Stack - Stack)));
-            } else
+        } else
         {
             owner.AddBuff(new DefPower(owner, caster, -val));
         }
@@ -187,7 +187,7 @@ public class Seed : Buff
 {
     public override BuffType BuffType => BuffType.Good;
     public override string Bname => "Seed";
-    public override string BnameKR => "Seed";
+    public override string BnameKR => "씨앗";
     public override string Description => $"수치가 5가 되면 '발아' 상태 돌입.." +
         $"\n발아: 턴 시작 | 수치만큼 의지 감소, 의지가 0이 되면 기절.";
 
