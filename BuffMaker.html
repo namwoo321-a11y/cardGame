@@ -709,15 +709,19 @@
                 inner = `<span class="text-amber-400 font-mono text-[10px] md:text-xs font-bold">}</span>`;
             } else if(act.type === 'AddBuff') {
                 let targetLen = act.target ? act.target.length : 1;
-                const casterOpts = ['caster', 'owner'].map(t => `<option ${act.caster===t?'selected':''}>${t}</option>`).join('');
+                let innerTargetLen = act.innerTarget ? act.innerTarget.length : targetLen;
+                let casterLen = act.caster ? act.caster.length : 1;
                 let stackLen = act.stack ? act.stack.length : 1;
                 let propsLen = act.props ? act.props.length : 0;
+                let currentInnerTarget = act.innerTarget || act.target;
                 inner = `
                     <input type="text" oninput="this.style.width = Math.max(10, this.value.length + 5) + 'ch'; updateAction('${eventId}', ${idx}, 'target', this.value)" value="${escapeHtml(act.target)}" style="width: ${Math.max(10, targetLen + 5)}ch;" list="targetList_${uniqueId}" class="bg-slate-800 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500">
                     <span class="text-slate-300 font-mono text-[10px] md:text-xs">.AddBuff(new </span>
                     <input type="text" oninput="updateAction('${eventId}', ${idx}, 'buffClass', this.value)" value="${escapeHtml(act.buffClass)}" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded w-20 text-blue-400 font-bold focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500" placeholder="Class">
-                    <span class="text-slate-300 font-mono text-[10px] md:text-xs">(${act.target}, </span>
-                    <select onchange="updateAction('${eventId}', ${idx}, 'caster', this.value)" class="bg-slate-800 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none">${casterOpts}</select>
+                    <span class="text-slate-300 font-mono text-[10px] md:text-xs">(</span>
+                    <input type="text" oninput="this.style.width = Math.max(5, this.value.length + 1) + 'ch'; updateAction('${eventId}', ${idx}, 'innerTarget', this.value)" value="${escapeHtml(currentInnerTarget)}" style="width: ${Math.max(5, innerTargetLen + 1)}ch;" list="targetList_${uniqueId}" class="bg-slate-800 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500">
+                    <span class="text-slate-300 font-mono text-[10px] md:text-xs">, </span>
+                    <input type="text" oninput="this.style.width = Math.max(5, this.value.length + 1) + 'ch'; updateAction('${eventId}', ${idx}, 'caster', this.value)" value="${escapeHtml(act.caster)}" style="width: ${Math.max(5, casterLen + 1)}ch;" list="targetList_${uniqueId}" class="bg-slate-800 text-slate-100 p-1 text-[10px] md:text-xs rounded border border-slate-600 focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500">
                     <span class="text-slate-300 font-mono text-[10px] md:text-xs">, </span>
                     <input type="text" oninput="this.style.width = Math.max(6, this.value.length + 3) + 'ch'; updateAction('${eventId}', ${idx}, 'stack', this.value)" value="${escapeHtml(act.stack)}" style="width: ${Math.max(6, stackLen + 3)}ch;" class="bg-slate-800 text-slate-100 border border-slate-600 p-1 text-[10px] md:text-xs rounded font-mono focus:ring-1 focus:ring-blue-500 outline-none placeholder-slate-500" placeholder="Stack, &quot;P&quot;">
                     <span class="text-slate-300 font-mono text-[10px] md:text-xs">)</span>
@@ -803,8 +807,9 @@
                 }
                 else if(act.type === 'StackChange') line = (act.op === '++' || act.op === '--') ? `Stack${act.op};` : `Stack ${act.op} ${act.val};`;
                 else if(act.type === 'AddBuff') {
-                    if(act.props && act.props.trim() !== "") line = `${act.target}.AddBuff(new ${act.buffClass}(${act.target}, ${act.caster}, ${act.stack}){ ${act.props.trim()} });`;
-                    else line = `${act.target}.AddBuff(new ${act.buffClass}(${act.target}, ${act.caster}, ${act.stack}));`;
+                    let innerT = act.innerTarget || act.target;
+                    if(act.props && act.props.trim() !== "") line = `${act.target}.AddBuff(new ${act.buffClass}(${innerT}, ${act.caster}, ${act.stack}){ ${act.props.trim()} });`;
+                    else line = `${act.target}.AddBuff(new ${act.buffClass}(${innerT}, ${act.caster}, ${act.stack}));`;
                 }
                 else if(act.type === 'RandVar') line = `int ${act.varName} = Rand(${act.min}, ${act.max});`;
                 else if(act.type === 'IfCondition') { line = `if (${act.condition})\n${indentStr}{`; }
@@ -1173,13 +1178,13 @@
                     continue;
                 }
 
-                const statThisMatch = line.match(/^([a-zA-Z0-9_]+(?:\[[^\]]+\])?)\.(Gain|Consume)\(this,\s*([^)]+)\);$/);
+                const statThisMatch = line.match(/^([a-zA-Z0-9_.\[\]]+)\.(Gain|Consume)\(this,\s*([^)]+)\);$/);
                 if (statThisMatch) { flushCustom(); actions.push({ type: 'StatChange', target: statThisMatch[1], op: statThisMatch[2], stat: 'this', val: statThisMatch[3] }); continue; }
                 
-                const statMatch = line.match(/^([a-zA-Z0-9_]+(?:\[[^\]]+\])?)\.(Gain|Consume)\("([^"]+)",\s*([^)]+)\);$/);
+                const statMatch = line.match(/^([a-zA-Z0-9_.\[\]]+)\.(Gain|Consume)\("([^"]+)",\s*([^)]+)\);$/);
                 if (statMatch) { flushCustom(); actions.push({ type: 'StatChange', target: statMatch[1], op: statMatch[2], stat: statMatch[3], val: statMatch[4] }); continue; }
                 
-                const fchaMatch = line.match(/^([a-zA-Z0-9_]+(?:\[[^\]]+\])?)\.(Heal|DrawCard|TakeDamage)\((.*)\);$/);
+                const fchaMatch = line.match(/^([a-zA-Z0-9_.\[\]]+)\.(Heal|DrawCard|TakeDamage)\((.*)\);$/);
                 if (fchaMatch) { flushCustom(); actions.push({ type: 'F_ChaMethod', target: fchaMatch[1], method: fchaMatch[2], args: fchaMatch[3] }); continue; }
                 
                 const clampMatch = line.match(/^([a-zA-Z0-9_]+)\s*=\s*Math\.Clamp\(([^,]+),\s*([^,]+),\s*([^)]+)\);$/);
@@ -1194,10 +1199,10 @@
                 const dcMatch = line.match(/^DC\.(PlusDamage|PercentDamage|Damage|FixDamage)\s*(\+=|-=|\*=|\/=|==|=)\s*([^;]+);$/);
                 if (dcMatch) { flushCustom(); actions.push({ type: 'DCModify', field: dcMatch[1], op: dcMatch[2], val: dcMatch[3] }); continue; }
                 
-                const addBuffMatch = line.match(/^([a-zA-Z0-9_]+(?:\[[^\]]+\])?)\.AddBuff\(new\s+(\w+)\(([^,]+),\s*([^,]+),\s*(.+?)\)(?:\s*\{\s*(.*?)\s*\})?\s*\);$/);
+                const addBuffMatch = line.match(/^([a-zA-Z0-9_.\[\]]+)\.AddBuff\(new\s+(\w+)\(([^,]+),\s*([^,]+),\s*(.+?)\)(?:\s*\{\s*(.*?)\s*\})?\s*\);$/);
                 if (addBuffMatch) {
                     flushCustom();
-                    actions.push({ type: 'AddBuff', target: addBuffMatch[1], buffClass: addBuffMatch[2], caster: addBuffMatch[4].trim(), stack: addBuffMatch[5].trim(), props: addBuffMatch[6] ? addBuffMatch[6].trim() : '' });
+                    actions.push({ type: 'AddBuff', target: addBuffMatch[1].trim(), buffClass: addBuffMatch[2].trim(), innerTarget: addBuffMatch[3].trim(), caster: addBuffMatch[4].trim(), stack: addBuffMatch[5].trim(), props: addBuffMatch[6] ? addBuffMatch[6].trim() : '' });
                     continue;
                 }
                 
@@ -1414,7 +1419,7 @@
                 if (id === 'BeforeDamaged' || id === 'BeforeAttack') act = { ...act, val: 'return DC' };
                 else act = { ...act, val: 'return' };
             }
-            else if (type === 'AddBuff') act = { ...act, target: 'owner', buffClass: 'Power_1T', caster: 'caster', stack: '1', props: '' };
+            else if (type === 'AddBuff') act = { ...act, target: 'owner', buffClass: 'Power_1T', innerTarget: 'owner', caster: 'caster', stack: '1', props: '' };
             else if (type === 'DCModify') act = { ...act, field: 'PlusDamage', op: '+=', val: '1' };
             else if (type === 'BaseCall') act = { ...act };
             else if (type === 'StackCheckCall') act = { ...act };
