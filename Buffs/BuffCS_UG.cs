@@ -59,7 +59,7 @@ public class MaxHP : Buff
     public override BuffType BuffType => BuffType.Good;
     public override string Bname => "MaxHP";
     public override string BnameKR => "쵀대 체력 상승";
-    public override string Description => $"[UG] 자동생성 버프";
+    public override string Description => $"획득 즉시 최대 체력 {stack} 회복";
 
     public MaxHP(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
@@ -70,7 +70,8 @@ public class PermBlock : Buff
     public override BuffType BuffType => BuffType.Good;
     public override string Bname => "PermBlock";
     public override string BnameKR => "다음 턴 방어";
-    public override string Description => $"[UG] 자동생성 버프";
+    public override string Description => $"다음 턴 시작 | 방어 {stack}," +
+        $"\n얻음";
 
     public PermBlock(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
