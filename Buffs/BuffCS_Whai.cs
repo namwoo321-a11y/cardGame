@@ -22,7 +22,7 @@ public class DarkMagic : Buff
     public override DamContext BeforeDamaged(DamContext DC)
     {
         int damageIncrease = (Stack / 5); // Stack 5당 받는 피해 1 증가
-                damageIncrease = Mathf.Clamp(damageIncrease, 0, 4); // 최대 4까지 증가
+                        damageIncrease = Mathf.Clamp(damageIncrease, 0, 4); // 최대 4까지 증가
         DC.PlusDamage += damageIncrease;
         return DC;
     }
@@ -63,7 +63,7 @@ public class Blind : Buff
     public override BuffType BuffType => BuffType.Good;
     public override string Bname => "Blind";
     public override string BnameKR => "실명";
-    public override string Description => $"빗나갈 확률 {stack}0% 증가";
+    public override string Description => $"빗나갈 확률 {Stack}0% 증가";
 
     public Blind(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
