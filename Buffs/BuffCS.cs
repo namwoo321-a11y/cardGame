@@ -135,10 +135,10 @@ public class Poison : Buff
     public Poison(F_Cha target, F_Cha user, int s) : base(target, user, s) { }
 
     // information
-                
-                
-                
-                 // Poison 디버프.
+                    
+                    
+                    
+                     // Poison 디버프.
 
     public override void OnTurnEnd()
     {
@@ -147,7 +147,7 @@ public class Poison : Buff
         // 스택 1 감소
         Stack--;
         // 스택이 0이 되면 버프 제거
-                        if (Stack == 0) { owner.RemoveBuff(this); }
+                                if (Stack == 0) { owner.RemoveBuff(this); }
     }
 
 }
@@ -205,7 +205,7 @@ public class Hurt : Buff
             owner.AddBuff(new Bleed(owner, caster, Stack));
             // 수치의 절반만큼 스택 감소")
             owner.Consume(this, Stack/ 2);
-            } else
+        } else
         {
             // 스택이 0이하가 되면 버프 제거
             owner.RemoveBuff(this);
