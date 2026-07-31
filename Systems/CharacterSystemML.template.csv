@@ -1,0 +1,6 @@
+CharacterID,Type,Code,Name,Trigger,EffectClass,Value,Limit,ParentCode,Tag,Description,Enabled
+C1_Prote_A,Passive,Prote_A,Offensive Stance,Spawn,Prote_A,1,1,,,Consumes defense before attack for a temporary power bonus,TRUE
+C1_Prote_A,Equipment,Prote_Armor,Guard Equipment,Spawn,CounterUp,3,3,,Northern,While durability remains this equipment improves its assigned effect,TRUE
+C1_Prote_A,Idea,Prote_Ideal,Idealism,BeforeAttack,Power_1T,1,1,,,A long-term idea-based passive,TRUE
+C1_Prote_A,Emotion,Prote_Calm,Calmness,RoundStart,DefPower,0,3,Prote_Base,,A sub-emotion stage connected to its base emotion,TRUE
+C1_Prote_A,Divinity,Prote_God_A,Stellar Resonance,RoundStart,GP,0,10,,Astra,Resonance with a deity; Tag is the deity identifier,TRUE
