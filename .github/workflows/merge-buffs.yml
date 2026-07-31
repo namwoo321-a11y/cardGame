@@ -5,10 +5,9 @@ on:
     branches:
       - main
     paths:
-      # 다음 파일들이 수정되었을 때만 이 액션이 실행됩니다.
-      - 'BuffCS*.cs'
-      - 'BuffCase.cs'
+      - 'Buffs/**/*.cs'
       - 'merge_buffs.py'
+      - '.github/workflows/merge-buffs.yml'
 
 jobs:
   merge:
@@ -16,10 +15,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.x'
 
@@ -31,6 +30,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add BuffCS.cs
-          # 변경사항이 있을 때만 커밋
           git diff --quiet && git diff --staged --quiet || git commit -m "Auto-generated BuffCS.cs"
           git push
