@@ -1,0 +1,42 @@
+{
+  "Prote": [
+    {
+      "Tier": 0,
+      "cardName": "공격",
+      "cost": 1,
+      "cost2": "",
+      "description": "대상에게 피해 6",
+      "CType": "A",
+      "TType": "Enemy",
+      "User": "Prote",
+      "Keyword": "",
+      "effects1": "damage:Target:6:HP"
+    },
+    {
+      "Tier": 1,
+      "cardName": "소모성 방호",
+      "cost": 1,
+      "cost2": "에너지 2",
+      "description": "자신에게 보호 8 [소멸]",
+      "CType": "S",
+      "TType": "Ally",
+      "User": "Prote",
+      "Keyword": "소멸",
+      "effects1": "shield:User:8"
+    }
+  ],
+  "E_C1": [
+    {
+      "Tier": 0,
+      "cardName": "꽃개 물기",
+      "cost": 1,
+      "cost2": "",
+      "description": "대상에게 피해 5",
+      "CType": "A",
+      "TType": "Enemy",
+      "User": "꽃개",
+      "Keyword": "",
+      "effects1": "damage:Target:5:HP"
+    }
+  ]
+}

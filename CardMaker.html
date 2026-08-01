@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CardML Maker</title>
+  <link rel="stylesheet" href="assets/card-maker.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">P-E · CardML</p>
+      <h1>Card Maker</h1>
+      <p class="subtitle">Google Sheets 원본을 읽고, 안전한 초안과 검증 결과를 만듭니다.</p>
+    </div>
+    <div class="toolbar" aria-label="카드 데이터 도구">
+      <button id="load-remote" class="primary">원본 불러오기</button>
+      <button id="load-fixture">예시 열기</button>
+      <button id="save-draft">초안 저장</button>
+      <button id="export-tsv">현재 시트 TSV</button>
+      <button id="export-json">변경 JSON</button>
+    </div>
+  </header>
+
+  <section class="source-bar" aria-label="데이터 원본 설정">
+    <label for="source-url">읽기 API</label>
+    <input id="source-url" type="url" autocomplete="off">
+    <button id="save-source">주소 저장</button>
+    <span id="status" role="status" aria-live="polite">준비됨</span>
+  </section>
+
+  <main class="workspace">
+    <aside class="card-list-panel">
+      <div class="panel-heading">
+        <div>
+          <h2>카드 목록</h2>
+          <p id="card-count">0장</p>
+        </div>
+        <button id="new-card" title="현재 시트에 빈 카드 추가">+ 카드</button>
+      </div>
+      <input id="filter" type="search" placeholder="카드명·사용자·시트 검색">
+      <div class="filter-row">
+        <select id="sheet-filter" aria-label="시트 필터"><option value="">모든 시트</option></select>
+        <select id="state-filter" aria-label="상태 필터">
+          <option value="">전체 상태</option>
+          <option value="changed">변경됨</option>
+          <option value="error">오류</option>
+        </select>
+      </div>
+      <div id="card-list" class="card-list" aria-label="카드 목록"></div>
+    </aside>
+
+    <section class="editor-panel">
+      <div id="empty-editor" class="empty-state">왼쪽에서 카드를 선택하거나 원본을 불러오세요.</div>
+      <form id="card-editor" class="hidden" novalidate>
+        <div class="panel-heading">
+          <div>
+            <p id="active-location" class="eyebrow">—</p>
+            <h2 id="active-title">카드</h2>
+          </div>
+          <button id="restore-card" type="button">이 카드 원본 복구</button>
+        </div>
+
+        <div class="form-grid">
+          <label>Tier<input data-field="Tier" type="number" min="0" step="1"></label>
+          <label>카드명<input data-field="cardName" required></label>
+          <label>의지 비용<input data-field="cost" type="number" min="0" step="1"></label>
+          <label>추가 비용<input data-field="cost2" placeholder="에너지 2"></label>
+          <label>CType
+            <select data-field="CType"><option value="A">A · 공격</option><option value="S">S · 스킬</option><option value="P">P · 파워</option><option value="SP">SP · 특수</option></select>
+          </label>
+          <label>TType
+            <select data-field="TType"><option value="Enemy">Enemy</option><option value="Ally">Ally</option><option value="None">None</option></select>
+          </label>
+          <label>사용자<input data-field="User" placeholder="Prote / C1_Player_0 / 적 ID"></label>
+          <label>Keyword<input data-field="Keyword" placeholder="신속, 관통"></label>
+        </div>
+
+        <label class="wide-label">설명<textarea data-field="description" rows="3" placeholder="카드의 실제 효과를 적습니다. [소멸]은 effects에서만 설정합니다."></textarea></label>
+
+        <section class="effects-section">
+          <div class="section-title-row">
+            <div><h3>실행 효과</h3><p>위에서 아래 순서대로 `effects1`, `effects2`…로 저장됩니다.</p></div>
+            <div class="effect-actions"><button id="add-effect" type="button">+ 효과</button><button id="toggle-exhaust" type="button">[소멸] 토글</button></div>
+          </div>
+          <div id="effects" class="effects"></div>
+        </section>
+
+        <section class="validation-section">
+          <h3>검증 결과</h3>
+          <ul id="validation-results" class="validation-results"></ul>
+        </section>
+      </form>
+    </section>
+
+    <aside class="preview-panel">
+      <h2>카드 미리보기</h2>
+      <article id="card-preview" class="card-preview empty-preview">카드를 선택하면 실제 저장값을 미리 봅니다.</article>
+      <section class="change-section">
+        <h3>변경 요약</h3>
+        <div id="change-summary">변경 없음</div>
+      </section>
+      <section class="help-section">
+        <h3>핵심 규칙</h3>
+        <ul>
+          <li><code>removeThis</code>는 사용한 카드를 소멸 더미로 옮깁니다.</li>
+          <li><code>[소멸]</code>을 설명·Keyword에 쓰지 않습니다.</li>
+          <li>저장은 브라우저 초안이며, TSV/JSON으로 Sheet에 반영할 데이터를 확인합니다.</li>
+        </ul>
+      </section>
+    </aside>
+  </main>
+
+  <template id="effect-row-template">
+    <div class="effect-row">
+      <span class="effect-number"></span>
+      <input class="effect-input" spellcheck="false" placeholder="damage:Target:8:HP">
+      <button type="button" class="move-effect-up" aria-label="효과를 위로">↑</button>
+      <button type="button" class="move-effect-down" aria-label="효과를 아래로">↓</button>
+      <button type="button" class="remove-effect" aria-label="효과 삭제">×</button>
+    </div>
+  </template>
+
+  <script type="module" src="assets/card-maker.js"></script>
+</body>
+</html>
