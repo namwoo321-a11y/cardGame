@@ -15,19 +15,19 @@ test("removeThis is a valid effect-only exhaustion marker", () => {
   assert.equal(parsed.action, "removethis");
 });
 
-test("legacy description and keyword markers migrate into removeThis", () => {
+test("display markers stay visible and add the required removeThis effect", () => {
   const record = makeRecord({ Tier: "1", cardName: "소모 카드", cost: "1", description: "보호 8 [소멸]", CType: "S", TType: "Ally", Keyword: "신속, 소멸" }, ["shield:User:8"]);
   assert.equal(migratePostUseMarkers(record), true);
-  assert.equal(record.values.description, "보호 8");
-  assert.equal(record.values.Keyword, "신속");
+  assert.equal(record.values.description, "보호 8 [소멸]");
+  assert.equal(record.values.Keyword, "신속, 소멸");
   assert.deepEqual(record.effects, ["shield:User:8", "removeThis"]);
   assert.equal(serializeRecord(record).effects2, "removeThis");
 });
 
-test("description [소멸] is rejected until it is moved to effects", () => {
+test("display [소멸] is rejected only when its runtime effect is absent", () => {
   const record = makeRecord({ Tier: "0", cardName: "오류 카드", cost: "1", description: "피해 5 [소멸]", CType: "A", TType: "Enemy", Keyword: "" }, ["damage:Target:5:HP"]);
   const validation = validateCard(record, [], schema);
-  assert.ok(validation.errors.some((message) => message.includes("description")));
+  assert.ok(validation.errors.some((message) => message.includes("removeThis")));
 });
 
 test("effect parameter count follows the published schema", () => {

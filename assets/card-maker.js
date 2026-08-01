@@ -6,9 +6,25 @@ const DRAFT_KEY = "active-draft";
 const CONFIG_KEY = "card-maker-source-url";
 const MAX_BACKUPS = 10;
 const STANDARD_FIELDS = ["Tier", "cardName", "cost", "cost2", "description", "CType", "TType", "User", "Keyword"];
+const EFFECT_TEMPLATES = [
+  { id: "damage", label: "공격", value: "damage:Target:0:HP", category: "attack", syntax: "damage:대상:수치:피해종류", description: "대상에게 피해를 줍니다. 피해종류는 보통 HP입니다." },
+  { id: "block", label: "방어", value: "Block:User:0", category: "defense", syntax: "Block:대상:수치", description: "방어력을 부여합니다." },
+  { id: "shield", label: "보호", value: "shield:User:0", category: "defense", syntax: "shield:대상:수치", description: "보호막을 부여합니다." },
+  { id: "heal", label: "치유", value: "heal:User:0:HP", category: "defense", syntax: "heal:대상:수치:회복종류", description: "체력 또는 지정 자원을 회복합니다." },
+  { id: "buff", label: "버프 부여", value: "buff:Target:1:BuffName", category: "support", syntax: "buff:대상:수치:버프명", description: "대상에게 지정 버프를 수치만큼 부여합니다." },
+  { id: "generate", label: "카드 생성", value: "generate:User:addHand:1:CardPool", category: "utility", syntax: "generate:대상:처리:수량:카드풀", description: "카드를 생성해 손·덱 등으로 보냅니다." },
+  { id: "draw", label: "드로우", value: "draw:User:1", category: "utility", syntax: "draw:대상:수량", description: "카드를 뽑습니다." },
+  { id: "discard", label: "버림", value: "discard:Target:1:Hand", category: "removal", syntax: "discard:대상:수량:위치", description: "지정 위치의 카드를 버린 카드 더미로 보냅니다." },
+  { id: "remove", label: "제거", value: "remove:Target:1:Hand", category: "removal", syntax: "remove:대상:수량:위치", description: "지정 위치의 카드를 소멸 더미로 보냅니다." },
+  { id: "removethis", label: "사용 후 소멸", value: "removeThis", category: "removal", syntax: "removeThis", description: "이 카드를 사용 뒤 소멸 더미로 옮깁니다. 표시용 [소멸]도 함께 둡니다." },
+  { id: "if", label: "조건", value: "if:User_HP:<:0:1:0", category: "logic", syntax: "if:값A:비교:값B:참줄수:거짓줄수", description: "다음 효과들의 실행 여부를 조건으로 제어합니다." },
+  { id: "repeat", label: "반복", value: "repeat:2:1", category: "logic", syntax: "repeat:횟수:다음효과줄수", description: "바로 뒤 효과 묶음을 지정 횟수만큼 반복합니다." },
+  { id: "emotion", label: "감정", value: "emotion:User:EMO_ANGER:10", category: "support", syntax: "emotion:대상:감정코드:수치", description: "감정 누적치를 변경합니다." }
+];
 
 let schema = { effects: {} };
 let state = createEmptyState();
+let activeEffectIndex = -1;
 
 function createEmptyState() {
   return { records: [], activeId: null, sourceUrl: CARDMAKER_DEFAULT_CONFIG.sourceUrl, sourceLabel: "초안", loadedAt: null };
@@ -37,26 +53,19 @@ export function migratePostUseMarkers(record) {
   const next = record;
   next.notes ??= [];
   let changed = false;
-  const description = text(next.values.description);
-  if (/\[소멸\]/i.test(description)) {
-    next.values.description = description.replace(/\s*\[소멸\]\s*/gi, " ").replace(/\s{2,}/g, " ").trim();
-    changed = true;
-  }
-
   const keywordField = Object.prototype.hasOwnProperty.call(next.values, "Keyword") ? "Keyword" : "Keywords";
   const keywordValues = text(next.values[keywordField]).split(/[,|]/).map((value) => value.trim()).filter(Boolean);
-  const keptKeywords = keywordValues.filter((value) => !/^\[?소멸\]?$/i.test(value));
-  if (keptKeywords.length !== keywordValues.length) {
-    next.values[keywordField] = keptKeywords.join(", ");
-    changed = true;
-  }
+  const hasDisplayMarker = /\[소멸\]/i.test(text(next.values.description)) || keywordValues.some((value) => /^\[?소멸\]?$/i.test(value));
 
   const hadLegacyEffect = next.effects.some((effect) => text(effect).trim() !== "removeThis" && isRemoveThis(effect));
   next.effects = next.effects.map((effect) => isRemoveThis(effect) ? "removeThis" : text(effect).trim()).filter(Boolean);
   if (hadLegacyEffect) changed = true;
-  if (changed && !next.effects.some((effect) => isRemoveThis(effect))) next.effects.push("removeThis");
-  if (changed && !next.notes.includes("[소멸]을 description/Keyword에서 effects의 removeThis로 옮겼습니다.")) {
-    next.notes.push("[소멸]을 description/Keyword에서 effects의 removeThis로 옮겼습니다.");
+  if (hasDisplayMarker && !next.effects.some((effect) => isRemoveThis(effect))) {
+    next.effects.push("removeThis");
+    changed = true;
+  }
+  if (changed && !next.notes.includes("표시용 [소멸]은 유지하고, 실행용 effects의 removeThis를 맞췄습니다.")) {
+    next.notes.push("표시용 [소멸]은 유지하고, 실행용 effects의 removeThis를 맞췄습니다.");
   }
   return changed;
 }
@@ -80,8 +89,12 @@ export function validateCard(record, allRecords = [], effectSchema = schema) {
   if (tier && (!Number.isInteger(Number(tier)) || Number(tier) < 0)) errors.push("Tier는 0 이상의 정수여야 합니다.");
   if (cost && (!Number.isInteger(Number(cost)) || Number(cost) < 0)) errors.push("cost는 0 이상의 정수여야 합니다.");
   if (text(row.cost2).trim() && !/^.+\s+\d+$/.test(text(row.cost2).trim())) errors.push("cost2는 '에너지 2'처럼 자원 이름과 수치로 작성하세요.");
-  if (/\[소멸\]/i.test(text(row.description))) errors.push("[소멸]은 description에 쓰지 말고 effects에 removeThis로 넣으세요.");
-  if (text(row.Keyword || row.Keywords).split(/[,|]/).some((keyword) => /^\[?소멸\]?$/i.test(keyword.trim()))) errors.push("소멸은 Keyword가 아니라 effects의 removeThis입니다.");
+  const hasDescriptionMarker = /\[소멸\]/i.test(text(row.description));
+  const hasKeywordMarker = text(row.Keyword || row.Keywords).split(/[,|]/).some((keyword) => /^\[?소멸\]?$/i.test(keyword.trim()));
+  const hasRemoveThis = record.effects.some(isRemoveThis);
+  if ((hasDescriptionMarker || hasKeywordMarker) && !hasRemoveThis) errors.push("표시용 [소멸]이 있으므로 effects에 removeThis도 필요합니다.");
+  if (hasRemoveThis && !hasDescriptionMarker) warnings.push("removeThis 카드에는 설명에도 표시용 [소멸]을 적는 것을 권장합니다.");
+  if (hasRemoveThis && !hasKeywordMarker) warnings.push("removeThis 카드에는 Keyword에도 표시용 [소멸]을 적는 것을 권장합니다.");
 
   record.effects.forEach((effect, index) => {
     const parsed = parseEffect(effect, effectSchema);
@@ -272,6 +285,35 @@ function renderEditor() {
   const validation = activeValidation();
   const results = [...active.notes.map((note) => ({ type: "warning", message: note })), ...validation.errors.map((message) => ({ type: "error", message })), ...validation.warnings.map((message) => ({ type: "warning", message }))];
   document.querySelector("#validation-results").innerHTML = results.length ? results.map((item) => `<li class="${item.type}">${escapeHtml(item.message)}</li>`).join("") : `<li class="ok">현재 카드 데이터는 명세를 통과했습니다.</li>`;
+  renderEffectTools();
+}
+
+function getEffectTemplate(effect) {
+  const parsed = parseEffect(effect);
+  return EFFECT_TEMPLATES.find((template) => template.id === parsed.action) || {
+    label: parsed.action || "효과",
+    category: "utility",
+    syntax: "효과:값1:값2…",
+    description: parsed.error || "고급 효과입니다. 오른쪽 명세와 Unity CardEffectParser를 확인하세요."
+  };
+}
+
+function renderEffectTools() {
+  const active = getActive();
+  const palette = document.querySelector("#effect-palette");
+  const guide = document.querySelector("#effect-guide");
+  const helper = document.querySelector("#effect-helper");
+  palette.innerHTML = EFFECT_TEMPLATES.map((template) => `<button type="button" class="${template.category}" data-add-template="${template.id}">${escapeHtml(template.label)}</button>`).join("");
+  guide.innerHTML = EFFECT_TEMPLATES.map((template) => `<article class="guide-item ${template.category}"><strong>${escapeHtml(template.label)}</strong><span>${escapeHtml(template.description)}</span><code>${escapeHtml(template.syntax)}</code></article>`).join("");
+  const effect = active?.effects[activeEffectIndex] || active?.effects.at(-1);
+  if (!effect) {
+    helper.className = "effect-helper";
+    helper.textContent = "+ 효과 선택을 눌러 공격·방어·버프·생성·버림·제거·조건·반복을 추가하세요.";
+    return;
+  }
+  const template = getEffectTemplate(effect);
+  helper.className = `effect-helper ${template.category}`;
+  helper.innerHTML = `<strong>${escapeHtml(template.label)}</strong> · ${escapeHtml(template.description)}<br><code>${escapeHtml(template.syntax)}</code><br><span>현재 값: ${escapeHtml(effect)}</span>`;
 }
 
 function renderPreview() {
@@ -292,14 +334,34 @@ function render() { renderSheetFilter(); renderList(); renderEditor(); renderPre
 function selectCard(id) { state.activeId = id; render(); }
 function activeOrWarn() { const active = getActive(); if (!active) setStatus("먼저 카드를 선택하세요.", "error"); return active; }
 
-function changeField(field, value) { const active = activeOrWarn(); if (!active) return; active.values[field] = value; active.notes = []; renderList(); renderEditor(); renderPreview(); }
-function changeEffect(index, value) { const active = activeOrWarn(); if (!active) return; active.effects[index] = value; active.notes = []; renderList(); renderEditor(); renderPreview(); }
+function changeField(field, value) {
+  const active = activeOrWarn(); if (!active) return;
+  active.values[field] = value; active.notes = [];
+  if (field === "cardName") document.querySelector("#active-title").textContent = value || "이름 없는 카드";
+  renderList(); renderPreview();
+}
+function changeEffect(index, value) {
+  const active = activeOrWarn(); if (!active) return;
+  active.effects[index] = value; active.notes = [];
+  renderList(); renderPreview(); renderEffectTools();
+}
 function swapEffect(index, next) { const active = activeOrWarn(); if (!active || next < 0 || next >= active.effects.length) return; [active.effects[index], active.effects[next]] = [active.effects[next], active.effects[index]]; render(); }
 
 function toggleExhaust() {
   const active = activeOrWarn(); if (!active) return;
   const index = active.effects.findIndex(isRemoveThis);
-  if (index >= 0) active.effects.splice(index, 1); else active.effects.push("removeThis");
+  const keywordField = Object.prototype.hasOwnProperty.call(active.values, "Keyword") ? "Keyword" : "Keywords";
+  const keywords = text(active.values[keywordField]).split(/[,|]/).map((value) => value.trim()).filter(Boolean);
+  const hasMarker = keywords.some((value) => /^\[?소멸\]?$/i.test(value));
+  const description = text(active.values.description);
+  if (index >= 0) {
+    active.effects.splice(index, 1);
+  } else {
+    active.effects.push("removeThis");
+    if (!hasMarker) keywords.push("[소멸]");
+    active.values[keywordField] = keywords.join(", ");
+    if (!/\[소멸\]/i.test(description)) active.values.description = `${description}${description ? " " : ""}[소멸]`;
+  }
   active.notes = []; render();
 }
 
@@ -319,6 +381,33 @@ function newCard() {
 
 function tsvEscape(value) { return text(value).replace(/\t/g, " ").replace(/\r?\n/g, " "); }
 function download(filename, contents, mime) { const blob = new Blob([contents], { type: mime }); const url = URL.createObjectURL(blob); const anchor = document.createElement("a"); anchor.href = url; anchor.download = filename; document.body.append(anchor); anchor.click(); anchor.remove(); URL.revokeObjectURL(url); }
+function getSheetColumns(sheetName) {
+  const columns = [];
+  state.records.filter((record) => record.sheetName === sheetName).forEach((record) => Object.keys(record.original).forEach((key) => {
+    if (!isEffectColumn(key) && !columns.includes(key)) columns.push(key);
+  }));
+  STANDARD_FIELDS.forEach((field) => { if (!columns.includes(field)) columns.push(field); });
+  const maxEffects = Math.max(0, ...state.records.filter((record) => record.sheetName === sheetName).map((record) => record.effects.length), getActive()?.effects.length || 0);
+  for (let index = 1; index <= maxEffects; index++) columns.push(`effects${index}`);
+  return columns;
+}
+async function copyText(contents, success) {
+  try {
+    await navigator.clipboard.writeText(contents);
+    setStatus(success, "success");
+  } catch {
+    setStatus("클립보드 접근이 막혔습니다. HTTPS GitHub Pages에서 다시 시도하세요.", "error");
+  }
+}
+function copyCardRow(includeHeader) {
+  const active = activeOrWarn(); if (!active) return;
+  const validation = activeValidation();
+  if (validation.errors.length) return setStatus("오류를 고친 뒤 행을 복사하세요.", "error");
+  const columns = getSheetColumns(active.sheetName);
+  const row = serializeRecord(active);
+  const rowText = columns.map((column) => tsvEscape(row[column])).join("\t");
+  copyText(includeHeader ? `${columns.join("\t")}\n${rowText}` : rowText, includeHeader ? "헤더와 현재 행을 복사했습니다. 새 시트나 검토용으로 붙여넣으세요." : "현재 카드 행을 복사했습니다. 같은 CardML 시트의 새 행 첫 칸에 붙여넣으세요.");
+}
 function exportTsv() {
   const sheetName = document.querySelector("#sheet-filter").value || getActive()?.sheetName;
   if (!sheetName) return setStatus("내보낼 시트를 선택하세요.", "error");
@@ -338,18 +427,22 @@ function bindEvents() {
   document.querySelector("#load-remote").addEventListener("click", loadRemote);
   document.querySelector("#load-fixture").addEventListener("click", loadFixture);
   document.querySelector("#save-draft").addEventListener("click", () => saveDraft());
+  document.querySelector("#copy-card-row").addEventListener("click", () => copyCardRow(false));
+  document.querySelector("#copy-header-row").addEventListener("click", () => copyCardRow(true));
   document.querySelector("#export-tsv").addEventListener("click", exportTsv);
   document.querySelector("#export-json").addEventListener("click", exportJson);
   document.querySelector("#save-source").addEventListener("click", () => { const value = document.querySelector("#source-url").value.trim(); localStorage.setItem(CONFIG_KEY, value); state.sourceUrl = value; setStatus("읽기 API 주소를 이 브라우저에 저장했습니다.", "success"); });
   document.querySelector("#new-card").addEventListener("click", newCard);
   document.querySelector("#restore-card").addEventListener("click", restoreActive);
-  document.querySelector("#add-effect").addEventListener("click", () => { const active = activeOrWarn(); if (!active) return; active.effects.push("damage:Target:0:HP"); render(); });
+  document.querySelector("#add-effect").addEventListener("click", () => document.querySelector("#effect-palette").classList.toggle("hidden"));
   document.querySelector("#toggle-exhaust").addEventListener("click", toggleExhaust);
   document.querySelector("#filter").addEventListener("input", renderList);
   document.querySelector("#sheet-filter").addEventListener("change", renderList);
   document.querySelector("#state-filter").addEventListener("change", renderList);
   document.querySelector("#card-list").addEventListener("click", (event) => { const target = event.target.closest("[data-select-card]"); if (target) selectCard(target.dataset.selectCard); });
-  document.querySelector("#card-editor").addEventListener("input", (event) => { if (event.target.dataset.field) changeField(event.target.dataset.field, event.target.value); if (event.target.dataset.effectIndex) changeEffect(Number(event.target.dataset.effectIndex), event.target.value); });
+  document.querySelector("#card-editor").addEventListener("input", (event) => { if (event.target.dataset.field) changeField(event.target.dataset.field, event.target.value); if (event.target.dataset.effectIndex) { activeEffectIndex = Number(event.target.dataset.effectIndex); changeEffect(activeEffectIndex, event.target.value); } });
+  document.querySelector("#card-editor").addEventListener("focusin", (event) => { if (event.target.dataset.effectIndex) { activeEffectIndex = Number(event.target.dataset.effectIndex); renderEffectTools(); } });
+  document.querySelector("#effect-palette").addEventListener("click", (event) => { const id = event.target.dataset.addTemplate; if (!id) return; const active = activeOrWarn(); const template = EFFECT_TEMPLATES.find((item) => item.id === id); if (!active || !template) return; if (template.id === "removethis") { toggleExhaust(); return; } active.effects.push(template.value); activeEffectIndex = active.effects.length - 1; document.querySelector("#effect-palette").classList.add("hidden"); render(); });
   document.querySelector("#effects").addEventListener("click", (event) => { const index = Number(event.target.dataset.effectIndex); if (!Number.isInteger(index)) return; if (event.target.classList.contains("remove-effect")) { getActive().effects.splice(index, 1); render(); } if (event.target.classList.contains("move-effect-up")) swapEffect(index, index - 1); if (event.target.classList.contains("move-effect-down")) swapEffect(index, index + 1); });
 }
 

@@ -17,6 +17,8 @@
       <button id="load-remote" class="primary">원본 불러오기</button>
       <button id="load-fixture">예시 열기</button>
       <button id="save-draft">초안 저장</button>
+      <button id="copy-card-row">현재 행 복사</button>
+      <button id="copy-header-row">헤더+현재 행 복사</button>
       <button id="export-tsv">현재 시트 TSV</button>
       <button id="export-json">변경 JSON</button>
     </div>
@@ -76,13 +78,15 @@
           <label>Keyword<input data-field="Keyword" placeholder="신속, 관통"></label>
         </div>
 
-        <label class="wide-label">설명<textarea data-field="description" rows="3" placeholder="카드의 실제 효과를 적습니다. [소멸]은 effects에서만 설정합니다."></textarea></label>
+        <label class="wide-label">설명<textarea data-field="description" rows="3" placeholder="카드의 실제 효과와 [소멸] 같은 표시 정보를 적습니다."></textarea></label>
 
         <section class="effects-section">
           <div class="section-title-row">
             <div><h3>실행 효과</h3><p>위에서 아래 순서대로 `effects1`, `effects2`…로 저장됩니다.</p></div>
-            <div class="effect-actions"><button id="add-effect" type="button">+ 효과</button><button id="toggle-exhaust" type="button">[소멸] 토글</button></div>
+            <div class="effect-actions"><button id="add-effect" type="button">+ 효과 선택</button><button id="toggle-exhaust" type="button">[소멸] 동기화</button></div>
           </div>
+          <div id="effect-palette" class="effect-palette hidden" aria-label="효과 빠른 추가"></div>
+          <div id="effect-helper" class="effect-helper">효과를 선택하거나 입력하면 작성법이 여기에 표시됩니다.</div>
           <div id="effects" class="effects"></div>
         </section>
 
@@ -101,12 +105,15 @@
         <div id="change-summary">변경 없음</div>
       </section>
       <section class="help-section">
-        <h3>핵심 규칙</h3>
-        <ul>
-          <li><code>removeThis</code>는 사용한 카드를 소멸 더미로 옮깁니다.</li>
-          <li><code>[소멸]</code>을 설명·Keyword에 쓰지 않습니다.</li>
-          <li>저장은 브라우저 초안이며, TSV/JSON으로 Sheet에 반영할 데이터를 확인합니다.</li>
-        </ul>
+        <h3>효과 작성 빠른 안내</h3>
+        <p class="help-intro">색상 버튼으로 효과를 추가한 뒤 수치·대상만 바꾸면 됩니다.</p>
+        <div id="effect-guide" class="effect-guide"></div>
+        <h3 class="paste-title">CardML 붙여넣기</h3>
+        <ol>
+          <li><strong>현재 행 복사</strong> 후, 같은 시트의 새 행 첫 칸에 붙여넣습니다.</li>
+          <li>새 카드도 원본과 같은 열 순서로 `effectsN`까지 생성됩니다.</li>
+          <li><strong>헤더+현재 행 복사</strong>는 새 시트/검토용입니다.</li>
+        </ol>
       </section>
     </aside>
   </main>
