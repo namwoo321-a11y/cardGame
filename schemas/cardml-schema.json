@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "requiredFields": ["Tier", "cardName", "cost", "description", "CType", "TType"],
   "postUseRule": {
-    "removeThis": "사용 뒤 카드를 제거 더미로 옮깁니다. description 및 Keyword에는 [소멸]을 쓰지 않습니다."
+    "removeThis": "사용 뒤 카드를 제거 더미로 옮깁니다. description과 Keyword의 [소멸]은 표시용이며, 실행에는 removeThis가 필요합니다."
   },
   "aliases": {
     "소멸": "removethis",

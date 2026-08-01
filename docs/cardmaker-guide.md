@@ -7,24 +7,26 @@
 1. **원본 불러오기**를 눌러 Google Apps Script 읽기 API에서 CardML을 가져온다.
 2. 카드와 효과를 수정한다. 브라우저는 IndexedDB에 현재 초안과 최근 백업 10개를 보관한다.
 3. `검증 결과`가 오류 0개인지 확인한다.
-4. 선택한 시트를 TSV로 내보내거나, 변경 카드만 JSON으로 내보낸다.
-5. TSV를 Google Sheets의 같은 열에 붙여 넣어 반영한다. 이 도구는 현재 Google 계정 쓰기 권한이나 비밀값을 보관하지 않는다.
+4. 새 카드·수정 카드 한 장은 **현재 행 복사**를 눌러 같은 CardML 시트의 새 행 첫 칸에 바로 붙여 넣는다. 열 순서와 `effectsN`이 자동으로 맞춰진다.
+5. 여러 카드는 선택한 시트를 TSV로 내보내거나, 변경 카드만 JSON으로 내보낸다.
+6. 이 도구는 현재 Google 계정 쓰기 권한이나 비밀값을 보관하지 않는다.
 6. 게임 시작 전 설정의 데이터 업데이트로 Unity에 새 데이터를 동기화한다.
 
 ## `[소멸]` 규칙
 
-사용 후 소멸은 **카드 설명이나 Keyword가 아니라 실행 효과**다.
+사용 후 소멸은 카드에 보이는 **표시 정보**와 실제 실행 효과를 함께 쓴다.
 
 ```text
-description: 자신에게 보호 8
-Keyword: 신속
+description: 자신에게 보호 8 [소멸]
+Keyword: 신속, [소멸]
 effects1: shield:User:8
 effects2: removeThis
 ```
 
+- `description`과 `Keyword`의 `[소멸]`은 플레이어가 확인하는 표시 정보다.
 - `removeThis`를 넣으면 해당 카드 인스턴스는 사용 뒤 `removedPile`로 이동한다.
 - 덱을 다시 섞어도 `removedPile`의 카드는 돌아오지 않는다.
-- 원본에 `description: ... [소멸]` 또는 `Keyword: 소멸`이 있으면 Card Maker는 초안에서 이를 지우고 `removeThis`로 옮긴다. 원본 Google Sheet는 사용자가 TSV를 반영하기 전까지 바뀌지 않는다.
+- 원본에 표시용 `[소멸]`만 있고 `removeThis`가 빠졌다면 Card Maker는 표시를 유지한 채 초안에 `removeThis`만 추가한다. 원본 Google Sheet는 사용자가 복사·붙여넣기 하기 전까지 바뀌지 않는다.
 
 ## 안전한 확장 순서
 
