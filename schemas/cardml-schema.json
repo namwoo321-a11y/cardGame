@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "requiredFields": ["Tier", "cardName", "cost", "description", "CType", "TType"],
+  "postUseRule": {
+    "removeThis": "사용 뒤 카드를 제거 더미로 옮깁니다. description 및 Keyword에는 [소멸]을 쓰지 않습니다."
+  },
+  "aliases": {
+    "소멸": "removethis",
+    "[소멸]": "removethis",
+    "버림": "discard",
+    "제거": "remove"
+  },
+  "effects": {
+    "if": { "minParts": 6, "example": "if:User_HP:<:10:1:0" },
+    "repeat": { "minParts": 3, "example": "repeat:3:1" },
+    "discardcheck": { "minParts": 1, "example": "discardCheck" },
+    "removecheck": { "minParts": 1, "example": "removeCheck" },
+    "removethis": { "minParts": 1, "example": "removeThis" },
+    "movedrawthis": { "minParts": 1, "example": "moveDrawThis" },
+    "damage": { "minParts": 4, "example": "damage:Target:8:HP" },
+    "adddamage": { "minParts": 4, "example": "addDamage:Target:4:HP" },
+    "block": { "minParts": 3, "example": "Block:User:5" },
+    "shield": { "minParts": 3, "example": "shield:Target:3" },
+    "heal": { "minParts": 4, "example": "heal:User:5:HP" },
+    "draw": { "minParts": 3, "example": "draw:User:2" },
+    "will": { "minParts": 3, "example": "will:User:1" },
+    "discard": { "minParts": 4, "example": "discard:User:1:Hand" },
+    "remove": { "minParts": 4, "example": "remove:User:1:Hand" },
+    "choose": { "minParts": 6, "example": "choose:User:Deck:addHand:1:1" },
+    "generate": { "minParts": 4, "example": "generate:User:addHand:1:Prote" },
+    "extort": { "minParts": 4, "example": "extort:Target:1:Will" },
+    "emotion": { "minParts": 4, "example": "emotion:User:EMO_ANGER:10" },
+    "consume": { "minParts": 4, "example": "consume:User:1:Energe" },
+    "kill": { "minParts": 2, "example": "kill:Target" },
+    "buff": { "minParts": 4, "example": "buff:User:1:Energe" },
+    "effecteffect": { "minParts": 1, "example": "effectEffect" }
+  }
+}
